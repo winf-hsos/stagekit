@@ -46,7 +46,7 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 
 ## Gestaltungsregeln (Kurzfassung)
 
-- Folientext kleingeschrieben (`--lowercase` im Theme), kein Kursiv, keine Übergänge. Code und Eigennamen mit `class="keep-case"` ausnehmen.
+- Folientext kleingeschrieben (`--lowercase` im Theme), kein Kursiv, keine Übergänge. Code, Eigennamen und Abkürzungen wie RAM, CPU, LLM bleiben groß: im HTML mit `class="keep-case"`, in Zeichnungen mit `keepCase: true`.
 - Acht Farben, **genau vier Schriftgrößen**, nur aus dem Theme: `var(--tiny)`, `var(--small)`, `var(--normal)`, `var(--large)` (20, 32, 48, 80 px auf der 1920er Leinwand) und in Zeichnungen `size: 20 | 32 | 48 | 80`. Keine anderen Pixelwerte, auch nicht „ein bisschen kleiner, damit es passt“: Passt es nicht, wird das Layout geändert, nicht die Größe. Der Export prüft das (`--fonts`) und meldet jede fremde Größe. Nie Hex-Werte im Deck. Farbe ist Bedeutung: Blau verweist, Gelb merkt an und zeigt „aktuell“, Rot ist der sparsame Hingucker.
 - Zeichnungen: Linien und Rahmen in `--white` oder `--gray-light`, Strom in Gelb, Inaktives in `--gray-dark`. Pfeile in einen Kasten liegen auf dessen Mittelachse; Eingabe-Labels rechtsbündig vor dem Pfeil, Ausgabe-Labels linksbündig dahinter.
 - Eine Aussage je Folie. Wenig Text; die Aussage steckt im Bild, der Rest in den Notizen.

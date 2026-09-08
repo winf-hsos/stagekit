@@ -129,7 +129,7 @@ table.sum td.lab { color: var(--gray); font-size: var(--small); padding-right: 1
 table.sum td.bits { letter-spacing: 0.35em; }
 table.sum td.dec { color: var(--gray); padding-left: 1.2em; text-align: right; }
 table.sum tr.result td { border-top: 2px solid var(--gray-light); padding-top: 8px; color: var(--white); }
-table.sum tr.carries td { color: var(--yellow); font-size: var(--small); }
+table.sum tr.carries td { color: var(--yellow); }   /* same size as the bits: the columns must line up */
 
 /* aligned equations: term, "=", the rest */
 table.eq { border-collapse: collapse; font-size: var(--normal); }
