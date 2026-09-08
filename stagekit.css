@@ -20,7 +20,9 @@ a { color: var(--blue); text-decoration: none; }
   line-height: 1.35;
 }
 .slide.current { display: block; }
-.slide pre, .slide code, .slide .keep-case, .slide .keep-case * { text-transform: none; }
+/* Code wird nie kleingeschrieben: `True`, `None`, Klassennamen und Bezeichner
+ * muessen stehen bleiben, wie sie im Programm stehen. */
+.slide pre, .slide code, .slide .code, .slide .keep-case, .slide .keep-case * { text-transform: none; }
 
 /* --- the building blocks (same names as slidekit's content blocks) --------- */
 .slide h2 {                       /* the small grey heading top left */
