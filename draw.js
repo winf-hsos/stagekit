@@ -6,7 +6,8 @@
  *
  *   svg(w, h, ...parts)               the frame
  *   box(x, y, w, h, text, opts)       rounded box with centred text
- *   label(x, y, text, opts)           text; opts: size, color, anchor, mono
+ *   label(x, y, text, opts)           text; opts: size, color, anchor, mono, keepCase
+ *   layers(...groups)                 concatenates groups so wires come first: layers(wires, gates, labels)
  *   line(x1, y1, x2, y2, opts)        opts: color, width, dashed
  *   arrow(x1, y1, x2, y2, opts)       line with a filled triangle head
  *   wire(pts, on)                     polyline, lit (yellow) or not (gray)
@@ -29,6 +30,9 @@
 
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
+  /* z-order: pass wires first, then gates, then labels; each group is an array */
+  const layers = (...groups) => groups.flat();
+
   function svg(w, h, ...parts) {
     // only a viewBox: the drawing fills its .figure and scales with the slide
     return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${parts.join("")}</svg>`;
@@ -41,7 +45,7 @@
     const fill = o.color || c.white;
     const family = o.mono ? c.mono : c.font;
     const anchor = o.anchor || "start";
-    return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${family}" font-size="${size}" fill="${fill}"${o.weight ? ` font-weight="${o.weight}"` : ""}>` +
+    return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${family}" font-size="${size}" fill="${fill}"${o.weight ? ` font-weight="${o.weight}"` : ""}${o.keepCase ? ' class="keep-case"' : ""}>` +
       lines.map((l, i) => `<tspan x="${x}" dy="${i ? size * lh : 0}">${esc(l)}</tspan>`).join("") + `</text>`;
   }
 
@@ -117,5 +121,5 @@
     return h + "</table>";
   }
 
-  window.draw = { svg, label, box, line, arrow, wire, dot, gate, lamp, toggle, truthTable, colors: C };
+  window.draw = { svg, layers, label, box, line, arrow, wire, dot, gate, lamp, toggle, truthTable, colors: C };
 })();

@@ -67,7 +67,9 @@
       const loc = document.createElement("div");
       loc.className = "location";
       const ticks = parts.map((_, j) => j ? `<span class="tick" style="left:${(j / parts.length) * 100}%"></span>` : "").join("");
-      loc.innerHTML = `<div class="bar"><div class="fill" style="width:${((k + 1) / parts.length) * 100}%"></div>${ticks}</div><span>${s.dataset.part}</span>`;
+      const segs = parts.map((p, j) => `<span class="seg" data-part="${p}" title="${p}" style="left:${(j / parts.length) * 100}%; width:${100 / parts.length}%"></span>`).join("");
+      loc.innerHTML = `<div class="bar"><div class="fill" style="width:${((k + 1) / parts.length) * 100}%"></div>${ticks}${segs}</div><span>${s.dataset.part}</span>`;
+      loc.dataset.noAdvance = "1";
       s.appendChild(loc);
     }
     if (s.dataset.part && partColors[s.dataset.part]) s.style.setProperty("--part-color", partColors[s.dataset.part]);
@@ -168,6 +170,14 @@
     counter.classList.add("hidden");
     return;
   }
+
+  // --- the location bar jumps to a part ------------------------------------------
+  document.addEventListener("click", (ev) => {
+    const seg = ev.target.closest(".location .seg");
+    if (!seg) return;
+    const target = slides.findIndex((s) => s.classList.contains("part") && s.dataset.part === seg.dataset.part);
+    if (target >= 0) show(target, 0);
+  });
 
   // --- keys ----------------------------------------------------------------------
   document.addEventListener("keydown", (ev) => {

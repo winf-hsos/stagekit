@@ -65,6 +65,8 @@ a { color: var(--blue); text-decoration: none; }
   display: flex; align-items: center; gap: 24px; font-size: var(--tiny); color: var(--gray);
 }
 .location .bar { flex: 1; height: 4px; background: var(--gray-dark); position: relative; }
+.location .seg { position: absolute; top: -14px; bottom: -14px; cursor: pointer; }
+.location .seg:hover { background: rgba(255,255,255,0.06); }
 .location .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--part-color); }
 .location .bar .tick { position: absolute; top: -4px; width: 2px; height: 12px; background: var(--bg); }
 .slide.title .location, .slide.agenda .location, .slide.part .location { display: none; }
@@ -91,12 +93,39 @@ a { color: var(--blue); text-decoration: none; }
 .two { position: absolute; left: var(--margin); right: var(--margin); top: calc(var(--margin) * 1.4); bottom: calc(var(--margin) * 0.9); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 80px; align-items: center; }
 .two > * { min-width: 0; }
 
-/* --- tables (truth tables, byte rows) --------------------------------------- */
-table.tt { border-collapse: collapse; font-family: var(--mono); font-size: var(--small); }
-table.tt th { font-weight: normal; color: var(--gray); font-family: var(--font); padding: 4px 18px; text-align: center; }
-table.tt td { padding: 2px 18px; text-align: center; color: var(--gray-light); border-top: 1px solid #1c2024; }
+/* --- tables: truth tables, byte rows, aligned equations ---------------------
+ * Everything countable is set in the code font. A quiet frame, a header row
+ * with a rule beneath, generous columns. .hl highlights a column. */
+table.tt { border-collapse: separate; border-spacing: 0; font-family: var(--mono); font-size: var(--small);
+           border: 1px solid var(--gray-dark); border-radius: 10px; overflow: hidden; }
+table.tt th { font-weight: normal; color: var(--gray); padding: 10px 26px; text-align: center; min-width: 2.4em;
+              border-bottom: 1px solid var(--gray-dark); background: #0b0d10; }
+table.tt th.sep, table.tt td.sep { border-left: 1px solid var(--gray-dark); }
+table.tt td { padding: 6px 26px; text-align: center; color: var(--gray-light); }
+table.tt tr + tr td { border-top: 1px solid #14171a; }
 table.tt td.on { color: var(--yellow); }
 table.tt tr.now td { color: var(--white); background: #14171a; }
+table.tt th.hl, table.tt td.hl { background: #16191d; color: var(--yellow); }
+table.tt.large { font-size: var(--normal); }
+table.tt.large th { padding: 12px 34px; } table.tt.large td { padding: 8px 34px; }
+
+/* a written addition: label, bits, decimal; a rule above the result */
+table.sum { border-collapse: collapse; font-family: var(--mono); font-size: var(--normal); color: var(--gray-light); }
+table.sum td { padding: 2px 0; white-space: pre; }
+table.sum td.lab { color: var(--gray); font-size: var(--small); padding-right: 1.2em; }
+table.sum td.bits { letter-spacing: 0.35em; }
+table.sum td.dec { color: var(--gray); padding-left: 1.2em; text-align: right; }
+table.sum tr.result td { border-top: 2px solid var(--gray-light); padding-top: 8px; color: var(--white); }
+table.sum tr.carries td { color: var(--yellow); font-size: var(--small); }
+
+/* aligned equations: term, "=", the rest */
+table.eq { border-collapse: collapse; font-size: var(--normal); }
+table.eq td { padding: 8px 0; vertical-align: baseline; }
+table.eq td.term { color: var(--yellow); padding-right: 0.6em; }
+table.eq td.eqs { color: var(--gray); padding: 8px 0.6em; }
+table.eq td.note { color: var(--gray); font-size: var(--small); padding-left: 1.2em; }
+
+.lines.pre { white-space: pre; }
 
 /* --- notes are never shown on the slide ----------------------------------- */
 .notes { display: none; }
