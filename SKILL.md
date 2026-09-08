@@ -46,7 +46,16 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 
 Das Deck lädt Framework und Bilder über relative Pfade; auf einer Website muss es für sich stehen. Ein Sync-Skript (im LiFi-Projekt `tools/sync_decks.py`, pre-render) kopiert `index.html`, `deck.js`, `theme.css` und nur die tatsächlich geladenen Bilder in einen erzeugten Ordner, schreibt die Pfade um, legt die drei Framework-Dateien einmal daneben und nimmt das PDF aus `export/` mit. Eingebettet wird mit einem Iframe im Seitenverhältnis 16:9 (`allowfullscreen`, damit F funktioniert) plus Links „in eigenem Tab öffnen“ und „als PDF“. Das Deck skaliert sich selbst auf die Iframe-Größe. Fotos, die ein Deck per Canvas ausliest, müssen aus demselben Ursprung kommen (ins `img/` des Decks kopieren), sonst verweigert der Browser die Pixel.
 
-### 5. Danach: die HTML-Datei ist die Quelle
+### 5. Abbildungen für Webseiten aus dem Deck
+
+Die Zeichnungen eines Decks sind reine SVG-Strings und können als Abbildungen einer Website dienen, in einer hellen Palette. Dazu:
+
+- `[colors.light]` in der `style.toml` mit denselben Schlüsseln wie `[colors]`; `theme.py` schreibt daraus `:root[data-theme="light"]`, und `draw.js` schaltet den Block ein, wenn `?theme=light` in der Adresse steht. Die Rollen bleiben: „yellow“ ist weiter die Farbe für 1, aktuell und Strom, „white“ die des Wichtigsten.
+- Zeichenfunktionen in `deck.js` geben ihr SVG **zurück** und schreiben es nur in ihr Element, wenn es das gibt (`if ($("fig-x")) …`); der Start des Decks steht unter `if ($("erstes-element"))`, damit `deck.js` auch ohne Folien lädt. Was die Website braucht, wird als `window.deckNN = {…}` veröffentlicht.
+- `figures.js` im Deckordner: `window.figures = { "name": () => svg, "anderes": async () => svg }`. Jede Funktion liefert ein komplettes SVG aus `draw.js`; für Tafeln gibt es `d.table(x, y, headers, rows, {cw, rh, size, hl})` als SVG-Fassung der HTML-Wahrheitstafel. Beschriftungen englisch, Codeschrift für Bits, dieselben Größen wie auf den Folien.
+- `python C:\agents\stagekit\tools\figures.py <deck>/index.html --out <ordner> --theme light` schreibt je Abbildung `<name>.svg` (Roboto Mono eingebettet, Breite und Höhe aus der viewBox). **Jede Abbildung danach als Screenshot auf Weiß ansehen** (Chrome headless mit `--default-background-color=ffffffff` auf die SVG-Datei), auf abgeschnittene Ränder, zu enge Spalten und Leerraum unter der Zeichnung prüfen; die viewBox-Höhe auf den Inhalt zuschneiden.
+
+### 6. Danach: die HTML-Datei ist die Quelle
 
 Änderungen laufen direkt an `index.html` und `deck.js`, nicht über einen Neubau. Jede inhaltliche Änderung zieht dieselbe Änderung in `skript.md` nach sich, im selben Arbeitsgang.
 

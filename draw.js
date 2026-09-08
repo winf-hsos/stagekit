@@ -16,12 +16,20 @@
  *   lamp(x, y, on, text)              output lamp with a caption below
  *   toggle(x, y, on, text)            a switch symbol (static on slides)
  *   truthTable(inputs, outputs, rows, now)   an HTML table (not SVG)
+ *   table(x, y, headers, rows, opts)  an SVG table for figures; opts: cw, rh, size, hl
+ *
+ * ?theme=<name> in the page address selects a palette block of theme.css
+ * (:root[data-theme="<name>"]); tools/figures.py renders figures that way.
  *
  * Colours are read from the theme at call time, so a deck with a different
  * theme gets different drawings without touching this file. */
 
 (function () {
   "use strict";
+
+  // ?theme=light (or any name) selects a palette block of theme.css before anything is drawn
+  const themeParam = new URLSearchParams(location.search).get("theme");
+  if (themeParam) document.documentElement.dataset.theme = themeParam;
 
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const C = () => ({ bg: css("--bg"), white: css("--white"), light: css("--gray-light"), gray: css("--gray"),
@@ -115,8 +123,8 @@
   function toggle(x, y, on, text) {
     const c = C();
     return (text ? label(x - 28, y + 6, text, { size: 18, color: c.light, anchor: "end", mono: true }) : "") +
-      `<rect x="${x - 20}" y="${y - 10}" width="40" height="20" rx="10" fill="${on ? c.yellow : "#101316"}" stroke="${on ? c.yellow : c.light}" stroke-width="2"/>` +
-      `<circle cx="${on ? x + 10 : x - 10}" cy="${y}" r="7" fill="${on ? "#000" : c.light}"/>`;
+      `<rect x="${x - 20}" y="${y - 10}" width="40" height="20" rx="10" fill="${on ? c.yellow : c.bg}" stroke="${on ? c.yellow : c.light}" stroke-width="2"/>` +
+      `<circle cx="${on ? x + 10 : x - 10}" cy="${y}" r="7" fill="${on ? c.bg : c.light}"/>`;
   }
 
   function truthTable(inputs, outputs, rows, now) {
@@ -127,5 +135,22 @@
     return h + "</table>";
   }
 
-  window.draw = { svg, layers, label, box, line, arrow, wire, dot, gate, lamp, toggle, truthTable, colors: C };
+  /* an SVG table for figures (the HTML truthTable is for slides): headers gray,
+   * values in the code font, ones in the accent colour, one column optionally
+   * highlighted; opts: cw (column width), rh (row height), size, hl (column index) */
+  function table(x, y, headers, rows, o = {}) {
+    const c = C();
+    const cw = o.cw || 90, rh = o.rh || 54, size = o.size || 32;
+    let s = "";
+    if (o.hl !== undefined) s += `<rect x="${x + o.hl * cw}" y="${y}" width="${cw}" height="${rh * (rows.length + 1)}" rx="6" fill="${c.dark}" opacity="0.35"/>`;
+    headers.forEach((h, j) => { s += label(x + j * cw + cw / 2, y + rh * 0.68, h, { size, color: o.hl === j ? c.yellow : c.gray, anchor: "middle", mono: true }); });
+    s += line(x, y + rh, x + cw * headers.length, y + rh, { color: c.dark, width: 2 });
+    rows.forEach((r, i) => r.forEach((v, j) => {
+      s += label(x + j * cw + cw / 2, y + rh * (i + 1) + rh * 0.68, String(v), { size, color: Number(v) === 1 ? c.yellow : c.light, anchor: "middle", mono: true });
+    }));
+    return s;
+  }
+  table.width = (n, cw = 90) => n * cw;
+
+  window.draw = { svg, layers, label, box, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C };
 })();

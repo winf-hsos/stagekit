@@ -12,6 +12,9 @@ werden auf die 1920x1080-Leinwand umgerechnet (1 pt = 2 px). Optional:
     lowercase = true        # Folientext kleingeschrieben (Standard)
     margin = 120            # Rand in px
     parts = { "switches" = "009EE3", ... }   # Farbe je Teil fuer die Ortsangabe
+
+[colors.light] mit denselben Schluesseln liefert die Palette fuer hellen Grund;
+sie wird als :root[data-theme="light"] in die theme.css geschrieben.
 """
 import pathlib
 import sys
@@ -40,6 +43,14 @@ def render(style):
     lines.append("  --part-color: var(--blue);")
     lines.append(f"  --lowercase: {'lowercase' if sk.get('lowercase', True) else 'none'};")
     lines.append("}")
+    light = colors.get("light")
+    if isinstance(light, dict):
+        # same roles, other values: a deck or a figure rendered with ?theme=light
+        # (draw.js sets data-theme from the query) picks these up automatically
+        lines.append(':root[data-theme="light"] {')
+        for key, var in KEYS:
+            lines.append(f"  --{var}: #{light.get(key, colors[key]).lower()};")
+        lines.append("}")
     if fonts["code"].lower().startswith("roboto mono"):
         lines.insert(1, '@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap");')
     return "\n".join(lines) + "\n"
