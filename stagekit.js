@@ -38,19 +38,20 @@
   const partColors = (() => { try { return JSON.parse(deck.dataset.partColors || "{}"); } catch (e) { return {}; } })();
 
   // --- generated slides ------------------------------------------------------
+  const bare = (s) => !$(".content", s);          // only notes inside: generate the content
   const titleSlide = $(".slide.title", deck);
-  if (titleSlide && !titleSlide.children.length) {
-    titleSlide.innerHTML = `<div class="content"><div class="title-text">${title}</div><div class="subtitle-text">${subtitle}</div></div>`;
+  if (titleSlide && bare(titleSlide)) {
+    titleSlide.insertAdjacentHTML("afterbegin", `<div class="content"><div class="title-text">${title}</div><div class="subtitle-text">${subtitle}</div></div>`);
   }
   const agenda = $(".slide.agenda", deck);
-  if (agenda && !agenda.children.length) {
-    agenda.innerHTML = `<div class="content">${parts.map((p, i) => `<div class="agenda-item"><span class="n">${i + 1}</span>${p}</div>`).join("")}</div>`;
+  if (agenda && bare(agenda)) {
+    agenda.insertAdjacentHTML("afterbegin", `<div class="content">${parts.map((p, i) => `<div class="agenda-item"><span class="n">${i + 1}</span>${p}</div>`).join("")}</div>`);
   }
   $$(".slide.part", deck).forEach((s) => {
-    if (s.children.length) return;
+    if (!bare(s)) return;
     const name = s.dataset.part;
     const n = parts.indexOf(name) + 1;
-    s.innerHTML = `<div class="content"><div class="part-n">${n ? "part " + n : ""}</div><div class="part-text">${name}</div></div>`;
+    s.insertAdjacentHTML("afterbegin", `<div class="content"><div class="part-n">${n ? "part " + n : ""}</div><div class="part-text">${name}</div></div>`);
   });
 
   // --- assign parts and location bars ----------------------------------------

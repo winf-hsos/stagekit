@@ -51,6 +51,7 @@ def main(argv):
         return 2
     src, dst = pathlib.Path(argv[0]), pathlib.Path(argv[1])
     style = tomllib.loads(src.read_text(encoding="utf-8"))
+    dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(render(style), encoding="utf-8")
     print(f"theme: {dst}")
     return 0

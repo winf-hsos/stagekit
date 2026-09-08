@@ -30,13 +30,14 @@
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
   function svg(w, h, ...parts) {
-    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${parts.join("")}</svg>`;
+    // only a viewBox: the drawing fills its .figure and scales with the slide
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${parts.join("")}</svg>`;
   }
 
   function label(x, y, text, o = {}) {
     const c = C();
     const lines = String(text).split("\n");
-    const size = o.size || 24, lh = o.lineHeight || 1.3;
+    const size = o.size || 32, lh = o.lineHeight || 1.3;
     const fill = o.color || c.white;
     const family = o.mono ? c.mono : c.font;
     const anchor = o.anchor || "start";
@@ -49,7 +50,7 @@
     const border = o.border === null ? "none" : (o.border || c.white);
     const fill = o.fill || "none";
     let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.rounded === false ? 0 : (o.rx || 8)}" fill="${fill}" stroke="${border}" stroke-width="${o.width || 2}"${o.dashed ? ' stroke-dasharray="8 6"' : ""}/>`;
-    if (text) s += label(x + w / 2, y + h / 2 + (o.size || 24) * 0.35, text, { ...o, anchor: "middle", color: o.color || c.white });
+    if (text) s += label(x + w / 2, y + h / 2 + (o.size || 32) * 0.35, text, { ...o, anchor: "middle", color: o.color || c.white });
     return s;
   }
 
