@@ -50,6 +50,11 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 - Acht Farben, **genau vier Schriftgrößen**, nur aus dem Theme: `var(--tiny)`, `var(--small)`, `var(--normal)`, `var(--large)` (20, 32, 48, 80 px auf der 1920er Leinwand) und in Zeichnungen `size: 20 | 32 | 48 | 80`. Keine anderen Pixelwerte, auch nicht „ein bisschen kleiner, damit es passt“: Passt es nicht, wird das Layout geändert, nicht die Größe. Der Export prüft das (`--fonts`) und meldet jede fremde Größe. Nie Hex-Werte im Deck. Farbe ist Bedeutung: Blau verweist, Gelb merkt an und zeigt „aktuell“, Rot ist der sparsame Hingucker.
 - Zeichnungen: Linien und Rahmen in `--white` oder `--gray-light`, Strom in Gelb, Inaktives in `--gray-dark`. Pfeile in einen Kasten liegen auf dessen Mittelachse; Eingabe-Labels rechtsbündig vor dem Pfeil, Ausgabe-Labels linksbündig dahinter.
 - Eine Aussage je Folie. Wenig Text; die Aussage steckt im Bild, der Rest in den Notizen.
+- **Punchline:** nur dort, wo ein Satz den Kern der Folie trägt, nicht auf jeder Folie. Wenn, dann als `<div class="punch">` am unteren Rand, immer in der kleinen Größe, immer an derselben Stelle; die Folie bekommt dazu die Klasse `has-punch`, damit der Inhalt darüber Abstand hält. Nie eine gelbe Zeile frei in eine Zeichnung setzen.
+- **Beschriftungen in Zeichnungen:** Achsen-, Ein- und Ausgabelabels in `small` (32), Werte und Bits in `normal` (48) oder `small`, nie größer als der Fließtext der Folie; Bildunterschriften und Erklärzeilen in `small` und Grau. Ein Foliensatz benutzt für dieselbe Textsorte überall dieselbe Größe.
+- **Gleiche Inhalte, gleiche Stelle:** Steht dieselbe Tabelle oder Zeichnung auf zwei aufeinanderfolgenden Folien, steht sie pixelgleich an derselben Stelle (gleiches Raster, feste Höhen). Die Schrittprüfung deckt das innerhalb einer Folie ab; zwischen Folien muss es der Bau sicherstellen und per Screenshot-Differenz prüfen.
+- **Vor dem Melden jede Folie einzeln in voller Größe ansehen,** nicht nur den Kontaktbogen: abgeschnittene Beschriftungen, Texte, die in Kästen zu tief sitzen, fehlende Linien und Kollisionen sieht man nur so.
+- **Cache-Buster:** `stagekit.css`, `stagekit.js`, `draw.js` und `deck.js` mit `?v=<datum>` einbinden und die Zahl bei jeder Änderung hochzählen, sonst zeigt der Browser des Nutzers alte Fassungen.
 
 ## API-Spickzettel
 

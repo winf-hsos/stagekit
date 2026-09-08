@@ -12,7 +12,7 @@
  *   arrow(x1, y1, x2, y2, opts)       line with a filled triangle head
  *   wire(pts, on)                     polyline, lit (yellow) or not (gray)
  *   dot(x, y, on)                     junction
- *   gate(type, x, y, on)              and/or/xor/not/nand/nor, 56 x 40, no label
+ *   gate(type, x, y, on)              and/or/xor/not/nand/nor/xnor, 56 x 40, no label
  *   lamp(x, y, on, text)              output lamp with a caption below
  *   toggle(x, y, on, text)            a switch symbol (static on slides)
  *   truthTable(inputs, outputs, rows, now)   an HTML table (not SVG)
@@ -54,7 +54,11 @@
     const border = o.border === null ? "none" : (o.border || c.white);
     const fill = o.fill || "none";
     let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.rounded === false ? 0 : (o.rx || 8)}" fill="${fill}" stroke="${border}" stroke-width="${o.width || 2}"${o.dashed ? ' stroke-dasharray="8 6"' : ""}/>`;
-    if (text) s += label(x + w / 2, y + h / 2 + (o.size || 32) * 0.35, text, { ...o, anchor: "middle", color: o.color || c.white });
+    if (text) {
+      // multi-line text is centred as a block: start above the middle by half the extra lines
+      const size = o.size || 32, lh = o.lineHeight || 1.3, n = String(text).split("\n").length;
+      s += label(x + w / 2, y + h / 2 + size * 0.35 - (n - 1) * size * lh / 2, text, { ...o, anchor: "middle", color: o.color || c.white });
+    }
     return s;
   }
 
@@ -87,14 +91,16 @@
     let b = "";
     if (type === "and" || type === "nand") {
       b = `<path d="M${x},${y} h28 a20,20 0 0 1 0,40 h-28 z" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
-    } else if (type === "or" || type === "nor" || type === "xor") {
-      b = `<path d="M${x + (type === "xor" ? 6 : 0)},${y} q14,20 0,40 q30,0 46,-20 q-16,-20 -46,-20 z" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
-      if (type === "xor") b += `<path d="M${x},${y} q14,20 0,40" fill="none" stroke="${stroke}" stroke-width="${sw}"/>`;
+    } else if (type === "or" || type === "nor" || type === "xor" || type === "xnor") {
+      const x2 = type === "xor" || type === "xnor";
+      b = `<path d="M${x + (x2 ? 6 : 0)},${y} q14,20 0,40 q30,0 46,-20 q-16,-20 -46,-20 z" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+      if (x2) b += `<path d="M${x},${y} q14,20 0,40" fill="none" stroke="${stroke}" stroke-width="${sw}"/>`;
     } else if (type === "not") {
       b = `<path d="M${x},${y} l40,20 l-40,20 z" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
     }
-    if (type === "nand" || type === "nor" || type === "not") {
-      b += `<circle cx="${type === "not" ? x + 44 : x + 52}" cy="${y + 20}" r="4" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+    if (type === "nand" || type === "nor" || type === "xnor" || type === "not") {
+      const bx = type === "not" ? x + 44 : type === "xnor" ? x + 57 : x + 52;
+      b += `<circle cx="${bx}" cy="${y + 20}" r="4" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
     }
     return b;
   }
