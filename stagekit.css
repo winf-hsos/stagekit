@@ -146,6 +146,14 @@ table.eq td.note { color: var(--gray); font-size: var(--small); padding-left: 1.
 /* --- the slide counter, small, bottom right -------------------------------- */
 .counter { position: fixed; right: 12px; bottom: 8px; font-family: var(--mono); font-size: 12px; color: var(--gray-dark); z-index: 5; }
 .counter.hidden { display: none; }
+/* the control bar of an embedded deck (?bar=1): back, counter, forward, full
+ * screen. Small and quiet, so the slide keeps the attention. */
+.embedbar { position: fixed; right: 12px; top: 12px; z-index: 6; display: flex; align-items: center; gap: 6px;
+  background: rgba(0, 0, 0, 0.55); border: 1px solid var(--gray-dark); border-radius: 999px; padding: 4px 10px; }
+.embedbar button { background: none; border: 0; color: var(--gray-light); font-size: 18px; line-height: 1;
+  cursor: pointer; padding: 4px 8px; border-radius: 999px; }
+.embedbar button:hover { color: var(--white); background: rgba(255, 255, 255, 0.08); }
+.embedbar .counter { position: static; min-width: 4.5em; text-align: center; color: var(--gray); }
 
 /* --- print: every slide on its own page, unscaled ------------------------- */
 @media print {

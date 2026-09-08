@@ -213,6 +213,32 @@
     else if (ev.clientX < window.innerWidth * 0.2) prev();
   });
 
+  /* --- control bar for embedded decks (?bar=1) ---------------------------------
+   * In an iframe there is no keyboard focus until someone clicks, and no browser
+   * chrome to leave the page with. The bar gives the three things a reader needs:
+   * back, forward, and full screen, plus the frame counter. It is never part of
+   * an export (the exporter does not pass ?bar). */
+  if (params.has("bar")) {
+    const bar = document.createElement("div");
+    bar.className = "embedbar";
+    bar.dataset.noAdvance = "1";
+    const button = (cls, glyph, title, fn) => {
+      const b = document.createElement("button");
+      b.className = cls; b.title = title; b.innerHTML = glyph;
+      b.addEventListener("click", fn);
+      bar.appendChild(b);
+      return b;
+    };
+    button("eb-prev", "&#8249;", "back", prev);
+    bar.appendChild(counter);          // der Zaehler des Decks selbst: showFrame haelt ihn aktuell
+    button("eb-next", "&#8250;", "forward", next);
+    button("eb-full", "&#x26F6;", "full screen", () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+    });
+    document.body.appendChild(bar);
+  }
+
   // --- start -----------------------------------------------------------------
   // ?slide=N and #N count frames (a build-up step is a frame of its own)
   const start = params.has("slide") ? Number(params.get("slide")) - 1
