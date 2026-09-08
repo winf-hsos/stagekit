@@ -1,0 +1,35 @@
+/* stagekit default theme: the design tokens every deck reads.
+ * Copy this file into a project as theme.css and change the values, or
+ * generate it from a style.toml with tools/theme.py. Nothing else in
+ * stagekit hard-codes a colour, a font or a size. */
+:root {
+  /* palette: eight colours with meaning, not decoration */
+  --bg: #000000;          /* slide background */
+  --white: #ffffff;       /* statements, code, everything important */
+  --gray-light: #b6bec6;  /* second rank, still easy to read */
+  --gray: #7d868f;        /* headings, side text, footnotes */
+  --gray-dark: #4a5259;   /* dimmed, e.g. code not in focus */
+  --blue: #009ee3;        /* accent: links, keywords */
+  --green: #4ade80;       /* second emphasis */
+  --yellow: #ffd23f;      /* remarks, numbers in code, "current" */
+  --red: #ff4d6d;         /* the rare eye-catcher */
+
+  /* fonts */
+  --font: Arial, "Helvetica Neue", sans-serif;
+  --mono: "Roboto Mono", Consolas, monospace;
+
+  /* four sizes, in px on the 1920 x 1080 design canvas */
+  --large: 80px;          /* statements, section titles (≈ 40 pt) */
+  --normal: 48px;         /* body, code, lists (≈ 24 pt) */
+  --small: 32px;          /* slide headings, remarks (≈ 16 pt) */
+  --tiny: 20px;           /* footnotes (≈ 10 pt) */
+
+  /* geometry of the design canvas */
+  --slide-w: 1920px;
+  --slide-h: 1080px;
+  --margin: 120px;
+
+  /* the location bar at the bottom of content slides */
+  --part-color: var(--blue);   /* a deck may override this per part */
+  --lowercase: lowercase;      /* set to "none" for a deck that keeps case */
+}

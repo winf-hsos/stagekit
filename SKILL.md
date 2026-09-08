@@ -1,0 +1,119 @@
+---
+name: stagekit
+description: Foliensätze als HTML mit stagekit entwerfen und bauen (SVG-Zeichnungen, eingebettete Demonstratoren, Design aus theme.css). Erst Basisinfos erfragen, dann Markdown-Entwurf zur Freigabe, erst danach das Deck bauen. Für neue Vorträge, Lehrveranstaltungs-Inputs und Änderungen an bestehenden stagekit-Decks.
+---
+
+# stagekit: Foliensätze als HTML entwerfen und bauen
+
+Dieses Skill beschreibt den verbindlichen Arbeitsablauf für Foliensätze mit `stagekit` (Repository `C:\agents\stagekit`, Dateien `stagekit.css`, `stagekit.js`, `draw.js`, `tools/`). Ein Deck ist eine HTML-Datei plus Notizen plus Zeichnungen in einem kleinen Skript; die Designwerte kommen aus der `theme.css` des Decks, erzeugt aus der `style.toml` des Projekts. Fehlt beides, lege die `style.toml` als ersten Schritt an (Vorlage unten) und erzeuge daraus die `theme.css`.
+
+## Der Ablauf, in dieser Reihenfolge
+
+### 1. Basisinfos erfragen (immer zuerst)
+
+Was der Nutzer schon mitgeliefert hat, wird nicht erneut gefragt; der Rest in **einem** kompakten Dialog:
+
+1. **Thema und Kernbotschaft:** der eine Satz, den das Publikum behalten soll.
+2. **Publikum und Vorwissen.**
+3. **Anlass und Dauer** (Faustregel: deutlich unter zwei Minuten je Inhaltsfolie).
+4. **Sprache der Folien** (Lehrkontexte oft englisch; Skript und Notizen deutsch).
+5. **Eröffnung:** jeder Satz beginnt mit einem Symbolfoto samt Geschichte.
+6. **Design:** gilt die `style.toml` des Projekts, oder braucht dieser Satz eine eigene?
+7. **Interaktive Elemente:** gibt es Demonstratoren oder Live-Daten, die auf eine Folie gehören? Das ist die Stärke von stagekit; frag danach.
+
+### 2. Entwurf als Markdown (Diskussionsgrundlage)
+
+Der Satz entsteht zuerst als `entwurf.md` im Satzordner, nicht als HTML. Er wird iteriert, bis der Nutzer ihn **ausdrücklich freigibt**. Vor der Freigabe wird kein Deck gebaut, auch nicht „zur Ansicht“.
+
+Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortung; Symbolschlüssel als Tabelle (🎬 Abschnittsfolie, 📷 Foto, 🖼️ Zeichnung, 📊 Vergleich, 💬 Merksatz, ⌨️ Code, 🪜 Aufbau in Schritten, 🧪 Live-Moment, 🕹️ eingebetteter Demonstrator); dann `# Die Folien`, gegliedert in `## Teil N: <titel> (<X> Folien)`, je Folie ein Block `### Folie N <symbole>` mit Folientext in Backticks, Elementen fett (**Bild:**, **Zeichnung:**, **Titel klein:**, **Text:**, **Demo:**), Sprechernotiz als **Dazu sagen.**, Live-Momente als **Live-Moment:**. Die Kleinschreibung gilt nur für Folientext; die Prosa des Entwurfs ist normales Deutsch.
+
+### 3. Bau des Decks (erst nach Freigabe)
+
+- Deckordner mit `index.html` (aus `template/deck.html`), `deck.js` für die Zeichnungen, `theme.css` (aus der `style.toml`: `python C:\agents\stagekit\tools\theme.py style.toml <ordner>/theme.css`), Fotos in `img/`.
+- Struktur ist Pflicht: `<section class="slide title">` und `agenda` (leer lassen, stagekit füllt sie aus `data-title`, `data-subtitle`, `data-parts`), je Teil `<section class="slide part" data-part="…">`, Ortsangabe entsteht automatisch. Teilfarben optional über `data-part-colors='{"teil": "#hex"}'`.
+- Eröffnungsfoto: `<img class="photo" src="img/…png">` rechts, `<div class="photo-text">` links, Fußnote `image: ai-generated (<modell>)`; Bild in 3840x2160 mit schwarzem Grund (siehe `slidekit.image`).
+- Inhaltsfolie: `<h2>` kleine Überschrift, `.content` mit `.header`, `.statement`, `.lines`, `.code`, `.sidenote`, `.remark`; `.footnote`. Aufbau in Schritten mit `data-step="n"` an den Elementen, die später erscheinen; sie behalten ihren Platz.
+- Zeichnungen: SVG-Strings aus `draw.js` in ein `<div class="figure" id="…">`, geschrieben von `deck.js` beim Laden. Für Aufbau in Schritten je Schritt neu zeichnen über `data-on-show="fn"` / `data-on-step="fn"` (globale Funktionen mit `(slide, step)`).
+- Demonstratoren: `<div class="embed"><iframe src="…" title="…"></iframe></div>`. Auf der Folie steht sonst nur die kleine Überschrift.
+- Notizen: `<aside class="notes">` je Folie; sie erscheinen im Notizfenster (N).
+- Parallel zum Bau entsteht `skript.md`: der Text zum Nachlesen in Folienreihenfolge, als eigenständiger Text lesbar.
+- Nach dem Bau: `python C:\agents\stagekit\tools\export.py <ordner>/index.html` (PDF, PNGs, Kontaktbogen), Kontaktbogen und Einzelfolien **ansehen**, erst dann dem Nutzer melden.
+
+### 4. Danach: die HTML-Datei ist die Quelle
+
+Änderungen laufen direkt an `index.html` und `deck.js`, nicht über einen Neubau. Jede inhaltliche Änderung zieht dieselbe Änderung in `skript.md` nach sich, im selben Arbeitsgang.
+
+## Gestaltungsregeln (Kurzfassung)
+
+- Folientext kleingeschrieben (`--lowercase` im Theme), kein Kursiv, keine Übergänge. Code und Eigennamen mit `class="keep-case"` ausnehmen.
+- Acht Farben, vier Größen, nur aus dem Theme: `var(--blue)` usw., nie Hex-Werte im Deck. Farbe ist Bedeutung: Blau verweist, Gelb merkt an und zeigt „aktuell“, Rot ist der sparsame Hingucker.
+- Zeichnungen: Linien und Rahmen in `--white` oder `--gray-light`, Strom in Gelb, Inaktives in `--gray-dark`. Pfeile in einen Kasten liegen auf dessen Mittelachse; Eingabe-Labels rechtsbündig vor dem Pfeil, Ausgabe-Labels linksbündig dahinter.
+- Eine Aussage je Folie. Wenig Text; die Aussage steckt im Bild, der Rest in den Notizen.
+
+## API-Spickzettel
+
+```html
+<div class="deck" data-title="…" data-subtitle="…" data-parts='["a","b"]' data-part-colors='{"a":"#009ee3"}'>
+  <section class="slide title"></section>
+  <section class="slide agenda"></section>
+  <section class="slide part" data-part="a"></section>
+  <section class="slide">
+    <h2>heading</h2>
+    <div class="content">
+      <div class="header">header</div>
+      <div class="statement">statement</div>
+      <div class="lines mono"><div>line one</div><div data-step="1">line two, on step 1</div></div>
+      <div class="sidenote">sidenote</div><div class="remark">remark</div>
+    </div>
+    <div class="footnote">footnote</div>
+    <aside class="notes">notes</aside>
+  </section>
+  <section class="slide"><h2>drawing</h2><div class="figure" id="f1"></div></section>
+  <section class="slide"><h2>demo</h2><div class="embed"><iframe src="…"></iframe></div></section>
+  <section class="slide"><img class="photo" src="img/x.png"><div class="photo-text">question?</div><div class="footnote">image: ai-generated (gpt-image-2)</div></section>
+</div>
+<script src="…/stagekit/draw.js"></script><script src="…/stagekit/stagekit.js"></script>
+<script src="deck.js"></script>
+```
+
+```js
+const d = window.draw;                       // Farben kommen aus dem Theme
+d.svg(w, h, ...parts)                        // Rahmen (viewBox)
+d.box(x, y, w, h, text, {border, fill, color, size, mono, dashed, rx})
+d.label(x, y, text, {size, color, anchor, mono, lineHeight})   // "\n" bricht um
+d.line(x1, y1, x2, y2, {color, width, dashed});  d.arrow(x1, y1, x2, y2, {color, width})
+d.wire([[x,y],…], on);  d.dot(x, y, on);  d.gate("and|or|xor|not|nand|nor", x, y, on)
+d.lamp(x, y, on, caption);  d.toggle(x, y, on, label)
+d.truthTable(["a","b"], ["out"], [{in:[0,0], out:[0]}, …], nowIndex)   // HTML-Tabelle
+```
+
+Hooks: `data-on-show="fn"` und `data-on-step="fn"` auf einer Folie rufen `window.fn(slide, step)`.
+
+## Vorlage style.toml
+
+```toml
+[colors]
+background = "000000"
+white = "FFFFFF"
+gray_light = "B6BEC6"
+gray = "7D868F"
+gray_dark = "4A5259"
+blue = "009EE3"
+green = "4ADE80"
+yellow = "FFD23F"
+red = "FF4D6D"
+
+[fonts]
+text = "Arial"
+code = "Roboto Mono"
+
+[sizes]
+large = 40
+normal = 24
+small = 16
+tiny = 10
+
+[stagekit]
+lowercase = true
+margin = 120
+```

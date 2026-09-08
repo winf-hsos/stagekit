@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>deck title</title>
+  <!-- stagekit: adjust the two paths to where the repository lives relative to this file -->
+  <link rel="stylesheet" href="../theme.css">
+  <link rel="stylesheet" href="../../stagekit/stagekit.css">
+</head>
+<body>
+<div class="deck" data-title="deck title" data-subtitle="occasion · date"
+     data-parts='["part one", "part two"]'>
+
+  <section class="slide title"></section>
+  <section class="slide agenda"></section>
+
+  <section class="slide part" data-part="part one"></section>
+
+  <section class="slide">
+    <h2>a small grey heading</h2>
+    <div class="content">
+      <div class="header">a header line above the statement</div>
+      <div class="statement">the statement, one idea, large</div>
+      <div class="sidenote" data-step="1">a side note that appears on the first step</div>
+    </div>
+    <aside class="notes">Speaker notes. They never show on the slide; press N for the notes window.</aside>
+  </section>
+
+  <section class="slide">
+    <h2>a drawing</h2>
+    <div class="figure" id="fig-example"></div>
+    <div class="footnote">a footnote</div>
+    <aside class="notes">Drawings are SVG strings from draw.js, written into a .figure by the deck's script.</aside>
+  </section>
+
+  <section class="slide part" data-part="part two"></section>
+
+  <section class="slide">
+    <div class="content center">
+      <div class="statement">the closing statement.</div>
+    </div>
+  </section>
+
+</div>
+<script src="../../stagekit/draw.js"></script>
+<script src="../../stagekit/stagekit.js"></script>
+<script>
+  // drawings go here; each writes into its figure once
+  const d = window.draw;
+  document.getElementById("fig-example").innerHTML = d.svg(600, 200,
+    d.box(20, 60, 200, 80, "input"), d.arrow(220, 100, 360, 100), d.box(360, 60, 200, 80, "output"));
+</script>
+</body>
+</html>
