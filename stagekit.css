@@ -74,6 +74,8 @@ a { color: var(--blue); text-decoration: none; }
 /* --- steps: build a slide up piece by piece --------------------------------- */
 [data-step] { visibility: hidden; }
 [data-step].shown { visibility: visible; }
+/* a hidden step must not leave its borders behind (collapsed table borders would) */
+.slide [data-step]:not(.shown), .slide [data-step]:not(.shown) * { border-color: transparent; }
 .slide.no-hold [data-step] { display: none; }
 .slide.no-hold [data-step].shown { display: revert; }
 
