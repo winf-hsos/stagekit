@@ -42,9 +42,33 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 - Zum Ansehen im Browser einen lokalen Server oberhalb von Deck und Framework starten (`python -m http.server 8800 --bind 127.0.0.1` in `C:\agents`), Adresse mit `?slide=N` für einen bestimmten Frame; nach änderungen Strg+F5. Einzelne Frames prüft man mit Chrome headless: `chrome --headless=new --window-size=1200,675 --virtual-time-budget=3000 --screenshot=<png> <url>?slide=N`.
 - **Jeder Aufbauschritt ist eine Folie mit eigener Nummer** (Zähler, Adresse, PDF, Kontaktbogen), wie die Aufbau-Kopien bei slidekit. Folienverweise in `skript.md` zählen deshalb Frames.
 
-### 4. Einbindung in eine Website
+### 4. Einbindung in eine Website (der Player)
 
-Das Deck lädt Framework und Bilder über relative Pfade; auf einer Website muss es für sich stehen. Ein Sync-Skript (im LiFi-Projekt `tools/sync_decks.py`, pre-render) kopiert `index.html`, `deck.js`, `theme.css` und nur die tatsächlich geladenen Bilder in einen erzeugten Ordner, schreibt die Pfade um, legt die drei Framework-Dateien einmal daneben und nimmt das PDF aus `export/` mit. Eingebettet wird mit einem Iframe im Seitenverhältnis 16:9 (`allowfullscreen`) und der Adresse `…/index.html?bar=1`: Das blendet die Bedienleiste ein (zurück, Zähler, vor, Vollbild), denn im Iframe hat die Tastatur erst nach einem Klick den Fokus. Dazu die Links plus Links „in eigenem Tab öffnen“ und „als PDF“. Das Deck skaliert sich selbst auf die Iframe-Größe. Fotos, die ein Deck per Canvas ausliest, müssen aus demselben Ursprung kommen (ins `img/` des Decks kopieren), sonst verweigert der Browser die Pixel.
+Ein Deck laedt Framework und Bilder ueber relative Pfade; auf einer fremden Seite muss es fuer sich stehen. Zwei Schritte:
+
+**a) Deck kopieren.** Ein Sync-Skript (im LiFi-Projekt `tools/sync_decks.py`, als `pre-render` eingehaengt) kopiert `index.html`, `deck.js`, `theme.css` und nur die tatsaechlich geladenen Bilder in einen erzeugten Ordner, schreibt die Framework-Pfade auf einen gemeinsamen `stagekit/`-Ordner daneben um und nimmt das PDF aus `export/` als `<name>.pdf` mit. **Nur schreiben, was sich geaendert hat**, sonst dreht ein laufender `quarto preview` endlos (siehe die Warnung in `sync_decks.py`).
+
+**b) Player einsetzen.** Das Deck bringt seine Bedienung selbst mit: `?bar=1` blendet oben rechts eine Leiste ein mit zurueck, Zaehler, vor, Vollbild, "in eigenem Tab oeffnen" und, wenn `?pdf=<pfad>` mitgegeben wird, dem PDF. Alles als Symbol mit Tooltip; unter dem Rahmen steht dadurch kein Link mehr. Im Iframe hat die Tastatur erst nach einem Klick den Fokus, deshalb ist die Leiste dort Pflicht.
+
+In Quarto in einem `{=html}`-Block (Markdown-Links wuerden im Rohblock nicht gerendert):
+
+```html
+<div class="deck-embed">
+  <iframe src="../assets/decks/<name>/index.html?bar=1&pdf=../<name>.pdf"
+          title="<decktitel>" allowfullscreen loading="lazy"></iframe>
+</div>
+```
+
+Dazu einmal im Stylesheet:
+
+```scss
+.deck-embed {
+  margin: 1rem 0 1.5rem;
+  iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 1px solid #ddd; background: #000; }
+}
+```
+
+Der `pdf`-Pfad ist relativ zur `index.html` des Decks, nicht zur einbettenden Seite. `allowfullscreen` ist noetig, damit der Vollbildknopf und die Taste F wirken. Fotos, die ein Deck per Canvas ausliest, muessen aus demselben Ursprung kommen (ins `img/` des Decks kopieren), sonst verweigert der Browser die Pixel.
 
 ### 5. Abbildungen für Webseiten aus dem Deck
 

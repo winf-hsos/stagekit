@@ -222,20 +222,34 @@
     const bar = document.createElement("div");
     bar.className = "embedbar";
     bar.dataset.noAdvance = "1";
+    const icon = {
+      prev: "&#8249;", next: "&#8250;",
+      full: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M17 7V3h-4M3 13v4h4M17 13v4h-4"/></svg>',
+      open: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4H4v12h12v-4M12 3h5v5M17 3l-7 7"/></svg>',
+      pdf: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9M6.5 8.5 10 12l3.5-3.5M4 15h12"/></svg>',
+    };
     const button = (cls, glyph, title, fn) => {
       const b = document.createElement("button");
-      b.className = cls; b.title = title; b.innerHTML = glyph;
+      b.className = cls; b.title = title; b.setAttribute("aria-label", title); b.innerHTML = glyph;
       b.addEventListener("click", fn);
       bar.appendChild(b);
       return b;
     };
-    button("eb-prev", "&#8249;", "back", prev);
+    button("eb-prev", icon.prev, "back", prev);
     bar.appendChild(counter);          // der Zaehler des Decks selbst: showFrame haelt ihn aktuell
-    button("eb-next", "&#8250;", "forward", next);
-    button("eb-full", "&#x26F6;", "full screen", () => {
+    button("eb-next", icon.next, "forward", next);
+    button("eb-full", icon.full, "full screen", () => {
       if (document.fullscreenElement) document.exitFullscreen();
       else document.documentElement.requestFullscreen();
     });
+    // in einem eigenen Tab oeffnen: dieselbe Datei ohne die Leiste
+    button("eb-open", icon.open, "open in a new tab",
+           () => window.open(location.pathname, "_blank", "noopener"));
+    // das PDF, falls die einbettende Seite eines mitgibt: ?pdf=<pfad>
+    if (params.get("pdf")) {
+      button("eb-pdf", icon.pdf, "slides as PDF",
+             () => window.open(params.get("pdf"), "_blank", "noopener"));
+    }
     document.body.appendChild(bar);
   }
 

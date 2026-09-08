@@ -153,6 +153,8 @@ table.eq td.note { color: var(--gray); font-size: var(--small); padding-left: 1.
 .embedbar button { background: none; border: 0; color: var(--gray-light); font-size: 18px; line-height: 1;
   cursor: pointer; padding: 4px 8px; border-radius: 999px; }
 .embedbar button:hover { color: var(--white); background: rgba(255, 255, 255, 0.08); }
+.embedbar button svg { width: 17px; height: 17px; display: block; fill: none; stroke: currentColor;
+  stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .embedbar .counter { position: static; min-width: 4.5em; text-align: center; color: var(--gray); }
 
 /* --- print: every slide on its own page, unscaled ------------------------- */
