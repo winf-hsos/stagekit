@@ -25,7 +25,7 @@ Was neu ist:
 | `draw.js` | SVG-Helfer: `svg`, `box`, `label`, `line`, `arrow`, `wire`, `dot`, `gate`, `lamp`, `toggle`, `truthTable` |
 | `themes/default.css` | die Design-Tokens; Vorlage für die `theme.css` eines Projekts |
 | `tools/theme.py` | erzeugt `theme.css` aus einer `style.toml` (dasselbe Format wie slidekit) |
-| `tools/export.py` | PDF, PNGs, Kontaktbogen (je Frame: jeder Aufbauschritt einzeln), Schrittprüfung (`--steps`: meldet Elemente, die zwischen Aufbauschritten wandern) |
+| `tools/export.py` | PDF, PNGs, Kontaktbogen (je Frame: jeder Aufbauschritt einzeln), Schrittprüfung (`--steps`: meldet Elemente, die zwischen Aufbauschritten wandern), Schriftprüfung (`--fonts`: meldet Textgrößen außerhalb der vier Stufen) |
 | `template/deck.html` | Startpunkt für einen neuen Satz |
 | `SKILL.md` | der Arbeitsablauf für Agenten |
 

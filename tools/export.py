@@ -10,6 +10,9 @@ Schriften und Einbettungen so laden wie im Browser.
   --pdf    eine Seite je Frame, 1920x1080, aus den Frame-PNGs (wie im Vortrag)
   --png    ein PNG je Frame (jeder Aufbauschritt einzeln, ?slide=N) nach DIR/slides/
   --sheet  Kontaktbogen aus den PNGs, 6 Spalten, nummeriert, nach DIR/sheet.png
+  --fonts  Schriftpruefung: jede Folie wird auf Textgroessen ausserhalb der vier
+           Stufen des Themes (tiny, small, normal, large) durchsucht, auch in
+           SVG-Zeichnungen. Meldet Folie, Element und Groesse.
   --steps  Schrittpruefung: jede Folie mit Aufbau schrittweise durchschalten und
            die Position aller sichtbaren Elemente vergleichen. Meldet jedes
            Element, das zwischen zwei Schritten wandert (Layout springt).
@@ -155,6 +158,65 @@ def check_steps(ch, url, deck, out):
     print(f"steps: {sum(1 for n in counts if n)} folien mit aufbau geprueft, {problems} springen")
 
 
+FONT_HARNESS = """<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#000">
+<iframe id="f" style="width:960px;height:540px;border:0"></iframe>
+<script>
+const q = new URLSearchParams(location.search);
+const f = document.getElementById("f");
+f.src = q.get("deck") + "?slide=" + q.get("slide");
+f.onload = () => setTimeout(() => {
+  const win = f.contentWindow, doc = win.document, cs = win.getComputedStyle(doc.documentElement);
+  const allowed = ["--tiny", "--small", "--normal", "--large"].map((v) => Math.round(parseFloat(cs.getPropertyValue(v))));
+  const root = doc.querySelector(".slide.current"), bad = {};
+  root.querySelectorAll("*").forEach((e) => {
+    if (e.closest(".notes") || e.closest(".location") || e.closest("iframe")) return;
+    const hasText = Array.from(e.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim());
+    if (!hasText) return;
+    let size = parseFloat(win.getComputedStyle(e).fontSize);
+    // SVG-Text: font-size in viewBox-Einheiten, auf Folienpixel umrechnen
+    const svg = e.closest("svg");
+    if (svg) { const vb = svg.viewBox.baseVal; const r = svg.getBoundingClientRect(); const scale = parseFloat(cs.getPropertyValue("--scale")) || 1; if (vb && vb.width) size = size * (r.width / scale) / vb.width; }
+    size = Math.round(size);
+    if (!allowed.some((a) => Math.abs(a - size) <= 2)) { const key = (e.tagName + (e.id ? "#" + e.id : "") + " " + size + "px"); bad[key] = (bad[key] || 0) + 1; }
+  });
+  document.title = "FONTS:" + JSON.stringify({ allowed, bad });
+}, 900);
+</script></body></html>
+"""
+
+
+def check_fonts(ch, url, deck):
+    """Nur die vier Groessen des Themes sind erlaubt (auf der 1920er Leinwand).
+    SVG-Text wird ueber die viewBox in Folienpixel umgerechnet."""
+    import json
+    import re
+    harness = deck.parent / "_fontcheck.html"
+    harness.write_text(FONT_HARNESS, encoding="utf-8")
+    hurl = url.rsplit("/", 1)[0] + "/_fontcheck.html"
+    frames = frames_of(deck)
+    seen = set()
+    problems = 0
+    try:
+        first = {}
+        for f, (slide, step) in enumerate(frames, start=1):
+            first.setdefault(slide, f)
+        for slide, f in first.items():
+            res = subprocess.run([ch, "--headless=new", "--disable-gpu", "--virtual-time-budget=6000", "--dump-dom",
+                                  f"{hurl}?deck={deck.name}&slide={f}"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+            m = re.search(r"<title>FONTS:(.*?)</title>", res.stdout, re.S)
+            if not m:
+                continue
+            data = json.loads(m.group(1).replace("&quot;", '"'))
+            if data["bad"]:
+                problems += 1
+                items = ", ".join(f"{k} x{v}" for k, v in data["bad"].items())
+                print(f"  folie {slide}: {items}")
+            seen.add(slide)
+    finally:
+        harness.unlink(missing_ok=True)
+    print(f"fonts: {len(seen)} folien geprueft, {problems} mit fremden groessen (erlaubt: 20, 32, 48, 80 px)")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("deck")
@@ -162,10 +224,11 @@ def main():
     ap.add_argument("--png", action="store_true")
     ap.add_argument("--sheet", action="store_true")
     ap.add_argument("--steps", action="store_true")
+    ap.add_argument("--fonts", action="store_true")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
-    if not (a.pdf or a.png or a.sheet or a.steps):
-        a.pdf = a.png = a.sheet = a.steps = True
+    if not (a.pdf or a.png or a.sheet or a.steps or a.fonts):
+        a.pdf = a.png = a.sheet = a.steps = a.fonts = True
     deck = pathlib.Path(a.deck).resolve()
     out = pathlib.Path(a.out).resolve() if a.out else deck.parent / "export"
     out.mkdir(parents=True, exist_ok=True)
@@ -212,6 +275,8 @@ def main():
         print(f"sheet: {out / 'sheet.png'}")
     if a.steps:
         check_steps(ch, url, deck, out)
+    if a.fonts:
+        check_fonts(ch, url, deck)
     srv.shutdown()
 
 

@@ -37,7 +37,7 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 - Demonstratoren: `<div class="embed"><iframe src="…" title="…"></iframe></div>`. Auf der Folie steht sonst nur die kleine Überschrift.
 - Notizen: `<aside class="notes">` je Folie; sie erscheinen im Notizfenster (N).
 - Parallel zum Bau entsteht `skript.md`: der Text zum Nachlesen in Folienreihenfolge, als eigenständiger Text lesbar.
-- Nach dem Bau: `python C:\agents\stagekit\tools\export.py <ordner>/index.html` (PDF, PNGs, Kontaktbogen **und die Schrittprüfung**), Kontaktbogen und Einzelfolien **ansehen**, erst dann dem Nutzer melden. Die Schrittprüfung (`--steps`) schaltet jede Folie mit Aufbau durch und meldet jedes Element, das zwischen zwei Schritten seine Position ändert. **Ein Deck mit einer springenden Folie ist nicht fertig.** Häufigste Ursache: ein zentrierter Block, dessen Inhalt beim Schritt wächst (längerer Text, neue Tabelle, anderes Bild). Abhilfe: dem wachsenden Element eine feste Höhe (`min-height`) geben oder den Container oben ausrichten, und Texte je Schritt gleich lang halten.
+- Nach dem Bau: `python C:\agents\stagekit\tools\export.py <ordner>/index.html` (PDF, PNGs, Kontaktbogen, **Schrittprüfung und Schriftprüfung**), Kontaktbogen und Einzelfolien **ansehen**, erst dann dem Nutzer melden. Die Schrittprüfung (`--steps`) schaltet jede Folie mit Aufbau durch und meldet jedes Element, das zwischen zwei Schritten seine Position ändert. **Ein Deck mit einer springenden Folie ist nicht fertig.** Häufigste Ursache: ein zentrierter Block, dessen Inhalt beim Schritt wächst (längerer Text, neue Tabelle, anderes Bild). Abhilfe: dem wachsenden Element eine feste Höhe (`min-height`) geben oder den Container oben ausrichten, und Texte je Schritt gleich lang halten.
 - **Jeder Aufbauschritt ist eine Folie mit eigener Nummer** (Zähler, Adresse, PDF, Kontaktbogen), wie die Aufbau-Kopien bei slidekit. Folienverweise in `skript.md` zählen deshalb Frames.
 
 ### 4. Danach: die HTML-Datei ist die Quelle
@@ -47,7 +47,7 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 ## Gestaltungsregeln (Kurzfassung)
 
 - Folientext kleingeschrieben (`--lowercase` im Theme), kein Kursiv, keine Übergänge. Code und Eigennamen mit `class="keep-case"` ausnehmen.
-- Acht Farben, vier Größen, nur aus dem Theme: `var(--blue)` usw., nie Hex-Werte im Deck. Farbe ist Bedeutung: Blau verweist, Gelb merkt an und zeigt „aktuell“, Rot ist der sparsame Hingucker.
+- Acht Farben, **genau vier Schriftgrößen**, nur aus dem Theme: `var(--tiny)`, `var(--small)`, `var(--normal)`, `var(--large)` (20, 32, 48, 80 px auf der 1920er Leinwand) und in Zeichnungen `size: 20 | 32 | 48 | 80`. Keine anderen Pixelwerte, auch nicht „ein bisschen kleiner, damit es passt“: Passt es nicht, wird das Layout geändert, nicht die Größe. Der Export prüft das (`--fonts`) und meldet jede fremde Größe. Nie Hex-Werte im Deck. Farbe ist Bedeutung: Blau verweist, Gelb merkt an und zeigt „aktuell“, Rot ist der sparsame Hingucker.
 - Zeichnungen: Linien und Rahmen in `--white` oder `--gray-light`, Strom in Gelb, Inaktives in `--gray-dark`. Pfeile in einen Kasten liegen auf dessen Mittelachse; Eingabe-Labels rechtsbündig vor dem Pfeil, Ausgabe-Labels linksbündig dahinter.
 - Eine Aussage je Folie. Wenig Text; die Aussage steckt im Bild, der Rest in den Notizen.
 

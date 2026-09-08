@@ -41,9 +41,9 @@
   function label(x, y, text, o = {}) {
     const c = C();
     const lines = String(text).split("\n");
-    const size = o.size || 32, lh = o.lineHeight || 1.3;
+    const size = o.size || 32, lh = o.lineHeight || 1.3;   // erlaubt: 20, 32, 48, 80 (tiny, small, normal, large)
     const fill = o.color || c.white;
-    const family = o.mono ? c.mono : c.font;
+    const family = (o.mono ? c.mono : c.font).replace(/"/g, "'");   // Anfuehrungszeichen im Attribut vermeiden
     const anchor = o.anchor || "start";
     return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${family}" font-size="${size}" fill="${fill}"${o.weight ? ` font-weight="${o.weight}"` : ""}${o.keepCase ? ' class="keep-case"' : ""}>` +
       lines.map((l, i) => `<tspan x="${x}" dy="${i ? size * lh : 0}">${esc(l)}</tspan>`).join("") + `</text>`;
