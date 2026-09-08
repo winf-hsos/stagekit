@@ -15,8 +15,10 @@
  *   - keyboard: → ↓ space PgDn next, ← ↑ PgUp back, Home/End, F fullscreen,
  *     N notes window (speaker notes of the current and next slide, kept in
  *     sync over a BroadcastChannel), P print view, Esc leaves fullscreen
- *   - hash routing (#12 is slide 12), ?print shows all slides stacked for
- *     PDF export, ?slide=12 opens a slide (for screenshots)
+ *   - every build-up step is a frame with its own number: the counter, the
+ *     hash (#12 is frame 12), ?slide=12 and the export count frames, so a
+ *     slide with two steps takes three numbers, as it did in slidekit
+ *   - ?print shows all frames stacked (steps as clones) for a quick print
  *   - hooks: a slide may carry data-on-show="fn" / data-on-step="fn"; the
  *     named global functions are called with (slide, step)
  *
@@ -89,8 +91,15 @@
   window.addEventListener("resize", fit);
   fit();
 
+  // --- frames: every build-up step is a slide of its own ------------------------
+  // The numbering, the counter, the hash and the export all count frames, as a
+  // .pptx deck built with slidekit counted its build-up copies.
+  const frames = [];
+  slides.forEach((s, i) => { [0, ...s._steps].forEach((st) => frames.push({ slide: i, step: st })); });
+
   // --- navigation --------------------------------------------------------------
-  let index = 0;
+  let index = 0;      // slide index
+  let frame = 0;      // frame index
   const counter = document.createElement("div");
   counter.className = "counter";
   document.body.appendChild(counter);
@@ -99,33 +108,25 @@
     $$("[data-step]", s).forEach((e) => e.classList.toggle("shown", Number(e.dataset.step) <= s._step));
   }
 
-  function show(i, step) {
-    index = Math.max(0, Math.min(slides.length - 1, i));
-    slides.forEach((s, k) => s.classList.toggle("current", k === index));
+  function showFrame(f) {
+    frame = Math.max(0, Math.min(frames.length - 1, f));
+    const fr = frames[frame];
+    const sameSlide = fr.slide === index && slides[index].classList.contains("current");
+    index = fr.slide;
     const s = slides[index];
-    if (step !== undefined) s._step = step;
+    s._step = fr.step;
+    if (!sameSlide) slides.forEach((x, k) => x.classList.toggle("current", k === index));
     applySteps(s);
-    counter.textContent = `${index + 1} / ${slides.length}`;
-    history.replaceState(null, "", "#" + (index + 1));
-    if (s.dataset.onShow && typeof window[s.dataset.onShow] === "function") window[s.dataset.onShow](s, s._step);
+    counter.textContent = `${frame + 1} / ${frames.length}`;
+    history.replaceState(null, "", "#" + (frame + 1));
+    if (!sameSlide && s.dataset.onShow && typeof window[s.dataset.onShow] === "function") window[s.dataset.onShow](s, s._step);
+    else if (sameSlide && s.dataset.onStep && typeof window[s.dataset.onStep] === "function") window[s.dataset.onStep](s, s._step);
     broadcast();
   }
-
-  function next() {
-    const s = slides[index];
-    const pending = s._steps.filter((n) => n > s._step);
-    if (pending.length) { s._step = pending[0]; applySteps(s); stepHook(s); broadcast(); return; }
-    if (index < slides.length - 1) show(index + 1, 0);
-  }
-  function prev() {
-    const s = slides[index];
-    const done = s._steps.filter((n) => n <= s._step);
-    if (done.length) { s._step = done.length > 1 ? done[done.length - 2] : 0; applySteps(s); stepHook(s); broadcast(); return; }
-    if (index > 0) { show(index - 1); const p = slides[index]; p._step = p._steps.length ? p._steps[p._steps.length - 1] : 0; applySteps(p); broadcast(); }
-  }
-  function stepHook(s) {
-    if (s.dataset.onStep && typeof window[s.dataset.onStep] === "function") window[s.dataset.onStep](s, s._step);
-  }
+  const frameOf = (slideIndex, step) => Math.max(0, frames.findIndex((fr) => fr.slide === slideIndex && fr.step === (step === undefined ? 0 : step)));
+  function show(i, step) { showFrame(frameOf(Math.max(0, Math.min(slides.length - 1, i)), step === 99 ? slides[i]._steps[slides[i]._steps.length - 1] || 0 : step)); }
+  function next() { if (frame < frames.length - 1) showFrame(frame + 1); }
+  function prev() { if (frame > 0) showFrame(frame - 1); }
 
   // --- notes window ------------------------------------------------------------
   const channel = ("BroadcastChannel" in window) ? new BroadcastChannel("stagekit-" + location.pathname) : null;
@@ -140,7 +141,7 @@
   }
   function broadcast() {
     if (!channel) return;
-    channel.postMessage({ index, total: slides.length, step: slides[index]._step,
+    channel.postMessage({ index: frame, total: frames.length, step: slides[index]._step,
       heading: headingOf(slides[index]), notes: notesOf(slides[index]),
       nextHeading: headingOf(slides[index + 1]), nextNotes: notesOf(slides[index + 1]) });
   }
@@ -165,8 +166,21 @@
 
   // --- print view --------------------------------------------------------------
   if (params.has("print")) {
+    // every frame becomes a page; slides with steps are cloned once per step
+    // (hooks that draw by element id run on the original only, so decks with
+    // hooks are exported frame by frame through tools/export.py instead)
     document.body.classList.add("print");
-    slides.forEach((s) => { s.classList.add("current"); s._step = 99; applySteps(s); if (s.dataset.onShow && window[s.dataset.onShow]) window[s.dataset.onShow](s, 99); });
+    slides.forEach((s) => {
+      const steps = [0, ...s._steps];
+      steps.forEach((st, k) => {
+        const el = k === steps.length - 1 ? s : s.cloneNode(true);
+        if (el !== s) s.parentNode.insertBefore(el, s);
+        el.classList.add("current");
+        $$("[data-step]", el).forEach((e) => e.classList.toggle("shown", Number(e.dataset.step) <= st));
+      });
+      s._step = steps[steps.length - 1];
+      if (s.dataset.onShow && window[s.dataset.onShow]) window[s.dataset.onShow](s, s._step);
+    });
     counter.classList.add("hidden");
     return;
   }
@@ -186,8 +200,8 @@
     switch (ev.key) {
       case "ArrowRight": case "ArrowDown": case " ": case "PageDown": ev.preventDefault(); next(); break;
       case "ArrowLeft": case "ArrowUp": case "PageUp": ev.preventDefault(); prev(); break;
-      case "Home": show(0, 0); break;
-      case "End": show(slides.length - 1, 99); break;
+      case "Home": showFrame(0); break;
+      case "End": showFrame(frames.length - 1); break;
       case "f": case "F": if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); break;
       case "n": case "N": openNotes(); break;
       case "p": case "P": location.search = "?print"; break;
@@ -200,9 +214,10 @@
   });
 
   // --- start -----------------------------------------------------------------
+  // ?slide=N and #N count frames (a build-up step is a frame of its own)
   const start = params.has("slide") ? Number(params.get("slide")) - 1
               : location.hash ? Number(location.hash.slice(1)) - 1 : 0;
-  show(Number.isFinite(start) && start >= 0 ? start : 0, params.has("step") ? Number(params.get("step")) : 0);
+  showFrame(Number.isFinite(start) && start >= 0 ? start : 0);
 
-  window.stagekit = { next, prev, show, slides, get index() { return index; } };
+  window.stagekit = { next, prev, show, showFrame, slides, frames, get index() { return index; }, get frame() { return frame; } };
 })();

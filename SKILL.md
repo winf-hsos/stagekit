@@ -32,12 +32,13 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 - Deckordner mit `index.html` (aus `template/deck.html`), `deck.js` für die Zeichnungen, `theme.css` (aus der `style.toml`: `python C:\agents\stagekit\tools\theme.py style.toml <ordner>/theme.css`), Fotos in `img/`.
 - Struktur ist Pflicht: `<section class="slide title">` und `agenda` (leer lassen, stagekit füllt sie aus `data-title`, `data-subtitle`, `data-parts`), je Teil `<section class="slide part" data-part="…">`, Ortsangabe entsteht automatisch. Teilfarben optional über `data-part-colors='{"teil": "#hex"}'`.
 - Eröffnungsfoto: `<img class="photo" src="img/…png">` rechts, `<div class="photo-text">` links, Fußnote `image: ai-generated (<modell>)`; Bild in 3840x2160 mit schwarzem Grund (siehe `slidekit.image`).
-- Inhaltsfolie: `<h2>` kleine Überschrift, `.content` mit `.header`, `.statement`, `.lines`, `.code`, `.sidenote`, `.remark`; `.footnote`. Aufbau in Schritten mit `data-step="n"` an den Elementen, die später erscheinen; sie behalten ihren Platz.
+- Inhaltsfolie: `<h2>` kleine Überschrift, `.content` mit `.header`, `.statement`, `.lines`, `.code`, `.sidenote`, `.remark`; `.footnote`. Aufbau in Schritten mit `data-step="n"` an den Elementen, die später erscheinen; sie behalten ihren Platz. Ändert ein Schritt Inhalte (Text, Tabelle, Zeichnung per Hook), müssen die Container ihre Größe behalten: feste Höhen, Ausrichtung oben, gleich lange Texte.
 - Zeichnungen: SVG-Strings aus `draw.js` in ein `<div class="figure" id="…">`, geschrieben von `deck.js` beim Laden. Für Aufbau in Schritten je Schritt neu zeichnen über `data-on-show="fn"` / `data-on-step="fn"` (globale Funktionen mit `(slide, step)`).
 - Demonstratoren: `<div class="embed"><iframe src="…" title="…"></iframe></div>`. Auf der Folie steht sonst nur die kleine Überschrift.
 - Notizen: `<aside class="notes">` je Folie; sie erscheinen im Notizfenster (N).
 - Parallel zum Bau entsteht `skript.md`: der Text zum Nachlesen in Folienreihenfolge, als eigenständiger Text lesbar.
-- Nach dem Bau: `python C:\agents\stagekit\tools\export.py <ordner>/index.html` (PDF, PNGs, Kontaktbogen), Kontaktbogen und Einzelfolien **ansehen**, erst dann dem Nutzer melden.
+- Nach dem Bau: `python C:\agents\stagekit\tools\export.py <ordner>/index.html` (PDF, PNGs, Kontaktbogen **und die Schrittprüfung**), Kontaktbogen und Einzelfolien **ansehen**, erst dann dem Nutzer melden. Die Schrittprüfung (`--steps`) schaltet jede Folie mit Aufbau durch und meldet jedes Element, das zwischen zwei Schritten seine Position ändert. **Ein Deck mit einer springenden Folie ist nicht fertig.** Häufigste Ursache: ein zentrierter Block, dessen Inhalt beim Schritt wächst (längerer Text, neue Tabelle, anderes Bild). Abhilfe: dem wachsenden Element eine feste Höhe (`min-height`) geben oder den Container oben ausrichten, und Texte je Schritt gleich lang halten.
+- **Jeder Aufbauschritt ist eine Folie mit eigener Nummer** (Zähler, Adresse, PDF, Kontaktbogen), wie die Aufbau-Kopien bei slidekit. Folienverweise in `skript.md` zählen deshalb Frames.
 
 ### 4. Danach: die HTML-Datei ist die Quelle
 

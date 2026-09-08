@@ -25,7 +25,7 @@ Was neu ist:
 | `draw.js` | SVG-Helfer: `svg`, `box`, `label`, `line`, `arrow`, `wire`, `dot`, `gate`, `lamp`, `toggle`, `truthTable` |
 | `themes/default.css` | die Design-Tokens; Vorlage für die `theme.css` eines Projekts |
 | `tools/theme.py` | erzeugt `theme.css` aus einer `style.toml` (dasselbe Format wie slidekit) |
-| `tools/export.py` | PDF, PNGs, Kontaktbogen |
+| `tools/export.py` | PDF, PNGs, Kontaktbogen (je Frame: jeder Aufbauschritt einzeln), Schrittprüfung (`--steps`: meldet Elemente, die zwischen Aufbauschritten wandern) |
 | `template/deck.html` | Startpunkt für einen neuen Satz |
 | `SKILL.md` | der Arbeitsablauf für Agenten |
 
@@ -43,4 +43,4 @@ Was neu ist:
 
 ## Adresse
 
-`deck.html#12` öffnet Folie 12. `?slide=12&step=99` dasselbe mit allen Schritten (für Screenshots). `?print` zeigt alle Folien untereinander (PDF). `?notes` ist das Notizfenster.
+`deck.html#12` öffnet Frame 12; ein Aufbauschritt ist ein Frame mit eigener Nummer, wie bei slidekit. `?slide=12` dasselbe (für Screenshots). `?print` zeigt alle Frames untereinander. `?notes` ist das Notizfenster.
