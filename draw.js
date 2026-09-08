@@ -60,7 +60,12 @@
   function box(x, y, w, h, text, o = {}) {
     const c = C();
     const border = o.border === null ? "none" : (o.border || c.white);
-    const fill = o.fill || "none";
+    // Standardfuellung ist der Hintergrund, nicht "none": So deckt der Kasten
+    // die Leitung ab, die in ihn hineinfuehrt, statt sie auf seinem Rand liegen
+    // zu lassen. Kaesten werden deshalb immer NACH den Leitungen gezeichnet
+    // (layers(wires, boxes, labels)). Fuer einen wirklich transparenten Kasten
+    // ausdruecklich fill: "none" setzen.
+    const fill = o.fill || c.bg;
     let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.rounded === false ? 0 : (o.rx || 8)}" fill="${fill}" stroke="${border}" stroke-width="${o.width || 2}"${o.dashed ? ' stroke-dasharray="8 6"' : ""}/>`;
     if (text) {
       // multi-line text is centred as a block: start above the middle by half the extra lines
