@@ -6,6 +6,9 @@
  *
  *   svg(w, h, ...parts)               the frame
  *   box(x, y, w, h, text, opts)       rounded box with centred text
+ *   verdict(x, y, w, h, text, ok, opts)  box framed green with a check, or red with a cross, centred at its bottom;
+ *                                     ok null keeps the same layout without a mark (no verdict yet)
+ *   mark(cx, cy, ok, opts)           just the check or cross, same size everywhere
  *   label(x, y, text, opts)           text; opts: size, color, anchor, mono, keepCase
  *   layers(...groups)                 concatenates groups so wires come first: layers(wires, gates, labels)
  *   line(x1, y1, x2, y2, opts)        opts: color, width, dashed
@@ -54,7 +57,7 @@
     const family = (o.mono ? c.mono : c.font).replace(/"/g, "'");   // Anfuehrungszeichen im Attribut vermeiden
     const anchor = o.anchor || "start";
     return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${family}" font-size="${size}" fill="${fill}"${o.weight ? ` font-weight="${o.weight}"` : ""}${o.keepCase ? ' class="keep-case"' : ""}>` +
-      lines.map((l, i) => `<tspan x="${x}" dy="${i ? size * lh : 0}">${esc(l)}</tspan>`).join("") + `</text>`;
+      lines.map((l, i) => `<tspan x="${x}" dy="${i ? size * lh : 0}">${esc(l) || "&#160;"}</tspan>`).join("") + `</text>`;
   }
 
   function box(x, y, w, h, text, o = {}) {
@@ -73,6 +76,42 @@
       s += label(x + w / 2, y + h / 2 + size * 0.35 - (n - 1) * size * lh / 2, text, { ...o, anchor: "middle", color: o.color || c.white });
     }
     return s;
+  }
+
+  /* Bewertungszeichen: Der Kasten, der die bessere Loesung zeigt, bekommt einen
+   * gruenen Rahmen und mittig an seinem unteren Rand einen kleinen gruenen
+   * Haken; das Gegenstueck bekommt Rahmen und Kreuz in Rot, in derselben
+   * Groesse und an derselben Stelle. Immer ueber verdict() zeichnen, nie von
+   * Hand, damit das Zeichen auf jeder Folie gleich aussieht und gleich sitzt. */
+  function mark(cx, cy, ok, o = {}) {
+    const c = C();
+    const col = o.color || (ok ? c.green : c.red);
+    const r = (o.size || 34) / 2;
+    const w = o.width || 7;
+    const stil = `fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"`;
+    if (ok) return `<path d="M${cx - r},${cy + r * 0.1} l${r * 0.6},${r * 0.68} l${r * 1.4},${-r * 1.46}" ${stil}/>`;
+    const a = r * 0.72;
+    return `<path d="M${cx - a},${cy - a} L${cx + a},${cy + a} M${cx + a},${cy - a} L${cx - a},${cy + a}" ${stil}/>`;
+  }
+
+  function verdict(x, y, w, h, text, ok, o = {}) {
+    const c = C();
+    // Rahmen und Zeichen tragen immer die Bewertungsfarbe; o.color faerbt nur
+    // den Text im Kasten, o.size ist seine Schriftgroesse. Das Zeichen behaelt
+    // seine eigene Groesse, damit es auf jeder Folie gleich aussieht.
+    // ok === null: noch kein Urteil. Gleicher Kasten, gleiche Textlage, kein
+    // Zeichen; so springt nichts, wenn das Urteil erst spaeter erscheint.
+    const col = ok === null || ok === undefined ? (o.border || c.light) : (ok ? c.green : c.red);
+    const inset = o.inset || 44;
+    // Der Text sitzt mittig ueber dem Zeichen, nicht mittig im Kasten: sonst
+    // rueckt eine lange Aussage dem Haken auf den Leib.
+    const size = o.size || 32, lh = o.lineHeight || 1.3;
+    const n = String(text || "").split("\n").length;
+    let s = box(x, y, w, h, "", { ...o, border: col });
+    if (text) s += label(x + w / 2, y + (h - inset) / 2 + size * 0.35 - (n - 1) * size * lh / 2, text,
+                         { ...o, anchor: "middle", color: o.color || c.white });
+    if (ok === null || ok === undefined) return s;
+    return s + mark(x + w / 2, y + h - inset, ok, { size: o.markSize });
   }
 
   function line(x1, y1, x2, y2, o = {}) {
@@ -157,5 +196,5 @@
   }
   table.width = (n, cw = 90) => n * cw;
 
-  window.draw = { svg, layers, label, box, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C };
+  window.draw = { svg, layers, label, box, verdict, mark, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C };
 })();

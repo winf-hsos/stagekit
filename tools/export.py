@@ -67,8 +67,10 @@ def frames_of(deck):
 
 
 def run(ch, args):
+    # 12 s virtuelle Zeit: Bei 6 s wurde vereinzelt eine Folie aufgenommen, bevor
+    # die Codeschrift geladen war, und ihr Text sass dann falsch.
     subprocess.run([ch, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-pdf-header-footer",
-                    "--virtual-time-budget=6000", *args], check=False, capture_output=True)
+                    "--virtual-time-budget=12000", *args], check=False, capture_output=True)
 
 
 def step_counts(deck):
