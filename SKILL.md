@@ -93,6 +93,8 @@ Die Zeichnungen eines Decks sind reine SVG-Strings und können als Abbildungen e
 - Zeichnungen: Linien und Rahmen in `--white` oder `--gray-light`, Strom in Gelb, Inaktives in `--gray-dark`. Leitungen nur waagerecht und senkrecht, mit `d.layers(wires, gates, labels)` hinter den Gattern; Eingaben als Kippschalter (`d.toggle`), Ausgaben als Lampen (`d.lamp`); Zeichnung so groß wie die Fläche erlaubt, nur über die viewBox skaliert.
 - Tabellen: Wahrheitstafeln mit `.tt` (`.tt.large` neben großen Zeichnungen), schriftliche Addition mit `table.sum` (Zeile `carries` für die überträge in Bitgröße, Summenzeile mit Strich). Tabellen ohne Rahmenlinien-Wildwuchs: Kopf und Zeilen aus dem Framework, keine eigenen Rahmen.
 - **Der `.content`-Block deckt die ganze Folie ab** und zentriert senkrecht; ein hoher Block läuft deshalb unter die überschrift. Dann `style="top: 150px"` (oder eine Klasse) setzen, damit der Block unter der überschrift zentriert. Abstände zwischen Zeilen und Spalten großzügig (40 bis 60 px), zwischen Beschriftung und Wert mindestens 100 px.
+- **Formeln werden gesetzt, nicht getippt.** Kein `log2(x)`, kein `x^2` im Fließtext: `d.formula(x, y, "H = log_2(N)")` setzt die Formel in Codeschrift, `_` stellt tief, `^` hoch, geschweifte Klammern fassen zusammen (`H_{before}`). Tief- und Hochgestelltes läuft automatisch in der nächstkleineren der vier erlaubten Größen, die Schriftprüfung bleibt also still. Für alles, was darüber hinausgeht (Brüche, Summen, Wurzeln), gibt es in HTML-Decks bewusst nichts: Solche Formeln gehören in dieser Lehre auf die Konzeptseite, wo Quarto sie satzt, nicht auf eine Folie.
+- **Beschriftungen sitzen mittig zu dem, was sie beschriften.** Ein Label neben einem Kasten wird nicht an einer selbst ausgerechneten Grundlinie abgesetzt, sondern an der Mitte des Kastens: `d.label(x, y, text, { centerY: kastenMitte })` bestimmt die Grundlinie selbst, auch bei mehreren Zeilen. Von Hand gesetzte Grundlinien sind der häufigste Grund dafür, dass ein zweizeiliges Label sichtbar zu tief steht: Eine Zeile sitzt auf der Mitte, zwei Zeilen hängen darunter. Dasselbe gilt für Werte neben Formen, Erklärzeilen an Kästen und Achsenbeschriftungen an Balken. **Abweichungen nur mit Grund** und dann sichtbar begründet: wenn mehrere Beschriftungen an einer gemeinsamen Kante ausgerichtet werden (Eingabe-Labels rechtsbündig vor dem Pfeil), wenn eine Beschriftung bewusst an der Oberkante einer Spalte steht, oder wenn zwei Labels sonst kollidieren würden.
 - **Bewertung: grüner Rahmen mit Haken, roter Rahmen mit Kreuz.** Die bessere Lösung, die richtige Antwort, der Weg, der trägt: Der Kasten bekommt einen grünen Rahmen und mittig an seinem unteren Rand einen kleinen grünen Haken. Das Gegenstück bekommt Rahmen und Kreuz in Rot, in derselben Größe und an derselben Stelle. Immer über `d.verdict(x, y, w, h, text, ok, opts)` zeichnen, nie von Hand, damit das Zeichen auf jeder Folie gleich aussieht und gleich sitzt; `ok` ist `true`, `false` oder `null` für den Fall, dass das Urteil erst in einem späteren Schritt erscheint (gleicher Kasten, gleiche Textlage, nur ohne Zeichen). Steht ein bewerteter Kasten neben unbewerteten, bekommen auch die `verdict(..., null, {border: …})`, sonst sitzt ihr Text höher als der der Nachbarn. Kein zweites Zeichen für dieselbe Aussage: Die Farbe des Rahmens sagt es schon, der Haken wiederholt sie für den, der sie nicht sieht.
 - **Demonstratoren auf Folien** laden mit `?embed=1` (Kopfzeile, Fußzeile und Hinweise ausgeblendet) und ihren Startparametern in der Adresse, in `.embed.z125` oder `.z150`, damit die Bedienelemente auf der Leinwand lesbar sind. Die Folie trägt nur die kleine überschrift `try it: …`.
 - **Foto-Folien:** Eröffnung und Schluss als Symbolfoto rechts, Frage oder Satz links (`.photo` und `.photo-text`), Fußnote `image: ai-generated (<modell>)`. Pfeile in einen Kasten liegen auf dessen Mittelachse; Eingabe-Labels rechtsbündig vor dem Pfeil, Ausgabe-Labels linksbündig dahinter.
@@ -125,8 +127,12 @@ Die Zeichnungen eines Decks sind reine SVG-Strings und können als Abbildungen e
   <section class="slide"><h2>demo</h2><div class="embed"><iframe src="…"></iframe></div></section>
   <section class="slide"><img class="photo" src="img/x.png"><div class="photo-text">question?</div><div class="footnote">image: ai-generated (gpt-image-2)</div></section>
 </div>
-<script src="…/stagekit/draw.js"></script><script src="…/stagekit/stagekit.js"></script>
+<!-- Reihenfolge ist Pflicht: deck.js VOR stagekit.js. stagekit ruft beim ersten
+     Anzeigen die data-on-show-Funktionen auf; stehen sie danach, fehlen sie noch.
+     Sichtbar wird das erst im Export, wo jeder Frame frisch mit ?slide=N laedt. -->
+<script src="…/stagekit/draw.js"></script>
 <script src="deck.js"></script>
+<script src="…/stagekit/stagekit.js"></script>
 ```
 
 ```js
@@ -135,7 +141,8 @@ d.svg(w, h, ...parts)                        // Rahmen (viewBox)
 d.box(x, y, w, h, text, {border, fill, color, size, mono, dashed, rx})
 d.verdict(x, y, w, h, text, ok, opts)   // grüner Rahmen mit Haken (true), roter mit Kreuz (false), ohne Zeichen (null)
 d.mark(cx, cy, ok, {size})             // nur das Zeichen, überall gleich groß
-d.label(x, y, text, {size, color, anchor, mono, lineHeight})   // "\n" bricht um
+d.formula(x, y, "H = log_2(N)", {size, color, anchor, centerY})  // _ tief, ^ hoch, {} gruppiert
+d.label(x, y, text, {size, color, anchor, mono, lineHeight, centerY})  // "\n" bricht um; centerY: mittig zu dieser Hoehe
 d.line(x1, y1, x2, y2, {color, width, dashed});  d.arrow(x1, y1, x2, y2, {color, width})
 d.wire([[x,y],…], on);  d.dot(x, y, on);  d.gate("and|or|xor|not|nand|nor", x, y, on)
 d.lamp(x, y, on, caption);  d.toggle(x, y, on, label)

@@ -9,7 +9,9 @@
  *   verdict(x, y, w, h, text, ok, opts)  box framed green with a check, or red with a cross, centred at its bottom;
  *                                     ok null keeps the same layout without a mark (no verdict yet)
  *   mark(cx, cy, ok, opts)           just the check or cross, same size everywhere
- *   label(x, y, text, opts)           text; opts: size, color, anchor, mono, keepCase
+ *   formula(x, y, text, opts)         a set formula: _ subscript, ^ superscript, {} groups
+ *   label(x, y, text, opts)           text; opts: size, color, anchor, mono, keepCase,
+ *                                     centerY (mittig zu dieser Hoehe statt Grundlinie y)
  *   layers(...groups)                 concatenates groups so wires come first: layers(wires, gates, labels)
  *   line(x1, y1, x2, y2, opts)        opts: color, width, dashed
  *   arrow(x1, y1, x2, y2, opts)       line with a filled triangle head
@@ -56,7 +58,11 @@
     const fill = o.color || c.white;
     const family = (o.mono ? c.mono : c.font).replace(/"/g, "'");   // Anfuehrungszeichen im Attribut vermeiden
     const anchor = o.anchor || "start";
-    return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${family}" font-size="${size}" fill="${fill}"${o.weight ? ` font-weight="${o.weight}"` : ""}${o.keepCase ? ' class="keep-case"' : ""}>` +
+    // centerY: die Beschriftung sitzt mittig zu dieser Hoehe, auch mehrzeilig.
+    // So richtet man Labels an dem Kasten aus, zu dem sie gehoeren.
+    const y0 = o.centerY === undefined ? y
+      : o.centerY + size * 0.35 - (lines.length - 1) * size * lh / 2;
+    return `<text x="${x}" y="${y0}" text-anchor="${anchor}" font-family="${family}" font-size="${size}" fill="${fill}"${o.weight ? ` font-weight="${o.weight}"` : ""}${o.keepCase ? ' class="keep-case"' : ""}>` +
       lines.map((l, i) => `<tspan x="${x}" dy="${i ? size * lh : 0}">${esc(l) || "&#160;"}</tspan>`).join("") + `</text>`;
   }
 
@@ -112,6 +118,61 @@
                          { ...o, anchor: "middle", color: o.color || c.white });
     if (ok === null || ok === undefined) return s;
     return s + mark(x + w / 2, y + h - inset, ok, { size: o.markSize });
+  }
+
+  /* Formelsatz. Die Projektregel verlangt gesetzte Formeln statt getippter
+   * ("log2(x)" ist keine Formel). Notation: `_` stellt tief, `^` hoch, und
+   * geschweifte Klammern fassen zusammen: "H_{before} = log_2(N)".
+   * Tief- und Hochgestelltes nimmt die naechstkleinere der vier erlaubten
+   * Groessen, damit die Schriftpruefung des Exports nichts zu melden hat. */
+  const GROESSEN = [20, 32, 48, 80];
+
+  function formula(x, y, text, o = {}) {
+    const c = C();
+    const size = o.size || 48;
+    const klein = GROESSEN[Math.max(0, GROESSEN.indexOf(size) - 1)] || 20;
+    const fill = o.color || c.white;
+    const family = c.mono.replace(/"/g, "'");
+
+    const teile = [];
+    let i = 0;
+    while (i < text.length) {
+      const z = text[i];
+      if (z === "_" || z === "^") {
+        let inhalt;
+        if (text[i + 1] === "{") {
+          const ende = text.indexOf("}", i + 2);
+          inhalt = text.slice(i + 2, ende);
+          i = ende + 1;
+        } else {
+          inhalt = text[i + 1];
+          i += 2;
+        }
+        teile.push({ art: z, text: inhalt });
+      } else {
+        let ende = i;
+        while (ende < text.length && text[ende] !== "_" && text[ende] !== "^") ende += 1;
+        teile.push({ art: "", text: text.slice(i, ende) });
+        i = ende;
+      }
+    }
+
+    // centerY wie bei label(): die Formel sitzt mittig zu dieser Hoehe
+    const yBasis = o.centerY === undefined ? y : o.centerY + size * 0.35;
+
+    let dy = 0;
+    const spans = teile.map((t) => {
+      const ziel = t.art === "_" ? size * 0.24 : t.art === "^" ? -size * 0.42 : 0;
+      const schritt = ziel - dy;
+      dy = ziel;
+      const gr = t.art ? klein : size;
+      return `<tspan dy="${schritt.toFixed(1)}" font-size="${gr}">${esc(t.text)}</tspan>`;
+    }).join("");
+
+    // Formeln behalten ihre Schreibweise: N ist nicht n, und die
+    // Kleinschreibungsregel der Folien gilt fuer Folientext, nicht fuer Mathematik
+    return `<text x="${x}" y="${yBasis}" text-anchor="${o.anchor || "start"}" font-family="${family}" ` +
+      `font-size="${size}" fill="${fill}" class="keep-case">${spans}</text>`;
   }
 
   function line(x1, y1, x2, y2, o = {}) {
@@ -196,5 +257,5 @@
   }
   table.width = (n, cw = 90) => n * cw;
 
-  window.draw = { svg, layers, label, box, verdict, mark, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C };
+  window.draw = { svg, layers, label, box, verdict, mark, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C };
 })();

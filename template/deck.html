@@ -42,13 +42,17 @@
   </section>
 
 </div>
+<!-- Reihenfolge ist Pflicht: die Zeichnungen (deck.js oder dieser Block) stehen
+     VOR stagekit.js. stagekit ruft beim ersten Anzeigen die data-on-show-Funktionen
+     auf; stehen sie danach, gibt es sie noch nicht, und der Export liefert leere
+     Zeichnungen, weil er jeden Frame frisch mit ?slide=N laedt. -->
 <script src="../../stagekit/draw.js"></script>
-<script src="../../stagekit/stagekit.js"></script>
 <script>
   // drawings go here; each writes into its figure once
   const d = window.draw;
   document.getElementById("fig-example").innerHTML = d.svg(600, 200,
     d.box(20, 60, 200, 80, "input"), d.arrow(220, 100, 360, 100), d.box(360, 60, 200, 80, "output"));
 </script>
+<script src="../../stagekit/stagekit.js"></script>
 </body>
 </html>
