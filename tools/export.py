@@ -16,7 +16,12 @@ Schriften und Einbettungen so laden wie im Browser.
   --steps  Schrittpruefung: jede Folie mit Aufbau schrittweise durchschalten und
            die Position aller sichtbaren Elemente vergleichen. Meldet jedes
            Element, das zwischen zwei Schritten wandert (Layout springt).
+  --jobs N Chrome-Instanzen gleichzeitig (Standard: Prozessorkerne, hoechstens 8).
+           Frames, Schritt- und Schriftpruefung sind voneinander unabhaengig und
+           laufen deshalb nebeneinander; die Ausgabe bleibt in Reihenfolge.
 """
+import concurrent.futures
+import os
 import argparse
 import http.server
 import pathlib
@@ -47,9 +52,21 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
 
 def serve(root):
     handler = lambda *a, **k: Quiet(*a, directory=str(root), **k)  # noqa: E731
-    srv = socketserver.TCPServer(("127.0.0.1", 0), handler)
+    # Threading, sonst bedient der Server eine Chrome-Instanz nach der anderen
+    # und die Parallelisierung verpufft.
+    srv = socketserver.ThreadingTCPServer(("127.0.0.1", 0), handler)
+    srv.daemon_threads = True
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv, srv.server_address[1]
+
+
+JOBS = min(8, os.cpu_count() or 1)
+
+
+def parallel(fn, items):
+    """fn auf alle items, JOBS gleichzeitig; Ergebnisse in der Reihenfolge der items."""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=JOBS) as pool:
+        return list(pool.map(fn, items))
 
 
 def slide_count(url):
@@ -135,17 +152,21 @@ def check_steps(ch, url, deck, out):
     for i, n in enumerate(counts, start=1):
         first_frame[i] = f
         f += n + 1
+    def pruefe(i):
+        n = counts[i - 1]
+        res = subprocess.run([ch, "--headless=new", "--disable-gpu", "--virtual-time-budget=6000", "--dump-dom",
+                              f"{hurl}?deck={deck.name}&slide={first_frame[i]}&n={n}"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+        m = re.search(r"<title>STEPS:(.*?)</title>", res.stdout, re.S)
+        return json.loads(m.group(1).replace("&quot;", '"')) if m else None
+
     try:
-        for i, n in enumerate(counts, start=1):
-            if n == 0:
-                continue
-            res = subprocess.run([ch, "--headless=new", "--disable-gpu", "--virtual-time-budget=6000", "--dump-dom",
-                                  f"{hurl}?deck={deck.name}&slide={first_frame[i]}&n={n}"], capture_output=True, text=True, encoding="utf-8", errors="replace")
-            m = re.search(r"<title>STEPS:(.*?)</title>", res.stdout, re.S)
-            if not m:
+        folien = [i for i, n in enumerate(counts, start=1) if n]
+        ergebnisse = parallel(pruefe, folien)
+        for i, moved in zip(folien, ergebnisse):
+            n = counts[i - 1]
+            if moved is None:
                 print(f"  folie {i}: pruefung ohne ergebnis")
                 continue
-            moved = json.loads(m.group(1).replace("&quot;", '"'))
             if not moved:
                 print(f"  folie {i}: {n} schritt(e), nichts wandert")
             else:
@@ -198,17 +219,20 @@ def check_fonts(ch, url, deck):
     frames = frames_of(deck)
     seen = set()
     problems = 0
+    def pruefe(f):
+        res = subprocess.run([ch, "--headless=new", "--disable-gpu", "--virtual-time-budget=6000", "--dump-dom",
+                              f"{hurl}?deck={deck.name}&slide={f}"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+        m = re.search(r"<title>FONTS:(.*?)</title>", res.stdout, re.S)
+        return json.loads(m.group(1).replace("&quot;", '"')) if m else None
+
     try:
         first = {}
         for f, (slide, step) in enumerate(frames, start=1):
             first.setdefault(slide, f)
-        for slide, f in first.items():
-            res = subprocess.run([ch, "--headless=new", "--disable-gpu", "--virtual-time-budget=6000", "--dump-dom",
-                                  f"{hurl}?deck={deck.name}&slide={f}"], capture_output=True, text=True, encoding="utf-8", errors="replace")
-            m = re.search(r"<title>FONTS:(.*?)</title>", res.stdout, re.S)
-            if not m:
+        ergebnisse = parallel(pruefe, list(first.values()))
+        for (slide, f), data in zip(first.items(), ergebnisse):
+            if data is None:
                 continue
-            data = json.loads(m.group(1).replace("&quot;", '"'))
             if data["bad"]:
                 problems += 1
                 items = ", ".join(f"{k} x{v}" for k, v in data["bad"].items())
@@ -228,7 +252,11 @@ def main():
     ap.add_argument("--steps", action="store_true")
     ap.add_argument("--fonts", action="store_true")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--jobs", type=int, default=None)
     a = ap.parse_args()
+    global JOBS
+    if a.jobs:
+        JOBS = max(1, a.jobs)
     if not (a.pdf or a.png or a.sheet or a.steps or a.fonts):
         a.pdf = a.png = a.sheet = a.steps = a.fonts = True
     deck = pathlib.Path(a.deck).resolve()
@@ -251,9 +279,9 @@ def main():
         # ein PNG je Frame, aufgenommen wie im Vortrag (Hooks laufen mit)
         sl = out / "slides"
         sl.mkdir(exist_ok=True)
-        for f in range(1, n + 1):
-            run(ch, ["--window-size=1920,1080", f"--screenshot={sl / f'{f:02d}.png'}", f"{url}?slide={f}"])
-        print(f"png: {sl} ({n} frames)")
+        parallel(lambda f: run(ch, ["--window-size=1920,1080", f"--screenshot={sl / f'{f:02d}.png'}", f"{url}?slide={f}"]),
+                 range(1, n + 1))
+        print(f"png: {sl} ({n} frames, {JOBS} gleichzeitig)")
     if a.pdf:
         # PDF aus den Frame-PNGs: eine Seite je Frame, genau das Bild des Vortrags
         from PIL import Image
