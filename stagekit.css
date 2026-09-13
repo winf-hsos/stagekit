@@ -1,6 +1,11 @@
 /* stagekit: layout and typography. Reads every colour, font and size from
  * the theme tokens (themes/default.css or the project's theme.css). */
 
+/* Die Codeschrift kommt aus dem Framework selbst, nicht aus dem Netz. Die
+   theme.css importiert sie zwar auch von Google Fonts, aber diese Regel steht
+   spaeter und gewinnt deshalb; so setzt der Export jede Folie mit derselben
+   Schrift, auch wenn acht Chrome-Instanzen gleichzeitig laden. */
+@font-face { font-family: "Roboto Mono"; font-style: normal; font-weight: 400; src: url("fonts/RobotoMono-Regular.woff2") format("woff2"); }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--white); font-family: var(--font); overflow: hidden; }
 a { color: var(--blue); text-decoration: none; }

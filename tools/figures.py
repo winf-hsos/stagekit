@@ -31,7 +31,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from export import chrome  # noqa: E402
 
-FONT = HERE / "fonts" / "RobotoMono-Regular.woff2"
+FONT = HERE.parent / "fonts" / "RobotoMono-Regular.woff2"
 
 HARNESS = """<!DOCTYPE html>
 <html data-theme="{theme}"><head><meta charset="utf-8">
