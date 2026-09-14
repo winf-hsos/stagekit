@@ -279,8 +279,24 @@ def main():
         # ein PNG je Frame, aufgenommen wie im Vortrag (Hooks laufen mit)
         sl = out / "slides"
         sl.mkdir(exist_ok=True)
-        parallel(lambda f: run(ch, ["--window-size=1920,1080", f"--screenshot={sl / f'{f:02d}.png'}", f"{url}?slide={f}"]),
-                 range(1, n + 1))
+        aufnehmen = lambda f: run(ch, ["--window-size=1920,1080", f"--screenshot={sl / f'{f:02d}.png'}", f"{url}?slide={f}"])  # noqa: E731
+        parallel(aufnehmen, range(1, n + 1))
+        # Beim parallelen Aufnehmen faellt eine Aufnahme gelegentlich vor dem
+        # ersten Zeichnen: ein rein schwarzes Bild. Solche Frames einzeln
+        # nachholen; jede Folie zeigt mindestens die Ortsangabe, also nie Schwarz.
+        from PIL import Image
+        def schwarz(f):
+            return Image.open(sl / f"{f:02d}.png").convert("L").getextrema()[1] < 40
+        for versuch in range(3):
+            nachholen = [f for f in range(1, n + 1) if schwarz(f)]
+            if not nachholen:
+                break
+            print(f"  {len(nachholen)} schwarze frame(s) nachgeholt: {nachholen}")
+            for f in nachholen:
+                aufnehmen(f)
+        rest = [f for f in range(1, n + 1) if schwarz(f)]
+        if rest:
+            print(f"  WARNUNG: frames weiterhin schwarz: {rest}")
         print(f"png: {sl} ({n} frames, {JOBS} gleichzeitig)")
     if a.pdf:
         # PDF aus den Frame-PNGs: eine Seite je Frame, genau das Bild des Vortrags
