@@ -57,8 +57,10 @@ def render(style):
         for key, var in KEYS:
             lines.append(f"  --{var}: #{light.get(key, colors[key]).lower()};")
         lines.append("}")
-    if fonts["code"].lower().startswith("roboto mono"):
-        lines.insert(1, '@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap");')
+    # Kein @import von Google Fonts mehr (14.09.2026): Roboto Mono liegt im
+    # Framework (fonts/, @font-face in stagekit.css). Solange eine zweite,
+    # netzgeladene Fassung derselben Familie ausstand, zeigte Chrome beim
+    # Export die Ersatzschrift, und Beschriftungen sassen daneben.
     return "\n".join(lines) + "\n"
 
 
