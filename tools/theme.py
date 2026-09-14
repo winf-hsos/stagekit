@@ -9,7 +9,10 @@ so dass ein Projekt eine Designaussage fuer beide Werkzeuge hat. Punktgroessen
 werden auf die 1920x1080-Leinwand umgerechnet (1 pt = 2 px). Optional:
 
     [stagekit]
-    lowercase = true        # Folientext kleingeschrieben (Standard)
+    language = "en"         # Sprache des Foliensatzes, einmal festgelegt; alles
+                            # auf den Folien folgt ihr, auch Beispiele und Daten
+    lowercase = true        # Folientext kleingeschrieben; ohne Angabe gilt: ja
+                            # bei Englisch, nein bei Deutsch (Substantive gross)
     margin = 120            # Rand in px
     parts = { "switches" = "009EE3", ... }   # Farbe je Teil fuer die Ortsangabe
 
@@ -41,7 +44,10 @@ def render(style):
     lines.append("  --slide-w: 1920px;\n  --slide-h: 1080px;")
     lines.append(f"  --margin: {int(sk.get('margin', 120))}px;")
     lines.append("  --part-color: var(--blue);")
-    lines.append(f"  --lowercase: {'lowercase' if sk.get('lowercase', True) else 'none'};")
+    # Kleinschreibung ist eine englische Konvention; ein deutscher Satz behaelt
+    # seine Grossbuchstaben, sofern die toml nichts anderes sagt.
+    lowercase = sk.get("lowercase", sk.get("language", "en") != "de")
+    lines.append(f"  --lowercase: {'lowercase' if lowercase else 'none'};")
     lines.append("}")
     light = colors.get("light")
     if isinstance(light, dict):

@@ -16,7 +16,7 @@ Was der Nutzer schon mitgeliefert hat, wird nicht erneut gefragt; der Rest in **
 1. **Thema und Kernbotschaft:** der eine Satz, den das Publikum behalten soll.
 2. **Publikum und Vorwissen.**
 3. **Anlass und Dauer** (Faustregel: deutlich unter zwei Minuten je Inhaltsfolie).
-4. **Sprache der Folien** (Lehrkontexte oft englisch; Skript und Notizen deutsch).
+4. **Sprache der Folien** (Lehrkontexte oft englisch; Skript und Notizen deutsch). Die Antwort wird **einmal** in der `style.toml` des Projekts festgehalten (`[stagekit] language = "en"`), und danach ist **alles auf den Folien** in dieser Sprache: Überschriften, Beschriftungen, Zeichnungen, und auch die Beispiele, Beispielsätze und Beispieldaten. Ein deutscher Beispielsatz auf einer englischen Folie („die sonne scheint") ist ein Fehler, kein Lokalkolorit (Regel vom 14.09.2026). Bei Deutsch gilt die Kleinschreibung nicht: `theme.py` setzt `--lowercase` dann auf `none`, Substantive bleiben groß.
 5. **Eröffnung:** jeder Satz beginnt mit einem Symbolfoto samt Geschichte.
 6. **Design:** gilt die `style.toml` des Projekts, oder braucht dieser Satz eine eigene?
 7. **Interaktive Elemente:** gibt es Demonstratoren oder Live-Daten, die auf eine Folie gehören? Das ist die Stärke von stagekit; frag danach.
@@ -85,7 +85,7 @@ Die Zeichnungen eines Decks sind reine SVG-Strings und können als Abbildungen e
 
 ## Gestaltungsregeln (Kurzfassung)
 
-- Folientext kleingeschrieben (`--lowercase` im Theme), kein Kursiv, keine Übergänge. Code, Eigennamen und Abkürzungen wie RAM, CPU, LLM bleiben groß: im HTML mit `class="keep-case"`, in Zeichnungen mit `keepCase: true`.
+- Folientext kleingeschrieben (`--lowercase` im Theme; **nur bei englischen Sätzen**, ein deutscher Satz behält seine Großbuchstaben, `language = "de"` in der `style.toml` schaltet es ab), kein Kursiv, keine Übergänge. Code, Eigennamen und Abkürzungen wie RAM, CPU, LLM bleiben groß: im HTML mit `class="keep-case"`, in Zeichnungen mit `keepCase: true`.
 - Acht Farben, **genau vier Schriftgrößen**, nur aus dem Theme: `var(--tiny)`, `var(--small)`, `var(--normal)`, `var(--large)` (20, 32, 48, 80 px auf der 1920er Leinwand) und in Zeichnungen `size: 20 | 32 | 48 | 80`. Keine anderen Pixelwerte, auch nicht „ein bisschen kleiner, damit es passt“: Passt es nicht, wird das Layout geändert, nicht die Größe. Der Export prüft das (`--fonts`) und meldet jede fremde Größe. Nie Hex-Werte im Deck. Farbe ist Bedeutung: Blau verweist, Gelb merkt an und zeigt „aktuell“, Rot ist der sparsame Hingucker.
 - **Codeschrift für alles, was der Rechner liest:** Bits, Bytes, Hex-Adressen, Binärzahlen, Bezeichner, Formeln (`var(--mono)` bzw. `mono: true`), ohne Ausnahme und auf jeder Folie gleich. Bitfolgen in Vierergruppen mit Leerzeichen; Bytes, die untereinander stehen (Addition, Vergleich), Stelle für Stelle ausgerichtet: Bits rechtsbündig an einer gemeinsamen Kante, Gleichheitszeichen fest, Dezimalzahlen rechtsbündig.
 - **Zeigt eine Zeichnung echte Farben, trägt daneben keine Palettenfarbe Bedeutung.** Sobald die Flächen für sich selbst stehen, also für rotes, grünes, blaues Licht statt für eine Rolle, konkurrieren zwei Lesarten um dieselbe Farbe: Rot ist dann gleichzeitig das gesendete Symbol und der Warnhinweis. Die Zeichnung verliert dadurch nicht an Schönheit, sondern an Eindeutigkeit. In so einer Zeichnung sind Beschriftungen, Zeiger und Marken deshalb **weiß**, und das Urteil trägt die Punchline darunter, nicht die Farbe im Bild. Rot im Kasten auf rotem Grund ist ohnehin schlecht lesbar; das ist nur das sichtbare Symptom. **Ausnahmen sind erlaubt, wenn sie begründet sind** und die Begründung als Kommentar neben der Zeichenfunktion steht: etwa wenn genau ein Element markiert werden muss, das in keiner der gezeigten echten Farben vorkommt (ein gelber Taktimpuls über roten und grünen Symbolen), oder wenn eine Zeichnung nur teilweise echte Farben zeigt und der bewertete Teil sauber davon getrennt liegt.
@@ -182,6 +182,7 @@ small = 16
 tiny = 10
 
 [stagekit]
-lowercase = true
+language = "en"    # Sprache aller Folien, auch der Beispiele; einmal festgelegt
+lowercase = true   # optional; ohne Angabe: ja bei "en", nein bei "de"
 margin = 120
 ```
