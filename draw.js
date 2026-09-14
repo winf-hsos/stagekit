@@ -84,6 +84,19 @@
     return s;
   }
 
+  /* Hervorhebung einer Textstelle: ein durchscheinender Kasten in einer
+   * Bedeutungsfarbe ueber die ganze Stelle, nicht je Zeichen. Die Hoehe kommt
+   * aus der Schriftgroesse, der Rand ist oben und unten gleich (0.2 em); die
+   * Stelle bleibt lesbar, weil der Kasten nur gefuellt ist, ohne Rand. x und w
+   * sind die Ausdehnung des Textes, centerY seine Mitte wie bei label(). */
+  function highlight(x, w, centerY, size, o = {}) {
+    const c = C();
+    const col = o.color || c.yellow;
+    const h = size * 1.4, pad = o.pad === undefined ? size * 0.15 : o.pad;
+    return `<rect x="${x - pad}" y="${centerY - h / 2}" width="${w + 2 * pad}" height="${h}" rx="${o.rx === undefined ? 4 : o.rx}" ` +
+      `fill="${col}" fill-opacity="${o.opacity === undefined ? 0.2 : o.opacity}"/>`;
+  }
+
   /* Bewertungszeichen: Der Kasten, der die bessere Loesung zeigt, bekommt einen
    * gruenen Rahmen und mittig an seinem unteren Rand einen kleinen gruenen
    * Haken; das Gegenstueck bekommt Rahmen und Kreuz in Rot, in derselben
@@ -257,5 +270,5 @@
   }
   table.width = (n, cw = 90) => n * cw;
 
-  window.draw = { svg, layers, label, box, verdict, mark, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C };
+  window.draw = { svg, layers, label, box, verdict, mark, highlight, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C };
 })();
