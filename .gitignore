@@ -1,3 +1,5 @@
 export/
 __pycache__/
 slides/
+openai.key
+.openai.key

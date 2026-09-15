@@ -4,8 +4,8 @@
     python -m tools.theme <style.toml> <theme.css>
     python tools/theme.py style.toml slides/web/theme.css
 
-Die style.toml ist dieselbe wie bei slidekit ([colors], [fonts], [sizes]),
-so dass ein Projekt eine Designaussage fuer beide Werkzeuge hat. Punktgroessen
+Die style.toml haelt die Designaussage eines Projekts an einer Stelle:
+[colors], [fonts], [sizes]. Punktgroessen
 werden auf die 1920x1080-Leinwand umgerechnet (1 pt = 2 px). Optional:
 
     [stagekit]

@@ -11,13 +11,13 @@
  *   - a location bar on every content slide (part name, progress)
  *   - steps: any element with data-step="n" appears on step n of its slide
  *     (space/arrow advance steps before slides; the layout never jumps
- *     because hidden steps keep their space, like slidekit's buildup)
+ *     because hidden steps keep their space)
  *   - keyboard: → ↓ space PgDn next, ← ↑ PgUp back, Home/End, F fullscreen,
  *     N notes window (speaker notes of the current and next slide, kept in
  *     sync over a BroadcastChannel), P print view, Esc leaves fullscreen
  *   - every build-up step is a frame with its own number: the counter, the
  *     hash (#12 is frame 12), ?slide=12 and the export count frames, so a
- *     slide with two steps takes three numbers, as it did in slidekit
+ *     slide with two steps takes three numbers
  *   - ?print shows all frames stacked (steps as clones) for a quick print
  *   - hooks: a slide may carry data-on-show="fn" / data-on-step="fn"; the
  *     named global functions are called with (slide, step)
@@ -92,8 +92,8 @@
   fit();
 
   // --- frames: every build-up step is a slide of its own ------------------------
-  // The numbering, the counter, the hash and the export all count frames, as a
-  // .pptx deck built with slidekit counted its build-up copies.
+  // The numbering, the counter, the hash and the export all count frames, not
+  // slides: a slide with two steps occupies three of them.
   const frames = [];
   slides.forEach((s, i) => { [0, ...s._steps].forEach((st) => frames.push({ slide: i, step: st })); });
 
