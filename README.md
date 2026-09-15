@@ -1,8 +1,8 @@
 # stagekit
 
-Foliensätze als HTML: eine Datei je Satz, Zeichnungen als SVG, Demonstratoren eingebettet, Design aus einer Datei. Entstanden im LiFi-Projekt der Hochschule Osnabrück als Nachfolger von `slidekit` (PowerPoint), ausgegründet als eigenständiges Werkzeug für weitere Module und Vorträge.
+Foliensätze als HTML: eine Datei je Satz, Zeichnungen als SVG, Demonstratoren eingebettet, Design aus einer Datei. Entstanden im LiFi-Projekt der Hochschule Osnabrück, ausgegründet als eigenständiges Werkzeug für weitere Module und Vorträge.
 
-Grundsätze, geerbt von slidekit:
+Grundsätze:
 
 - **Feste Palette** (acht Farben mit Bedeutung), **vier Schriftgrößen**, Folientext kleingeschrieben, kein Kursiv. Alles davon steht in `theme.css` und nirgends sonst.
 - **Struktur je Satz:** Titelfolie, Agenda, je Teil eine Abschnittsfolie, Ortsangabe (Balken plus Teilname, Farbe je Teil möglich) auf jeder Inhaltsfolie.
@@ -24,7 +24,7 @@ Was neu ist:
 | `stagekit.js` | Laufzeit: Titel und Agenda erzeugen, Ortsangabe, Schritte, Tastatur, Notizfenster, Druckansicht, Hash-Routing |
 | `draw.js` | SVG-Helfer: `svg`, `box`, `label`, `line`, `arrow`, `wire`, `dot`, `gate`, `lamp`, `toggle`, `truthTable` |
 | `themes/default.css` | die Design-Tokens; Vorlage für die `theme.css` eines Projekts |
-| `tools/theme.py` | erzeugt `theme.css` aus einer `style.toml` (dasselbe Format wie slidekit); `[colors.light]` wird zum Block `:root[data-theme="light"]`, den `?theme=light` in der Adresse einschaltet |
+| `tools/theme.py` | erzeugt `theme.css` aus einer `style.toml`; `[colors.light]` wird zum Block `:root[data-theme="light"]`, den `?theme=light` in der Adresse einschaltet |
 | `tools/figures.py` | rendert die in `figures.js` eines Decks benannten Zeichnungen als eigenständige SVG-Dateien in einer Palette der `theme.css` (`--theme light`), Codeschrift eingebettet; für Website-Abbildungen, die dieselben sind wie auf den Folien |
 | `tools/export.py` | PDF, PNGs, Kontaktbogen (je Frame: jeder Aufbauschritt einzeln), Schrittprüfung (`--steps`: meldet Elemente, die zwischen Aufbauschritten wandern), Schriftprüfung (`--fonts`: meldet Textgrößen außerhalb der vier Stufen). PDF vektoriell aus `?print`; `--pdf-raster` baut es stattdessen aus den Frame-PNGs (nötig bei eingebetteten Demonstratoren) |
 | `template/deck.html` | Startpunkt für einen neuen Satz |
@@ -48,4 +48,4 @@ Was neu ist:
 
 ## Adresse
 
-`deck.html#12` öffnet Frame 12; ein Aufbauschritt ist ein Frame mit eigener Nummer, wie bei slidekit. `?slide=12` dasselbe (für Screenshots). `?print` zeigt alle Frames untereinander. `?notes` ist das Notizfenster.
+`deck.html#12` öffnet Frame 12; ein Aufbauschritt ist ein Frame mit eigener Nummer. `?slide=12` dasselbe (für Screenshots). `?print` zeigt alle Frames untereinander. `?notes` ist das Notizfenster.
