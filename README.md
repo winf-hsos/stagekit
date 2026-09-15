@@ -14,7 +14,7 @@ Was neu ist:
 - **Zeichnungen sind SVG** (`draw.js`): Kästen, Pfeile, Leitungen mit Strom, Gatter, Lampen, Schalter, Wahrheitstafeln. Sie skalieren verlustfrei und lesen ihre Farben aus dem Theme.
 - **Demonstratoren laufen auf der Folie** (`<div class="embed"><iframe …>`), nicht hinter einem Link.
 - **Sprechernotizen** in einem zweiten Fenster (Taste N), synchron über einen BroadcastChannel; Vollbild mit F; Druckansicht mit P.
-- **Export** als PDF, PNG je Folie und Kontaktbogen über `tools/export.py` (Headless Chrome).
+- **Export** als PDF, PNG je Folie und Kontaktbogen über `tools/export.py` (Headless Chrome). Das PDF ist Vektor: Chrome druckt die Druckansicht direkt, Text bleibt Text und Zeichnungen bleiben SVG. **Ausnahme: eingebettete Demonstratoren drucken nicht mit** — ein `<iframe>` bleibt im PDF leer. Decks, die davon leben, brauchen `--pdf-raster`.
 
 ## Dateien
 
@@ -26,7 +26,7 @@ Was neu ist:
 | `themes/default.css` | die Design-Tokens; Vorlage für die `theme.css` eines Projekts |
 | `tools/theme.py` | erzeugt `theme.css` aus einer `style.toml` (dasselbe Format wie slidekit); `[colors.light]` wird zum Block `:root[data-theme="light"]`, den `?theme=light` in der Adresse einschaltet |
 | `tools/figures.py` | rendert die in `figures.js` eines Decks benannten Zeichnungen als eigenständige SVG-Dateien in einer Palette der `theme.css` (`--theme light`), Codeschrift eingebettet; für Website-Abbildungen, die dieselben sind wie auf den Folien |
-| `tools/export.py` | PDF, PNGs, Kontaktbogen (je Frame: jeder Aufbauschritt einzeln), Schrittprüfung (`--steps`: meldet Elemente, die zwischen Aufbauschritten wandern), Schriftprüfung (`--fonts`: meldet Textgrößen außerhalb der vier Stufen) |
+| `tools/export.py` | PDF, PNGs, Kontaktbogen (je Frame: jeder Aufbauschritt einzeln), Schrittprüfung (`--steps`: meldet Elemente, die zwischen Aufbauschritten wandern), Schriftprüfung (`--fonts`: meldet Textgrößen außerhalb der vier Stufen). PDF vektoriell aus `?print`; `--pdf-raster` baut es stattdessen aus den Frame-PNGs (nötig bei eingebetteten Demonstratoren) |
 | `template/deck.html` | Startpunkt für einen neuen Satz |
 | `SKILL.md` | der Arbeitsablauf für Agenten |
 
@@ -36,7 +36,7 @@ Was neu ist:
 2. `template/deck.html` in den Deckordner kopieren, die zwei Pfade zu stagekit anpassen, `data-title`, `data-subtitle`, `data-parts` setzen.
 3. Folien schreiben: `<section class="slide">` mit `<h2>` (kleine Überschrift), `.content` mit `.header`, `.statement`, `.lines`, `.code`, `.sidenote`, `.remark`, dazu `.footnote`; Zeichnungen in `.figure`, Fotos als `<img class="photo">` mit `.photo-text`, Einbettungen in `.embed`; Notizen in `<aside class="notes">`.
 4. Ansehen: die Datei im Browser öffnen (Schriften laden über Google Fonts). Für Einbettungen und Export einen lokalen Server nutzen, `tools/export.py` bringt seinen eigenen mit.
-5. Export: `python tools/export.py <deck.html>`.
+5. Export: `python tools/export.py <deck.html>`. Das PDF entsteht vektoriell; trägt der Satz eingebettete Demonstratoren, stattdessen `--pdf-raster` nehmen, weil ein `<iframe>` nicht mitdruckt.
 
 ## Tastatur
 

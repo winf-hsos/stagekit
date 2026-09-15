@@ -166,20 +166,38 @@
 
   // --- print view --------------------------------------------------------------
   if (params.has("print")) {
-    // every frame becomes a page; slides with steps are cloned once per step
-    // (hooks that draw by element id run on the original only, so decks with
-    // hooks are exported frame by frame through tools/export.py instead)
+    // Jeder Frame wird eine Seite; eine Folie mit Aufbau wird je Schritt geklont.
+    // Die Reihenfolge ist das Entscheidende: erst den Schritt setzen und zeichnen
+    // lassen, DANN klonen. Die Zeichenfunktionen schreiben ueber getElementById in
+    // ihr Element, und ein Klon traegt dieselbe id; getElementById liefert immer
+    // den ersten Treffer. Wer zuerst klont und danach zeichnet, bekommt deshalb
+    // leere Zeichnungen in allen Klonen. So geklont, traegt jede Seite das SVG
+    // ihres eigenen Schritts, und ?print gibt den Vortrag wieder -- auch als PDF
+    // aus Chrome (tools/export.py), das dadurch Vektor statt Pixel liefert.
+    // print-clone-ids: Marker fuer tools/export.py -- nur mit dieser Fassung
+    // stimmt der Vektor-Export; aeltere Kopien bekommen den Bildweg.
     document.body.classList.add("print");
     slides.forEach((s) => {
       const steps = [0, ...s._steps];
       steps.forEach((st, k) => {
+        s._step = st;
+        applySteps(s);
+        // dieselbe Hook-Wahl wie beim Vortrag: onShow beim Betreten, onStep beim Schritt
+        const hook = k === 0 ? s.dataset.onShow : (s.dataset.onStep || s.dataset.onShow);
+        if (hook && typeof window[hook] === "function") window[hook](s, st);
         const el = k === steps.length - 1 ? s : s.cloneNode(true);
-        if (el !== s) s.parentNode.insertBefore(el, s);
+        if (el !== s) {
+          // Der Klon wird VOR dem Original eingehaengt und traegt sonst dessen
+          // ids. getElementById liefert den ersten Treffer im Dokument, und das
+          // waere ab dann der Klon: Die Zeichnung des naechsten Schritts landete
+          // in der Seite davor. Ein Klon wird nie wieder nachgeschlagen, also
+          // verliert er seine ids.
+          el.removeAttribute("id");
+          el.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+          s.parentNode.insertBefore(el, s);
+        }
         el.classList.add("current");
-        $$("[data-step]", el).forEach((e) => e.classList.toggle("shown", Number(e.dataset.step) <= st));
       });
-      s._step = steps[steps.length - 1];
-      if (s.dataset.onShow && window[s.dataset.onShow]) window[s.dataset.onShow](s, s._step);
     });
     counter.classList.add("hidden");
     return;

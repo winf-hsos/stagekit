@@ -169,14 +169,17 @@ table.eq td.note { color: var(--gray); font-size: var(--small); padding-left: 1.
   html, body { overflow: visible; background: var(--bg); }
   .deck { width: auto; height: auto; }
   .slide { display: block; position: relative; left: 0; top: 0; transform: none; page-break-after: always; break-after: page; }
-  .slide [data-step] { visibility: visible; }
+  /* Ohne ?print gibt es keine Klone je Schritt, also muss der Ausdruck alle
+     Schritte zeigen, sonst fehlt Inhalt. Mit ?print klont stagekit je Schritt
+     eine Seite, und dort entscheidet .shown -- diese Regel wuerde sie
+     ueberstimmen und jede Seite im Endzustand zeigen. */
+  body:not(.print) .slide [data-step] { visibility: visible; }
   .counter { display: none; }
   @page { size: 1920px 1080px; margin: 0; }
 }
 body.print { overflow: auto; }
 body.print .deck { width: auto; height: auto; }
 body.print .slide { display: block; position: relative; left: 0; top: 0; transform: none; margin: 0 auto; }
-body.print .slide [data-step] { visibility: visible; }
 
 /* --- the notes window ------------------------------------------------------ */
 body.notes-view { overflow: auto; background: #111; color: var(--gray-light); font-size: 20px; padding: 24px; }

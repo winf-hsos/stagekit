@@ -7,7 +7,13 @@ Ohne Schalter: alles. Braucht Google Chrome (oder Edge) und Pillow fuer den
 Kontaktbogen. Das Deck wird ueber einen lokalen HTTP-Server geladen, damit
 Schriften und Einbettungen so laden wie im Browser.
 
-  --pdf    eine Seite je Frame, 1920x1080, aus den Frame-PNGs (wie im Vortrag)
+  --pdf    eine Seite je Frame, 1920x1080. Standard ist der Vektorweg: Chrome
+           druckt die Klon-Ansicht (?print) direkt nach PDF, Text bleibt Text und
+           Zeichnungen bleiben SVG. Beim Zoomen wird nichts pixelig, die Datei ist
+           rund ein Zehntel so gross, und der Text ist durchsuchbar.
+  --pdf-raster  das alte Verhalten: PDF aus den Frame-PNGs. Fuer Decks, bei denen
+           die Druckansicht nicht traegt (eingebettete Demonstratoren im iframe
+           drucken nicht mit), oder wenn das PDF exakt die Aufnahme zeigen soll.
   --png    ein PNG je Frame (jeder Aufbauschritt einzeln, ?slide=N) nach DIR/slides/
   --sheet  Kontaktbogen aus den PNGs, 6 Spalten, nummeriert, nach DIR/sheet.png
   --fonts  Schriftpruefung: jede Folie wird auf Textgroessen ausserhalb der vier
@@ -67,6 +73,37 @@ def parallel(fn, items):
     """fn auf alle items, JOBS gleichzeitig; Ergebnisse in der Reihenfolge der items."""
     with concurrent.futures.ThreadPoolExecutor(max_workers=JOBS) as pool:
         return list(pool.map(fn, items))
+
+
+PRINT_V2 = "print-clone-ids"
+
+
+def print_view_ok(deck):
+    """Traegt die stagekit.js, die DIESES Deck laedt, die reparierte Druckansicht?
+
+    Ein Deck darf eine eigene Framework-Kopie im Ordner haben. Eine aeltere klont
+    die Aufbauschritte, bevor gezeichnet wird, und liefert leere oder vertauschte
+    Zeichnungen -- ein Vektor-PDF waere dann still falsch. True/False, oder None,
+    wenn sich die Datei nicht finden laesst."""
+    import re
+    m = re.search(r'<script src="([^"?]*stagekit\.js)', deck.read_text(encoding="utf-8"))
+    if not m:
+        return None
+    js = (deck.parent / m.group(1))
+    if not js.exists():
+        return None
+    return PRINT_V2 in js.read_text(encoding="utf-8")
+
+
+def pdf_pages(pdf):
+    """Seitenzahl eines PDF, oder None, wenn keine PDF-Bibliothek da ist.
+    Dient nur der Kontrolle: Der Vektorweg muss so viele Seiten liefern, wie das
+    Deck Frames hat."""
+    try:
+        import pypdf
+        return len(pypdf.PdfReader(str(pdf)).pages)
+    except Exception:
+        return None
 
 
 def slide_count(url):
@@ -247,6 +284,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("deck")
     ap.add_argument("--pdf", action="store_true")
+    ap.add_argument("--pdf-raster", action="store_true", dest="pdf_raster")
     ap.add_argument("--png", action="store_true")
     ap.add_argument("--sheet", action="store_true")
     ap.add_argument("--steps", action="store_true")
@@ -257,6 +295,8 @@ def main():
     global JOBS
     if a.jobs:
         JOBS = max(1, a.jobs)
+    if a.pdf_raster:
+        a.pdf = True
     if not (a.pdf or a.png or a.sheet or a.steps or a.fonts):
         a.pdf = a.png = a.sheet = a.steps = a.fonts = True
     deck = pathlib.Path(a.deck).resolve()
@@ -275,7 +315,13 @@ def main():
     frames = frames_of(deck)
     n = len(frames)
     print(f"{slide_count(url)} Folien, {n} Frames (Aufbauschritte einzeln), {url}")
-    if a.pdf or a.png or a.sheet:
+    # Vektor nur, wenn die Druckansicht des Decks sie traegt
+    vektor = a.pdf and not a.pdf_raster
+    if vektor and print_view_ok(deck) is False:
+        print("  hinweis: dieses deck laedt eine aeltere stagekit.js; pdf als raster. "
+              "framework-kopie im deckordner erneuern fuer den vektorweg.")
+        vektor = False
+    if a.png or a.sheet or (a.pdf and not vektor):
         # ein PNG je Frame, aufgenommen wie im Vortrag (Hooks laufen mit)
         sl = out / "slides"
         sl.mkdir(exist_ok=True)
@@ -299,12 +345,28 @@ def main():
             print(f"  WARNUNG: frames weiterhin schwarz: {rest}")
         print(f"png: {sl} ({n} frames, {JOBS} gleichzeitig)")
     if a.pdf:
-        # PDF aus den Frame-PNGs: eine Seite je Frame, genau das Bild des Vortrags
-        from PIL import Image
-        pages = [Image.open(out / "slides" / f"{f:02d}.png").convert("RGB") for f in range(1, n + 1)]
         pdf = out / (deck.stem + ".pdf")
-        pages[0].save(pdf, save_all=True, append_images=pages[1:], resolution=144)
-        print(f"pdf: {pdf} ({n} seiten)")
+        if not vektor:
+            # PDF aus den Frame-PNGs: eine Seite je Frame, genau das Bild des Vortrags
+            from PIL import Image
+            pages = [Image.open(out / "slides" / f"{f:02d}.png").convert("RGB") for f in range(1, n + 1)]
+            pages[0].save(pdf, save_all=True, append_images=pages[1:], resolution=144)
+            print(f"pdf: {pdf} ({n} seiten, raster)")
+        else:
+            # Vektor: Chrome druckt ?print, wo je Aufbauschritt eine Seite geklont
+            # wird. @page in stagekit.css gibt 1920x1080 px vor, also 1440x810 pt.
+            run(ch, [f"--print-to-pdf={pdf}", f"{url}?print"])
+            seiten = pdf_pages(pdf)
+            if seiten is None:
+                print(f"pdf: {pdf} (vektor)")
+            elif seiten == n:
+                print(f"pdf: {pdf} ({seiten} seiten, vektor)")
+            else:
+                # Zahl stimmt nicht: fast immer ein Deck, dessen Druckansicht nicht
+                # traegt. Lieber laut sein als ein falsches PDF ausliefern.
+                print(f"  WARNUNG: pdf hat {seiten} seiten, erwartet {n}. "
+                      f"Mit --pdf-raster den Bildweg nehmen.")
+                print(f"pdf: {pdf} ({seiten} seiten, vektor)")
     if a.sheet:
         from PIL import Image, ImageDraw
         cols, w, h = 6, 320, 180
