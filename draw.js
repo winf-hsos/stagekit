@@ -290,5 +290,8 @@
   }
   table.width = (n, cw = 90) => n * cw;
 
-  window.draw = { svg, layers, label, box, verdict, mark, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C };
+  /* color(name) liest eine benannte Zusatzfarbe des Themes, etwa "families-transfer"
+   aus [colors.families] der style.toml; so bleibt ein Deck frei von Hex-Werten. */
+  const color = (name) => css("--" + name);
+  window.draw = { svg, layers, label, box, verdict, mark, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C, color };
 })();

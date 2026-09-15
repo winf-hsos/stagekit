@@ -80,6 +80,7 @@ Der `pdf`-Pfad ist relativ zur `index.html` des Decks, nicht zur einbettenden Se
 
 Die Zeichnungen eines Decks sind reine SVG-Strings und können als Abbildungen einer Website dienen, in einer hellen Palette. Dazu:
 
+- **Benannte Zusatzfarben, wenn Farbe Struktur ist.** Trägt ein Satz Farben, die etwas bezeichnen statt zu bewerten (Konzeptfamilien einer Karte, Gruppen, Teile), stehen sie als eigene Tabelle in der `style.toml`, etwa `[colors.families]` mit `transfer = "D6336C"`. `theme.py` schreibt daraus `--families-transfer`, und `deck.js` liest sie mit `d.color("families-transfer")`; so bleibt das Deck frei von Hex-Werten, und die Website-Fassung bekommt dieselben Werte (oder eigene unter `[colors.light.families]`). Solche Farben tragen dann **nur** diese Bedeutung: In derselben Zeichnung urteilt nichts über Rot oder Gelb aus der Achterpalette (Regel vom 15.09.2026).
 - `[colors.light]` in der `style.toml` mit denselben Schlüsseln wie `[colors]`; `theme.py` schreibt daraus `:root[data-theme="light"]`, und `draw.js` schaltet den Block ein, wenn `?theme=light` in der Adresse steht. Die Rollen bleiben: „yellow“ ist weiter die Farbe für 1, aktuell und Strom, „white“ die des Wichtigsten.
 - Zeichenfunktionen in `deck.js` geben ihr SVG **zurück** und schreiben es nur in ihr Element, wenn es das gibt (`if ($("fig-x")) …`); der Start des Decks steht unter `if ($("erstes-element"))`, damit `deck.js` auch ohne Folien lädt. Was die Website braucht, wird als `window.deckNN = {…}` veröffentlicht.
 - `figures.js` im Deckordner: `window.figures = { "name": () => svg, "anderes": async () => svg }`. Jede Funktion liefert ein komplettes SVG aus `draw.js`; für Tafeln gibt es `d.table(x, y, headers, rows, {cw, rh, size, hl})` als SVG-Fassung der HTML-Wahrheitstafel. Beschriftungen in der Sprache des Satzes (`[stagekit] language`), Codeschrift für Bits, dieselben Größen wie auf den Folien.
@@ -157,6 +158,7 @@ d.verdict(x, y, w, h, text, ok, opts)   // grüner Rahmen mit Haken (true), rote
 d.mark(cx, cy, ok, {size})             // nur das Zeichen, überall gleich groß
 d.highlight(x, w, centerY, size, {color, opacity, pad, rx})  // Kasten über eine ganze Textstelle, Höhe aus der Schriftgröße
 d.ipo(y, input, processing, output, {level, active, monoBox})  // IPO-Zeile mit fester Geometrie: Eingabe, Kasten, Ausgabe
+d.color("families-transfer")           // benannte Zusatzfarbe aus [colors.<tabelle>] der style.toml
 d.formula(x, y, "H = log_2(N)", {size, color, anchor, centerY})  // _ tief, ^ hoch, {} gruppiert
 d.label(x, y, text, {size, color, anchor, mono, lineHeight, centerY})  // "\n" bricht um; centerY: mittig zu dieser Hoehe
 d.line(x1, y1, x2, y2, {color, width, dashed});  d.arrow(x1, y1, x2, y2, {color, width})

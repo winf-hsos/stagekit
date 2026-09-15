@@ -18,6 +18,13 @@ werden auf die 1920x1080-Leinwand umgerechnet (1 pt = 2 px). Optional:
 
 [colors.light] mit denselben Schluesseln liefert die Palette fuer hellen Grund;
 sie wird als :root[data-theme="light"] in die theme.css geschrieben.
+
+Jede weitere Tabelle unter [colors] wird zu benannten Variablen: aus
+[colors.families] mit represent = "F5A623" wird --families-represent. So kann
+ein Projekt Farben fuehren, die Bedeutung tragen (Familien, Teile, Gruppen),
+ohne dass ein Deck Hex-Werte kennt; draw.js liest sie mit d.color("families-represent").
+Sie gelten unveraendert auch auf hellem Grund, sofern [colors.light.<tabelle>]
+nichts anderes sagt.
 """
 import pathlib
 import sys
@@ -48,6 +55,12 @@ def render(style):
     # seine Grossbuchstaben, sofern die toml nichts anderes sagt.
     lowercase = sk.get("lowercase", sk.get("language", "en") != "de")
     lines.append(f"  --lowercase: {'lowercase' if lowercase else 'none'};")
+    # benannte Zusatzfarben: jede Untertabelle ausser "light"
+    extras = {name: tab for name, tab in colors.items() if isinstance(tab, dict) and name != "light"}
+    for name, tab in extras.items():
+        for key, val in tab.items():
+            if isinstance(val, str):
+                lines.append(f"  --{name}-{key}: #{val.lower()};")
     lines.append("}")
     light = colors.get("light")
     if isinstance(light, dict):
@@ -56,6 +69,11 @@ def render(style):
         lines.append(':root[data-theme="light"] {')
         for key, var in KEYS:
             lines.append(f"  --{var}: #{light.get(key, colors[key]).lower()};")
+        for name, tab in extras.items():
+            hell = light.get(name, {})
+            for key, val in tab.items():
+                if isinstance(val, str):
+                    lines.append(f"  --{name}-{key}: #{hell.get(key, val).lower()};")
         lines.append("}")
     # Kein @import von Google Fonts mehr (14.09.2026): Roboto Mono liegt im
     # Framework (fonts/, @font-face in stagekit.css). Solange eine zweite,
