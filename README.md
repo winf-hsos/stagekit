@@ -30,6 +30,10 @@ Was neu ist:
 | `template/deck.html` | Startpunkt für einen neuen Satz |
 | `SKILL.md` | der Arbeitsablauf für Agenten |
 
+## Drittinhalte
+
+ ist Roboto Mono, Copyright 2015 The Roboto Mono Project Authors, lizenziert unter der [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) — siehe `fonts/NOTICE`. Die MIT-Lizenz dieses Repositorys gilt für stagekit selbst, nicht für die Schrift.
+
 ## Ein Deck anlegen
 
 1. `theme.css` erzeugen: `python tools/theme.py style.toml <deckordner>/theme.css` (oder `themes/default.css` kopieren und anpassen).
