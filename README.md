@@ -26,7 +26,7 @@ Was neu ist:
 | `themes/default.css` | die Design-Tokens; Vorlage für die `theme.css` eines Projekts |
 | `tools/theme.py` | erzeugt `theme.css` aus einer `style.toml`; `[colors.light]` wird zum Block `:root[data-theme="light"]`, den `?theme=light` in der Adresse einschaltet |
 | `tools/figures.py` | rendert die in `figures.js` eines Decks benannten Zeichnungen als eigenständige SVG-Dateien in einer Palette der `theme.css` (`--theme light`), Codeschrift eingebettet; für Website-Abbildungen, die dieselben sind wie auf den Folien |
-| `tools/image.py` | erzeugt Bilder über die OpenAI-API (gpt-image-2), für Fotofolien; Schlüssel aus `OPENAI_API_KEY`, `openai.key` im Projekt oder `~/.openai.key` |
+| `tools/image.py` | erzeugt Bilder über die OpenAI-API (gpt-image-2.5-flare, wahlweise sunburst), für Fotofolien; Schlüssel aus `OPENAI_API_KEY`, `openai.key` im Projekt oder `~/.openai.key` |
 | `tools/export.py` | PDF, PNGs, Kontaktbogen (je Frame: jeder Aufbauschritt einzeln), Schrittprüfung (`--steps`: meldet Elemente, die zwischen Aufbauschritten wandern), Schriftprüfung (`--fonts`: meldet Textgrößen außerhalb der vier Stufen). PDF vektoriell aus `?print`; `--pdf-raster` baut es stattdessen aus den Frame-PNGs (nötig bei eingebetteten Demonstratoren) |
 | `template/deck.html` | Startpunkt für einen neuen Satz |
 | `SKILL.md` | der Arbeitsablauf für Agenten |
