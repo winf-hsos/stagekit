@@ -27,11 +27,14 @@ Was neu ist:
 | `tools/theme.py` | erzeugt `theme.css` aus einer `style.toml`; `[colors.light]` wird zum Block `:root[data-theme="light"]`, den `?theme=light` in der Adresse einschaltet |
 | `tools/figures.py` | rendert die in `figures.js` eines Decks benannten Zeichnungen als eigenständige SVG-Dateien in einer Palette der `theme.css` (`--theme light`), Codeschrift eingebettet; für Website-Abbildungen, die dieselben sind wie auf den Folien |
 | `tools/image.py` | erzeugt Bilder über die OpenAI-API (gpt-image-2.5-flare, wahlweise sunburst), für Fotofolien; Schlüssel aus `OPENAI_API_KEY`, `openai.key` im Projekt oder `~/.openai.key` |
+| `tools/icon.py` | sucht Symbole aus Bootstrap Icons (`--search`) und gibt sie als `<svg>` für das HTML oder als Pfade für `draw.icon()` aus (`--js`); Version festgeschrieben, Zwischenspeicher in `tools/.icons/` |
 | `tools/export.py` | PDF, PNGs, Kontaktbogen (je Frame: jeder Aufbauschritt einzeln), Schrittprüfung (`--steps`: meldet Elemente, die zwischen Aufbauschritten wandern), Schriftprüfung (`--fonts`: meldet Textgrößen außerhalb der vier Stufen). PDF vektoriell aus `?print`; `--pdf-raster` baut es stattdessen aus den Frame-PNGs (nötig bei eingebetteten Demonstratoren) |
 | `template/deck.html` | Startpunkt für einen neuen Satz |
 | `SKILL.md` | der Arbeitsablauf für Agenten |
 
 ## Drittinhalte
+
+Symbole, die `tools/icon.py` einbindet, stammen aus [Bootstrap Icons](https://icons.getbootstrap.com), Copyright The Bootstrap Authors, lizenziert unter der [MIT-Lizenz](https://github.com/twbs/icons/blob/main/LICENSE). Sie liegen nicht im Repository; das Werkzeug lädt sie bei Bedarf und schreibt die Herkunft als Kommentar zu jedem Symbol.
 
 `fonts/RobotoMono-Regular.woff2` ist Roboto Mono, Copyright 2015 The Roboto Mono Project Authors, lizenziert unter der [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) — siehe `fonts/NOTICE`. Die MIT-Lizenz dieses Repositorys gilt für stagekit selbst, nicht für die Schrift.
 

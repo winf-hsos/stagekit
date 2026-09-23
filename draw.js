@@ -9,6 +9,7 @@
  *   verdict(x, y, w, h, text, ok, opts)  box framed green with a check, or red with a cross, centred at its bottom;
  *                                     ok null keeps the same layout without a mark (no verdict yet)
  *   mark(cx, cy, ok, opts)           just the check or cross, same size everywhere
+ *   icon(x, y, size, paths, opts)    a Bootstrap Icons symbol (paths from tools/icon.py --js); opts: color
  *   formula(x, y, text, opts)         a set formula: _ subscript, ^ superscript, {} groups
  *   label(x, y, text, opts)           text; opts: size, color, anchor, mono, keepCase,
  *                                     centerY (mittig zu dieser Hoehe statt Grundlinie y)
@@ -131,6 +132,16 @@
     if (ok) return `<path d="M${cx - r},${cy + r * 0.1} l${r * 0.6},${r * 0.68} l${r * 1.4},${-r * 1.46}" ${stil}/>`;
     const a = r * 0.72;
     return `<path d="M${cx - a},${cy - a} L${cx + a},${cy + a} M${cx + a},${cy - a} L${cx - a},${cy + a}" ${stil}/>`;
+  }
+
+  /* Symbol aus Bootstrap Icons in einer Zeichnung. `paths` sind die inneren
+   * Pfade eines Symbols (viewBox 16 x 16), wie `python tools/icon.py <name> --js`
+   * sie ausgibt; x, y ist die linke obere Ecke, size die Kantenlaenge in
+   * Zeichnungseinheiten. Farbe nur aus dem Theme, Standard ist Grau: ein Symbol
+   * begleitet eine Aussage, es traegt sie nicht. */
+  function icon(x, y, size, paths, o = {}) {
+    const c = C();
+    return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 16 16" fill="${o.color || c.gray}">${paths}</svg>`;
   }
 
   function verdict(x, y, w, h, text, ok, o = {}) {
@@ -293,5 +304,5 @@
   /* color(name) liest eine benannte Zusatzfarbe des Themes, etwa "families-transfer"
    aus [colors.families] der style.toml; so bleibt ein Deck frei von Hex-Werten. */
   const color = (name) => css("--" + name);
-  window.draw = { svg, layers, label, box, verdict, mark, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C, color };
+  window.draw = { svg, layers, label, box, verdict, mark, icon, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C, color };
 })();
