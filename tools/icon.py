@@ -2,7 +2,7 @@
 """Symbole aus Bootstrap Icons suchen und als Schnipsel fuer eine Folie ausgeben.
 
     python tools/icon.py --search calendar            # passende Namen finden
-    python tools/icon.py calendar-week                # <svg> fuer index.html
+    python tools/icon.py calendar-week                # <svg> fuer das Deck-HTML
     python tools/icon.py arrow-repeat --js            # Pfade fuer d.icon() in deck.js
 
 Bootstrap Icons (https://icons.getbootstrap.com) stehen unter der MIT-Lizenz,

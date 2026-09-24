@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Renders the figures of a deck as standalone SVG files, in a theme of choice.
 
-    python tools/figures.py <deck>/index.html --out <dir> [--theme light] [--only name,name]
+    python tools/figures.py <ordner>/<deck>.html --out <dir> [--theme light] [--only name,name]
 
 A deck may ship a `figures.js` next to `deck.js` that exposes
 
@@ -120,7 +120,7 @@ def raender(name, b, luft=40):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("deck", help="index.html of the deck")
+    ap.add_argument("deck", help="HTML file of the deck, e.g. a-brief-history-of-ai.html")
     ap.add_argument("--out", required=True, help="output folder for the SVG files")
     ap.add_argument("--theme", default="light", help="palette block of theme.css (default: light)")
     ap.add_argument("--only", default="", help="comma-separated figure names")
