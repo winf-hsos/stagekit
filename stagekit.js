@@ -164,6 +164,46 @@
     return;
   }
 
+  /* --- copy buttons on code blocks -------------------------------------------
+   * Every .code block gets a small button with a copy icon in its top right
+   * corner: one click puts the code on the clipboard, so the audience can take
+   * it straight into their editor. The icon turns into a check mark for a
+   * moment. Lines written as <div>s are joined with line breaks. The button is
+   * hidden in the print view (and so in the PDF). Icons: Bootstrap Icons
+   * "copy" and "check2" 1.11.3 (MIT, (c) The Bootstrap Authors). */
+  const ICON_COPY = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/></svg>';
+  const ICON_CHECK = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/></svg>';
+  function codeText(block) {
+    const lines = Array.from(block.children).filter((c) => c.tagName === "DIV");
+    if (lines.length) return lines.map((l) => l.textContent).join("\n");
+    const clone = block.cloneNode(true);
+    clone.querySelectorAll(".copy").forEach((b) => b.remove());
+    return clone.textContent.replace(/^\n+|\s+$/g, "");
+  }
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    // file:// and plain http: the old way, via a hidden text field
+    const area = document.createElement("textarea");
+    area.value = text; area.style.position = "fixed"; area.style.opacity = "0";
+    document.body.appendChild(area); area.select();
+    try { document.execCommand("copy"); } finally { area.remove(); }
+    return Promise.resolve();
+  }
+  document.querySelectorAll(".slide .code").forEach((block) => {
+    const b = document.createElement("button");
+    b.className = "copy"; b.title = "copy"; b.setAttribute("aria-label", "copy code");
+    b.dataset.noAdvance = "1"; b.innerHTML = ICON_COPY;
+    b.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      copyText(codeText(block)).then(() => {
+        b.innerHTML = ICON_CHECK; b.classList.add("done");
+        setTimeout(() => { b.innerHTML = ICON_COPY; b.classList.remove("done"); }, 1500);
+      });
+      b.blur();
+    });
+    block.appendChild(b);
+  });
+
   // --- print view --------------------------------------------------------------
   if (params.has("print")) {
     // Jeder Frame wird eine Seite; eine Folie mit Aufbau wird je Schritt geklont.
