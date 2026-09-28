@@ -14,7 +14,10 @@ Schriften und Einbettungen so laden wie im Browser.
   --pdf-raster  das alte Verhalten: PDF aus den Frame-PNGs. Fuer Decks, bei denen
            die Druckansicht nicht traegt (eingebettete Demonstratoren im iframe
            drucken nicht mit), oder wenn das PDF exakt die Aufnahme zeigen soll.
-  --png    ein PNG je Frame (jeder Aufbauschritt einzeln, ?slide=N) nach DIR/slides/
+  --png    ein PNG je Frame (jeder Aufbauschritt einzeln, ?slide=N) nach DIR/slides/.
+           Schwarze und ungestylte Frames (Pixel (5,5) nicht --bg der theme.css)
+           werden bis zu dreimal nachgeholt und gezaehlt; was danach noch
+           fehlerhaft ist, meldet eine WARNUNG.
   --sheet  Kontaktbogen aus den PNGs, 6 Spalten, nummeriert, nach DIR/sheet.png
   --fonts  Schriftpruefung: jede Folie wird auf Textgroessen ausserhalb der vier
            Stufen des Themes (tiny, small, normal, large) durchsucht, auch in
@@ -25,6 +28,8 @@ Schriften und Einbettungen so laden wie im Browser.
   --jobs N Chrome-Instanzen gleichzeitig (Standard: Prozessorkerne, hoechstens 8).
            Frames, Schritt- und Schriftpruefung sind voneinander unabhaengig und
            laufen deshalb nebeneinander; die Ausgabe bleibt in Reihenfolge.
+           Eine Schritt- oder Schriftpruefung ohne Ergebnis (Folie nicht oder
+           ohne Stylesheets geladen) wird einmal wiederholt, erst dann gemeldet.
 """
 import concurrent.futures
 import os
@@ -56,12 +61,20 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+class Server(socketserver.ThreadingTCPServer):
+    # Threading, sonst bedient der Server eine Chrome-Instanz nach der anderen
+    # und die Parallelisierung verpufft. Die Warteschlange fuer neue
+    # Verbindungen steht in socketserver auf 5; schon zwei Chrome-Instanzen
+    # oeffnen beim Laden mehr Verbindungen gleichzeitig, der Rest wurde
+    # abgewiesen (ERR_CONNECTION_REFUSED): mal die ganze Seite, mal nur
+    # theme.css, und der Frame kam als weisse Rohseite heraus.
+    request_queue_size = 256
+    daemon_threads = True
+
+
 def serve(root):
     handler = lambda *a, **k: Quiet(*a, directory=str(root), **k)  # noqa: E731
-    # Threading, sonst bedient der Server eine Chrome-Instanz nach der anderen
-    # und die Parallelisierung verpufft.
-    srv = socketserver.ThreadingTCPServer(("127.0.0.1", 0), handler)
-    srv.daemon_threads = True
+    srv = Server(("127.0.0.1", 0), handler)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv, srv.server_address[1]
 
@@ -73,6 +86,18 @@ def parallel(fn, items):
     """fn auf alle items, JOBS gleichzeitig; Ergebnisse in der Reihenfolge der items."""
     with concurrent.futures.ThreadPoolExecutor(max_workers=JOBS) as pool:
         return list(pool.map(fn, items))
+
+
+def nachholen(fn, items, name):
+    """Wie parallel(), aber eine Pruefung ohne Ergebnis (None) einmal einzeln
+    wiederholen, bevor sie als solche gemeldet wird."""
+    res = parallel(fn, items)
+    leer = [k for k, r in enumerate(res) if r is None]
+    if leer:
+        print(f"  {name}: {len(leer)} pruefung(en) ohne ergebnis nachgeholt: {[items[k] for k in leer]}")
+        for k in leer:
+            res[k] = fn(items[k])
+    return res
 
 
 PRINT_V2 = "print-clone-ids"
@@ -104,6 +129,23 @@ def pdf_pages(pdf):
         return len(pypdf.PdfReader(str(pdf)).pages)
     except Exception:
         return None
+
+
+def theme_bg(deck):
+    """--bg aus dem :root-Block der theme.css, die das Deck laedt, als (r, g, b).
+    Schwarz, wenn sich nichts finden laesst."""
+    import re
+    m = re.search(r'<link[^>]*href="([^"?]*theme\.css)', deck.read_text(encoding="utf-8"))
+    css = deck.parent / m.group(1) if m else None
+    if css and css.exists():
+        root = re.search(r":root\s*\{([^}]*)\}", css.read_text(encoding="utf-8"))
+        bg = re.search(r"--bg:\s*#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b", root.group(1)) if root else None
+        if bg:
+            h = bg.group(1)
+            if len(h) == 3:
+                h = "".join(c * 2 for c in h)
+            return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+    return (0, 0, 0)
 
 
 def slide_count(url):
@@ -156,7 +198,11 @@ function snap(win) {
   return m;
 }
 f.onload = () => setTimeout(() => {
-  const win = f.contentWindow, snaps = [snap(win)];
+  const win = f.contentWindow;
+  // Ohne Stylesheets (Verbindung abgewiesen, zu frueh) waeren es die Positionen
+  // einer Rohseite; lieber kein Ergebnis, dann wird die Folie nachgeholt.
+  if (!win.stagekit || !stylesLoaded(win)) { document.title = "STEPS:null"; return; }
+  const snaps = [snap(win)];
   for (let k = 0; k < n; k++) { win.stagekit.next(); snaps.push(snap(win)); }
   const moved = [];
   for (let k = 1; k <= n; k++) {
@@ -198,7 +244,7 @@ def check_steps(ch, url, deck, out):
 
     try:
         folien = [i for i, n in enumerate(counts, start=1) if n]
-        ergebnisse = parallel(pruefe, folien)
+        ergebnisse = nachholen(pruefe, folien, "steps")
         for i, moved in zip(folien, ergebnisse):
             n = counts[i - 1]
             if moved is None:
@@ -215,7 +261,9 @@ def check_steps(ch, url, deck, out):
                     print(f"    ... und {len(moved) - 8} weitere")
     finally:
         harness.unlink(missing_ok=True)
-    print(f"steps: {sum(1 for n in counts if n)} folien mit aufbau geprueft, {problems} springen")
+    ohne = sum(1 for e in ergebnisse if e is None)
+    print(f"steps: {len(folien) - ohne} von {len(folien)} folien mit aufbau geprueft, {problems} springen"
+          + (f", {ohne} ohne ergebnis" if ohne else ""))
 
 
 FONT_HARNESS = """<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#000">
@@ -226,6 +274,7 @@ const f = document.getElementById("f");
 f.src = q.get("deck") + "?slide=" + q.get("slide");
 f.onload = () => setTimeout(() => {
   const win = f.contentWindow, doc = win.document, cs = win.getComputedStyle(doc.documentElement);
+  if (!stylesLoaded(win) || !doc.querySelector(".slide.current")) { document.title = "FONTS:null"; return; }
   const allowed = ["--tiny", "--small", "--normal", "--large"].map((v) => Math.round(parseFloat(cs.getPropertyValue(v))));
   const root = doc.querySelector(".slide.current"), bad = {};
   root.querySelectorAll("*").forEach((e) => {
@@ -243,6 +292,17 @@ f.onload = () => setTimeout(() => {
 }, 900);
 </script></body></html>
 """
+
+
+# Beide Testrahmen: Sind alle Stylesheets des Decks geladen und traegt theme.css?
+# Ein abgewiesenes Stylesheet hat kein .sheet; ohne theme.css fehlt --bg.
+STYLES_LOADED = """function stylesLoaded(win) {
+  const doc = win.document, links = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'));
+  return links.every((l) => l.sheet && l.sheet.cssRules.length) && win.getComputedStyle(doc.documentElement).getPropertyValue("--bg").trim() !== "";
+}
+"""
+HARNESS = HARNESS.replace("<script>\n", "<script>\n" + STYLES_LOADED, 1)
+FONT_HARNESS = FONT_HARNESS.replace("<script>\n", "<script>\n" + STYLES_LOADED, 1)
 
 
 def check_fonts(ch, url, deck):
@@ -266,9 +326,10 @@ def check_fonts(ch, url, deck):
         first = {}
         for f, (slide, step) in enumerate(frames, start=1):
             first.setdefault(slide, f)
-        ergebnisse = parallel(pruefe, list(first.values()))
+        ergebnisse = nachholen(pruefe, list(first.values()), "fonts")
         for (slide, f), data in zip(first.items(), ergebnisse):
             if data is None:
+                print(f"  folie {slide}: pruefung ohne ergebnis")
                 continue
             if data["bad"]:
                 problems += 1
@@ -277,7 +338,9 @@ def check_fonts(ch, url, deck):
             seen.add(slide)
     finally:
         harness.unlink(missing_ok=True)
-    print(f"fonts: {len(seen)} folien geprueft, {problems} mit fremden groessen (erlaubt: 20, 32, 48, 80 px)")
+    ohne = len(first) - len(seen)
+    print(f"fonts: {len(seen)} folien geprueft, {problems} mit fremden groessen (erlaubt: 20, 32, 48, 80 px)"
+          + (f", {ohne} ohne ergebnis" if ohne else ""))
 
 
 def main():
@@ -327,23 +390,40 @@ def main():
         sl.mkdir(exist_ok=True)
         aufnehmen = lambda f: run(ch, ["--window-size=1920,1080", f"--screenshot={sl / f'{f:02d}.png'}", f"{url}?slide={f}"])  # noqa: E731
         parallel(aufnehmen, range(1, n + 1))
-        # Beim parallelen Aufnehmen faellt eine Aufnahme gelegentlich vor dem
-        # ersten Zeichnen: ein rein schwarzes Bild. Solche Frames einzeln
-        # nachholen; jede Folie zeigt mindestens die Ortsangabe, also nie Schwarz.
+        # Misslungene Aufnahmen einzeln nachholen. Zwei Arten:
+        # schwarz: aufgenommen vor dem ersten Zeichnen; jede Folie zeigt
+        #   mindestens die Ortsangabe, also nie reines Schwarz.
+        # ungestylt: theme.css oder die ganze Seite nicht geladen, eine weisse
+        #   Rohseite oder Chromes Fehlerseite. Erkannt am Pixel (5,5), das den
+        #   Seitengrund --bg aus der theme.css zeigen muss.
         from PIL import Image
-        def schwarz(f):
-            return Image.open(sl / f"{f:02d}.png").convert("L").getextrema()[1] < 40
+        bg = theme_bg(deck)
+        def fehler(f):
+            try:
+                im = Image.open(sl / f"{f:02d}.png").convert("RGB")
+            except Exception:
+                return "fehlt"
+            if im.convert("L").getextrema()[1] < 40:
+                return "schwarz"
+            if sum(abs(a - b) for a, b in zip(im.getpixel((5, 5)), bg)) > 30:
+                return "ungestylt"
+            return None
+        nachgeholt = set()
         for versuch in range(3):
-            nachholen = [f for f in range(1, n + 1) if schwarz(f)]
-            if not nachholen:
+            kaputt = {f: e for f in range(1, n + 1) if (e := fehler(f))}
+            if not kaputt:
                 break
-            print(f"  {len(nachholen)} schwarze frame(s) nachgeholt: {nachholen}")
-            for f in nachholen:
+            arten = ", ".join(f"{art}: {[f for f, e in kaputt.items() if e == art]}"
+                              for art in ("schwarz", "ungestylt", "fehlt") if art in kaputt.values())
+            print(f"  {len(kaputt)} frame(s) nachgeholt ({arten})")
+            nachgeholt |= set(kaputt)
+            for f in kaputt:
                 aufnehmen(f)
-        rest = [f for f in range(1, n + 1) if schwarz(f)]
+        rest = {f: e for f in range(1, n + 1) if (e := fehler(f))}
         if rest:
-            print(f"  WARNUNG: frames weiterhin schwarz: {rest}")
-        print(f"png: {sl} ({n} frames, {JOBS} gleichzeitig)")
+            print(f"  WARNUNG: frames weiterhin fehlerhaft: {rest} "
+                  f"(pixel (5,5) soll --bg {bg} zeigen; randlos gefuellte folie?)")
+        print(f"png: {sl} ({n} frames, {JOBS} gleichzeitig, {len(nachgeholt)} nachgeholt)")
     if a.pdf:
         pdf = out / (deck.stem + ".pdf")
         if not vektor:
