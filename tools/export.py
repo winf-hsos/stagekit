@@ -170,11 +170,21 @@ def run(ch, args):
 
 
 def step_counts(deck):
-    """Hoechster data-step je Folie, aus dem Quelltext (Reihenfolge der <section class="slide")."""
+    """Hoechster data-step je Folie, aus dem Quelltext (Reihenfolge der <section class="slide").
+
+    Live-Abfragen (<section class="slide poll">) bekommen ihre Schritte erst von
+    stagekit.js: einen zum Aufdecken, bei einer Quizfrage (data-correct) einen
+    zweiten fuer die richtige Antwort. Hier werden sie deshalb mitgezaehlt."""
     import re
     html = deck.read_text(encoding="utf-8")
     sections = re.split(r'<section class="slide', html)[1:]
-    return [max([int(m) for m in re.findall(r'data-step="(\d+)"', sec)] or [0]) for sec in sections]
+    counts = []
+    for sec in sections:
+        n = max([int(m) for m in re.findall(r'data-step="(\d+)"', sec)] or [0])
+        if "poll" in sec.split('"', 1)[0].split():
+            n = max(n, 2 if "data-correct" in sec else 1)
+        counts.append(n)
+    return counts
 
 
 HARNESS = """<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#000">

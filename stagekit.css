@@ -198,3 +198,50 @@ body.notes-view .nv-current { font-size: 26px; line-height: 1.5; color: var(--wh
 body.notes-view .nv-next { color: var(--gray); }
 body.notes-view .nv-next h1 { color: var(--gray-dark); }
 body.notes-view .nv-clock { position: fixed; right: 24px; top: 20px; font-family: var(--mono); color: var(--gray); }
+
+/* --- live polls (.slide.poll, built by stagekit.js) --------------------------
+ * left: question and options, bars appear on reveal; right: QR code, address,
+ * session code, a pulsing red "live" while the question is open, the counter.
+ * While open the empty bars shimmer like a page that is still loading. Every
+ * element keeps its place in every state, so nothing jumps between steps. */
+.slide.poll h2 .icon { width: 1em; height: 1em; vertical-align: -0.12em; margin-right: 16px; color: var(--gray); }
+.poll-main { position: absolute; left: var(--margin); top: 190px; width: 1260px; }
+.poll-q { font-size: var(--normal); color: var(--white); line-height: 1.25; min-height: 130px; }
+.poll-opts { margin-top: 30px; }
+.poll-opts .opt { height: 96px; display: grid; grid-template-columns: 640px 1fr 170px; align-items: center; column-gap: 28px;
+                  font-size: var(--normal); color: var(--gray-light); }
+.poll-opts .track { height: 40px; border-radius: 6px; background: transparent; position: relative; }
+.poll-opts .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 6px; background: var(--gray-light); }
+.poll-opts .pct { font-family: var(--mono); text-align: right; color: var(--gray-light); white-space: nowrap; }
+.poll.reveal .poll-opts .track { background: var(--gray-dark); }
+.poll.right .poll-opts .opt:not([data-correct]) { color: var(--gray); }
+.poll.right .poll-opts .opt:not([data-correct]) .fill { background: var(--gray); }
+.poll.right .poll-opts .opt[data-correct], .poll.right .poll-opts .opt[data-correct] .pct { color: var(--green); }
+.poll.right .poll-opts .opt[data-correct] .fill { background: var(--green); }
+.poll.open .poll-opts .track {
+  background: linear-gradient(90deg, var(--gray-dark) 0%, var(--gray-dark) 35%, var(--gray) 50%, var(--gray-dark) 65%, var(--gray-dark) 100%);
+  background-size: 300% 100%; animation: poll-shimmer 1.8s linear infinite; opacity: 0.8; }
+.poll.open .poll-opts .opt:nth-child(2) .track { animation-delay: 0.15s; }
+.poll.open .poll-opts .opt:nth-child(3) .track { animation-delay: 0.3s; }
+.poll.open .poll-opts .opt:nth-child(4) .track { animation-delay: 0.45s; }
+.poll.open .poll-opts .opt:nth-child(5) .track { animation-delay: 0.6s; }
+.poll.open .poll-opts .opt:nth-child(6) .track { animation-delay: 0.75s; }
+@keyframes poll-shimmer { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+.poll-side { position: absolute; right: var(--margin); top: 190px; width: 340px; text-align: center; }
+/* the one fixed colour: a QR code needs a white ground in every theme, or phones cannot read it */
+.poll-side .qr { width: 340px; height: 340px; border-radius: 12px; display: block; background: #fff; }
+.poll-side .url { font-size: var(--small); color: var(--blue); margin-top: 18px; }
+.poll-side .code { font-size: var(--normal); font-family: var(--mono); color: var(--white); margin-top: 10px; text-transform: none; }
+.poll-side .live-badge { font-size: var(--normal); color: var(--red); margin-top: 26px; visibility: hidden;
+                         display: flex; align-items: center; justify-content: center; gap: 22px; }
+.poll.open .poll-side .live-badge { visibility: visible; }
+.live-badge .pulse { position: relative; width: 28px; height: 28px; border-radius: 50%; background: var(--red); }
+.live-badge .pulse::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--red);
+                            animation: live-ring 1.6s ease-out infinite; }
+.poll.open .live-badge .pulse { animation: live-dot 1.6s ease-in-out infinite; }
+@keyframes live-ring { from { transform: scale(1); opacity: 0.9; } to { transform: scale(2.8); opacity: 0; } }
+@keyframes live-dot { 50% { opacity: 0.55; } }
+.poll-side .count { font-size: var(--normal); color: var(--white); margin-top: 18px; }
+.poll-side .live-state { font-size: var(--tiny); color: var(--gray); margin-top: 8px; }
+body.print .poll-side .count, body.print .poll-side .live-state, body.print .poll-side .code,
+body.print .poll-side .live-badge { visibility: hidden; }
