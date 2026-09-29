@@ -57,6 +57,16 @@ a { color: var(--blue); text-decoration: none; }
 .code .copy:hover { color: var(--white); border-color: var(--gray); }
 .code .copy.done { color: var(--green); border-color: var(--green); }
 body.print .code .copy { display: none; }
+/* what the slide is about inside a code block: the verb, operator or argument
+ * that is new on this slide, <span class="hl">...</span>. Blue, because yellow
+ * already means "current step" in drawings (rule of 29.09.2026) */
+.code .hl { color: var(--blue); }
+/* the code behind a figure: <div class="code figcode">...</div> anywhere on the
+ * slide. The code stays invisible, only its copy button shows, top right and
+ * level with the small heading; hidden in the print view like every copy button */
+.slide .code.figcode { position: absolute; top: calc(var(--margin) * 0.45); right: calc(var(--margin) + 80px);
+                       width: 0; height: 0; margin: 0; padding: 0; visibility: hidden; }
+.code.figcode .copy { visibility: visible; top: 0; }
 .dim { color: var(--gray-dark); }
 .sidenote { font-size: var(--small); color: var(--gray); }
 .remark { font-size: var(--small); color: var(--yellow); }
