@@ -76,10 +76,12 @@ body.print .code .copy { display: none; }
 .footnote.right { left: auto; right: var(--margin); }
 /* the punchline: one yellow sentence at the bottom, always the small size, always
  * the same place. A slide that carries one gets .has-punch, which shortens the
- * content area above so the two never touch. */
+ * content area above so the two never touch. The text content area shrinks by
+ * the same amount at the top, so a centred block stays in the middle of the
+ * slide: the punchline must not move the content (rule of 29.09.2026). */
 .punch { position: absolute; left: var(--margin); right: var(--margin); bottom: calc(var(--margin) * 1.05); text-align: center; font-size: var(--small); color: var(--yellow); }
 .slide.has-punch .figure, .slide.has-punch .cols3, .slide.has-punch .cols4, .slide.has-punch .two { bottom: calc(var(--margin) * 2.1); }
-.slide.has-punch .content { bottom: calc(var(--margin) * 1.6); }
+.slide.has-punch .content { top: calc(var(--margin) * 1.6); bottom: calc(var(--margin) * 1.6); }
 .bright { color: var(--white); }
 .y { color: var(--yellow); } .b { color: var(--blue); } .g { color: var(--green); } .r { color: var(--red); } .gr { color: var(--gray); }
 
