@@ -364,7 +364,7 @@
     const lines = Array.from(block.children).filter((c) => c.tagName === "DIV");
     if (lines.length) return lines.map((l) => l.textContent).join("\n");
     const clone = block.cloneNode(true);
-    clone.querySelectorAll(".copy").forEach((b) => b.remove());
+    clone.querySelectorAll(".copy, .show").forEach((b) => b.remove());
     return clone.textContent.replace(/^\n+|\s+$/g, "");
   }
   function copyText(text) {
@@ -387,6 +387,38 @@
         setTimeout(() => { b.innerHTML = ICON_COPY; b.classList.remove("done"); }, 1500);
       });
       b.blur();
+    });
+    block.appendChild(b);
+  });
+
+  /* --- show-code button on figures ----------------------------------------------
+   * A figure made from code carries that code as an invisible .code.figcode block
+   * (stagekit.css). Next to its copy button sits a second button with an eye: it
+   * lays the code over the slide in a slightly transparent window with a close
+   * button. Escape, the close button, the eye again or moving to another frame
+   * closes it. Hidden in the print view. Icons: Bootstrap Icons "eye" and "x-lg"
+   * 1.11.3 (MIT, (c) The Bootstrap Authors). */
+  const ICON_EYE = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>';
+  const ICON_CLOSE = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></svg>';
+  const closeOverlays = () => document.querySelectorAll(".code-overlay").forEach((o) => o.remove());
+  document.querySelectorAll(".slide .code.figcode").forEach((block) => {
+    const b = document.createElement("button");
+    b.className = "show"; b.title = "show code"; b.setAttribute("aria-label", "show code");
+    b.dataset.noAdvance = "1"; b.innerHTML = ICON_EYE;
+    b.addEventListener("click", (ev) => {
+      ev.stopPropagation(); b.blur();
+      const slide = block.closest(".slide");
+      if (slide.querySelector(".code-overlay")) { closeOverlays(); return; }
+      const box = document.createElement("div");
+      box.className = "code-overlay"; box.dataset.noAdvance = "1";
+      const code = document.createElement("div");
+      code.className = "overlay-code"; code.textContent = codeText(block);
+      const x = document.createElement("button");
+      x.className = "close"; x.title = "close"; x.setAttribute("aria-label", "close");
+      x.dataset.noAdvance = "1"; x.innerHTML = ICON_CLOSE;
+      x.addEventListener("click", (e) => { e.stopPropagation(); closeOverlays(); });
+      box.append(code, x);
+      slide.appendChild(box);
     });
     block.appendChild(b);
   });
@@ -443,6 +475,9 @@
   document.addEventListener("keydown", (ev) => {
     const tag = document.activeElement && document.activeElement.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "IFRAME") return;
+    // a code window closes with Escape and whenever the frame changes
+    if (ev.key === "Escape") { closeOverlays(); return; }
+    if (["ArrowRight", "ArrowDown", " ", "PageDown", "ArrowLeft", "ArrowUp", "PageUp", "Home", "End"].includes(ev.key)) closeOverlays();
     switch (ev.key) {
       case "ArrowRight": case "ArrowDown": case " ": case "PageDown": ev.preventDefault(); next(); break;
       case "ArrowLeft": case "ArrowUp": case "PageUp": ev.preventDefault(); prev(); break;
@@ -457,6 +492,7 @@
   });
   document.addEventListener("click", (ev) => {
     if (ev.target.closest("a, button, input, iframe, [data-no-advance]")) return;
+    closeOverlays();
     if (ev.clientX > window.innerWidth * 0.8) next();
     else if (ev.clientX < window.innerWidth * 0.2) prev();
   });
