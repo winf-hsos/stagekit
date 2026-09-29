@@ -64,7 +64,8 @@
    * code, a live counter and, one step later, the result as bars. It needs a
    * poll server (API: see SKILL.md), named on the deck: data-live-url, and a
    * series name for the deck's questions: data-live-series (default: the file
-   * name). Authoring is two elements, stagekit builds the rest:
+   * name), and optionally the module the deck belongs to: data-live-module.
+   * Authoring is two elements, stagekit builds the rest:
    *
    *   <div class="poll-q">how many values can one byte hold?</div>
    *   <ol class="poll-opts"><li>8</li><li>16</li><li data-correct>256</li></ol>
@@ -81,6 +82,7 @@
   const live = (() => {
     const url = (deck.dataset.liveUrl || "").replace(/\/+$/, "");
     const series = deck.dataset.liveSeries || location.pathname.split("/").pop().replace(/\.html?$/, "") || "deck";
+    const module = deck.dataset.liveModule || "";   // files the sessions under the newest course of this module
     const polls = $$(".slide.poll", deck);
     const KEY = "stagekit-live-key:" + url;
     const SESSION = "stagekit-live-session:" + url + ":" + series;
@@ -143,7 +145,7 @@
     async function session(create) {
       let code = storedSession();
       if (code || !create || !key()) return code;
-      code = (await call("/api/live/sessions", { series, title })).code;
+      code = (await call("/api/live/sessions", { series, title, module })).code;
       try { localStorage.setItem(SESSION, JSON.stringify({ code, day: today() })); } catch (e) {}
       return code;
     }
