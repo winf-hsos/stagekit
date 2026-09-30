@@ -86,6 +86,9 @@ body.print .code .copy { display: none; }
                        background: transparent; border: 1px solid var(--gray-dark); border-radius: 10px;
                        color: var(--gray); cursor: pointer; line-height: 0; }
 body.print .code .show, body.print .code-overlay { display: none; }
+/* the invisible figcode still takes up layout: its code runs past the right edge,
+ * the print page grows wider than 1920 px and Chrome shrinks every page to fit */
+body.print .slide .code.figcode { display: none; }
 .dim { color: var(--gray-dark); }
 .sidenote { font-size: var(--small); color: var(--gray); }
 .remark { font-size: var(--small); color: var(--yellow); }
@@ -220,7 +223,7 @@ table.eq td.note { color: var(--gray); font-size: var(--small); padding-left: 1.
 }
 body.print { overflow: auto; }
 body.print .deck { width: auto; height: auto; }
-body.print .slide { display: block; position: relative; left: 0; top: 0; transform: none; margin: 0 auto; }
+body.print .slide { display: block; position: relative; left: 0; top: 0; transform: none; margin: 0 auto; overflow: hidden; }
 
 /* --- the notes window ------------------------------------------------------ */
 body.notes-view { overflow: auto; background: #111; color: var(--gray-light); font-size: 20px; padding: 24px; }
