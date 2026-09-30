@@ -13,7 +13,7 @@ Was neu ist:
 
 - **Zeichnungen sind SVG** (`draw.js`): Kästen, Pfeile, Leitungen mit Strom, Gatter, Lampen, Schalter, Wahrheitstafeln. Sie skalieren verlustfrei und lesen ihre Farben aus dem Theme.
 - **Demonstratoren laufen auf der Folie** (`<div class="embed"><iframe …>`), nicht hinter einem Link.
-- **Sprechernotizen** in einem zweiten Fenster (Taste N), synchron über einen BroadcastChannel; Vollbild mit F; Druckansicht mit P.
+- **Sprechernotizen** in einem zweiten Fenster (Taste N), synchron über einen BroadcastChannel; Vollbild mit F; Druckansicht mit P; Taste M schaltet den Mauszeiger durch: normal, Laserpointer (roter Leuchtpunkt), ganz ausgeblendet (für einen digitalen Presenter).
 - **Export** als PDF, PNG je Folie und Kontaktbogen über `tools/export.py` (Headless Chrome). Das PDF ist Vektor: Chrome druckt die Druckansicht direkt, Text bleibt Text und Zeichnungen bleiben SVG. **Ausnahme: eingebettete Demonstratoren drucken nicht mit** — ein `<iframe>` bleibt im PDF leer. Decks, die davon leben, brauchen `--pdf-raster`.
 
 ## Dateien

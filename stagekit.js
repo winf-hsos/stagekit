@@ -471,6 +471,45 @@
     if (target >= 0) show(target, 0);
   });
 
+  /* --- cursor modes (key M) -------------------------------------------------------
+   * M cycles: cursor -> laser pointer -> cursor hidden -> cursor. "laser" hides the
+   * mouse cursor and lets a red, softly glowing dot follow the mouse; "hidden"
+   * shows no cursor at all, for a presenter with its own digital laser pointer.
+   * A short note names the new mode. The mode is remembered per deck in this
+   * browser (localStorage, a convenience only). Over an embedded iframe the
+   * browser shows the iframe's own cursor; a page cannot change that. The print
+   * view and the export never show either. */
+  const cursor = (() => {
+    const off = { cycle() {} };
+    if (new URLSearchParams(location.search).has("print")) return off;
+    const modes = ["normal", "laser", "hidden"];
+    const names = { normal: "cursor", laser: "laser pointer", hidden: "cursor hidden" };
+    const store = "stagekit-cursor:" + location.pathname;
+    const dot = document.createElement("div"); dot.className = "laser"; dot.setAttribute("aria-hidden", "true");
+    const note = document.createElement("div"); note.className = "mode-note";
+    document.body.append(dot, note);
+    let mode = "normal", timer;
+    function set(m, quiet) {
+      mode = m;
+      document.documentElement.dataset.cursor = m;
+      try { localStorage.setItem(store, m); } catch (e) { /* private window: not remembered */ }
+      if (quiet) return;
+      note.textContent = names[m];
+      note.classList.add("on");
+      clearTimeout(timer);
+      timer = setTimeout(() => note.classList.remove("on"), 1400);
+    }
+    document.addEventListener("mousemove", (ev) => {
+      dot.style.transform = `translate(${ev.clientX}px, ${ev.clientY}px)`;
+      dot.classList.add("seen");
+    });
+    document.documentElement.addEventListener("mouseleave", () => dot.classList.remove("seen"));
+    let saved = "normal";
+    try { saved = localStorage.getItem(store) || "normal"; } catch (e) { /* ignore */ }
+    set(modes.includes(saved) ? saved : "normal", true);
+    return { cycle() { set(modes[(modes.indexOf(mode) + 1) % modes.length]); } };
+  })();
+
   // --- keys ----------------------------------------------------------------------
   document.addEventListener("keydown", (ev) => {
     const tag = document.activeElement && document.activeElement.tagName;
@@ -488,6 +527,7 @@
       case "p": case "P": location.search = "?print"; break;
       case "l": case "L": live.askKey(); break;           // live polls: the server's admin key
       case "c": case "C": live.newSession(); break;       // live polls: a new session code
+      case "m": case "M": cursor.cycle(); break;          // cursor, laser pointer, cursor hidden
     }
   });
   document.addEventListener("click", (ev) => {

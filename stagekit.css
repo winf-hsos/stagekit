@@ -208,6 +208,20 @@ table.eq td.note { color: var(--gray); font-size: var(--small); padding-left: 1.
   stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .embedbar .counter { position: static; min-width: 4.5em; text-align: center; color: var(--gray); }
 
+/* --- cursor modes (key M): laser pointer and hidden cursor ---------------- */
+:root[data-cursor="laser"], :root[data-cursor="laser"] *,
+:root[data-cursor="hidden"], :root[data-cursor="hidden"] * { cursor: none !important; }
+.laser { position: fixed; left: 0; top: 0; z-index: 30; display: none; pointer-events: none;
+  width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%;
+  background: radial-gradient(circle, var(--white) 0 16%, var(--red) 38%, transparent 72%);
+  box-shadow: 0 0 18px 6px color-mix(in srgb, var(--red) 55%, transparent); }
+:root[data-cursor="laser"] .laser.seen { display: block; }
+.mode-note { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 30;
+  padding: 6px 14px; border-radius: 999px; font: 16px var(--font); color: var(--gray-light);
+  background: color-mix(in srgb, var(--bg) 80%, transparent); border: 1px solid var(--gray-dark);
+  opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.mode-note.on { opacity: 1; }
+
 /* --- print: every slide on its own page, unscaled ------------------------- */
 @media print {
   html, body { overflow: visible; background: var(--bg); }
@@ -218,7 +232,7 @@ table.eq td.note { color: var(--gray); font-size: var(--small); padding-left: 1.
      eine Seite, und dort entscheidet .shown -- diese Regel wuerde sie
      ueberstimmen und jede Seite im Endzustand zeigen. */
   body:not(.print) .slide [data-step] { visibility: visible; }
-  .counter { display: none; }
+  .counter, .laser, .mode-note { display: none; }
   @page { size: 1920px 1080px; margin: 0; }
 }
 body.print { overflow: auto; }
