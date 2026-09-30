@@ -216,6 +216,9 @@ table.eq td.note { color: var(--gray); font-size: var(--small); padding-left: 1.
   background: radial-gradient(circle, var(--white) 0 16%, var(--red) 38%, transparent 72%);
   box-shadow: 0 0 18px 6px color-mix(in srgb, var(--red) 55%, transparent); }
 :root[data-cursor="laser"] .laser.seen { display: block; }
+/* the trail drawn while the button is held; no text selection in laser mode */
+.laser-trail { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 29; pointer-events: none; }
+:root[data-cursor="laser"] body { user-select: none; -webkit-user-select: none; }
 .mode-note { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 30;
   padding: 6px 14px; border-radius: 999px; font: 16px var(--font); color: var(--gray-light);
   background: color-mix(in srgb, var(--bg) 80%, transparent); border: 1px solid var(--gray-dark);
@@ -232,7 +235,7 @@ table.eq td.note { color: var(--gray); font-size: var(--small); padding-left: 1.
      eine Seite, und dort entscheidet .shown -- diese Regel wuerde sie
      ueberstimmen und jede Seite im Endzustand zeigen. */
   body:not(.print) .slide [data-step] { visibility: visible; }
-  .counter, .laser, .mode-note { display: none; }
+  .counter, .laser, .laser-trail, .mode-note { display: none; }
   @page { size: 1920px 1080px; margin: 0; }
 }
 body.print { overflow: auto; }
