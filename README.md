@@ -29,8 +29,10 @@ Was neu ist:
 | `tools/image.py` | erzeugt Bilder über die OpenAI-API (gpt-image-2.5-flare, wahlweise sunburst), für Fotofolien; Schlüssel aus `OPENAI_API_KEY`, `openai.key` im Projekt oder `~/.openai.key` |
 | `tools/icon.py` | sucht Symbole aus Bootstrap Icons (`--search`) und gibt sie als `<svg>` für das HTML oder als Pfade für `draw.icon()` aus (`--js`); Version festgeschrieben, Zwischenspeicher in `tools/.icons/` |
 | `tools/export.py` | PDF, PNGs, Kontaktbogen (je Frame: jeder Aufbauschritt einzeln), Schrittprüfung (`--steps`: meldet Elemente, die zwischen Aufbauschritten wandern), Schriftprüfung (`--fonts`: meldet Textgrößen außerhalb der vier Stufen). PDF vektoriell aus `?print`; `--pdf-raster` baut es stattdessen aus den Frame-PNGs (nötig bei eingebetteten Demonstratoren) |
+| `tools/start_script.py` | legt im Deckordner `start-presentation.cmd` an: Doppelklick startet einen lokalen Server in dem Ordner, der Deck und Framework enthält, und öffnet das Deck; Port fest aus dem Decknamen |
 | `template/deck.html` | Startpunkt für einen neuen Satz |
 | `SKILL.md` | der Arbeitsablauf für Agenten |
+| `CHANGELOG.md` | was sich wann geändert hat und was bestehende Decks dann tun müssen |
 
 ## Drittinhalte
 
@@ -44,7 +46,8 @@ Symbole, die `tools/icon.py` einbindet, stammen aus [Bootstrap Icons](https://ic
 2. `template/deck.html` in den Deckordner kopieren, die zwei Pfade zu stagekit anpassen, `data-title`, `data-subtitle`, `data-parts` setzen.
 3. Folien schreiben: `<section class="slide">` mit `<h2>` (kleine Überschrift), `.content` mit `.header`, `.statement`, `.lines`, `.code`, `.sidenote`, `.remark`, dazu `.footnote`; Zeichnungen in `.figure`, Fotos als `<img class="photo">` mit `.photo-text`, Einbettungen in `.embed`; Notizen in `<aside class="notes">`.
 4. Ansehen: die Datei im Browser öffnen (Schriften laden über Google Fonts). Für Einbettungen und Export einen lokalen Server nutzen, `tools/export.py` bringt seinen eigenen mit.
-5. Export: `python tools/export.py <deck.html>`. Das PDF entsteht vektoriell; trägt der Satz eingebettete Demonstratoren, stattdessen `--pdf-raster` nehmen, weil ein `<iframe>` nicht mitdruckt.
+5. Startskript: `python tools/start_script.py <deck.html>` legt `start-presentation.cmd` in den Deckordner; ein Doppelklick startet den Vortrag.
+6. Export: `python tools/export.py <deck.html>`. Das PDF entsteht vektoriell; trägt der Satz eingebettete Demonstratoren, stattdessen `--pdf-raster` nehmen, weil ein `<iframe>` nicht mitdruckt.
 
 ## Tastatur
 
