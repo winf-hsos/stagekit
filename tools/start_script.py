@@ -59,9 +59,12 @@ def main(argv):
     for _ in range(n):
         wurzel = wurzel.parent
     pfad = deck.relative_to(wurzel).as_posix()
-    port = args.port or 8800 + zlib.crc32(deck.stem.encode("utf-8")) % 100
+    # Aeltere Decks heissen index.html; dann traegt der Ordner den Namen, sonst
+    # bekaemen alle denselben Port und dasselbe Etikett.
+    name = deck.parent.name if deck.stem == "index" else deck.stem
+    port = args.port or 8800 + zlib.crc32(name.encode("utf-8")) % 100
 
-    text = VORLAGE.format(deck=deck.stem, hoch="..\\" * n, port=port, pfad=pfad)
+    text = VORLAGE.format(deck=name, hoch="..\\" * n, port=port, pfad=pfad)
     ziel = deck.parent / "start-presentation.cmd"
     neu = text.replace("\n", "\r\n").encode("ascii")
     if not (ziel.exists() and ziel.read_bytes() == neu):
