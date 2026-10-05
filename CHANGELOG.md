@@ -12,7 +12,7 @@ Git-Historie nachgetragen.
   von Kästen, Spalten, Abfrageantworten und Fototext werden vor dem Bau
   gerechnet, mit konkreten Grenzwerten (Zeichen × Größe × 0,6; `verdict` mit
   zwei Zeilen mindestens 164 hoch; Abfrageantworten bis rund 26 Zeichen; Fotos
-  für Text links auf 64 % Höhe). Anlass: fünf Überläufe in einem Satz, die
+  für Text links auf 64 % Höhe; Kästen und Linien um die halbe Strichbreite vom Rand der Zeichenfläche einrücken, sonst schneidet die viewBox den Rahmen ab). Anlass: fünf Überläufe in einem Satz, die
   weder Schritt- noch Schriftprüfung finden. *Decks:* nichts zu tun; bestehende
   Sätze bei der nächsten Änderung gegen die Regel ansehen.
 
