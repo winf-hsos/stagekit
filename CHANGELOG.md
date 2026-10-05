@@ -6,6 +6,16 @@ Commit wie die Änderung (Regel in `SKILL.md`, Abschnitt „Änderungen an
 stagekit selbst“). Die Einträge bis zum 30.09.2026 sind am 01.10.2026 aus der
 Git-Historie nachgetragen.
 
+## 2026-10-05
+
+- **Regel gegen übergelaufenen Text** in `SKILL.md` (Gestaltungsregeln): Breiten
+  von Kästen, Spalten, Abfrageantworten und Fototext werden vor dem Bau
+  gerechnet, mit konkreten Grenzwerten (Zeichen × Größe × 0,6; `verdict` mit
+  zwei Zeilen mindestens 164 hoch; Abfrageantworten bis rund 26 Zeichen; Fotos
+  für Text links auf 64 % Höhe). Anlass: fünf Überläufe in einem Satz, die
+  weder Schritt- noch Schriftprüfung finden. *Decks:* nichts zu tun; bestehende
+  Sätze bei der nächsten Änderung gegen die Regel ansehen.
+
 ## 2026-10-01
 
 - **Startskript je Deck:** neues Werkzeug `tools/start_script.py` legt im
