@@ -6,6 +6,14 @@ Commit wie die Änderung (Regel in `SKILL.md`, Abschnitt „Änderungen an
 stagekit selbst“). Die Einträge bis zum 30.09.2026 sind am 01.10.2026 aus der
 Git-Historie nachgetragen.
 
+## 2026-10-08
+
+- **Regel: keine Zeitbezüge in Decks** in `SKILL.md` (Gestaltungsregeln): kein
+  „next week“, „this semester“, kein Datum und kein Verweis auf vorige oder
+  folgende Sitzungen in Folien, Notizen und Skripten, damit ein Deck an jeder
+  Stelle jedes Plans läuft (Nicolas, 07.10.2026, für alle Lehrdecks).
+  *Decks:* bei der nächsten Änderung auf Zeitbezüge durchsehen.
+
 ## 2026-10-05
 
 - **Regel gegen übergelaufenen Text** in `SKILL.md` (Gestaltungsregeln): Breiten
