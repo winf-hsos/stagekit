@@ -11,8 +11,8 @@ link to C:\\code\\stagekit is not wanted.
 
 What it does:
 
-- copies the runtime files (stagekit.css, stagekit.js, draw.js, the code
-  font and its NOTICE) into the copy, and only those that differ;
+- copies the runtime files (stagekit.css, stagekit.js, draw.js, anim.js,
+  the code font and its NOTICE) into the copy, and only those that differ;
 - sets the cache buster in every deck of the project that loads this copy
   to `?v=<version>-<hash>`, so browsers fetch the new files; decks that load
   another copy (a website's generated folder, say) are left alone.
@@ -31,7 +31,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from stagekit_version import REPO, RUNTIME, cache_tag, version_of  # noqa: E402
 
 SKIP = {".git", "node_modules", "export", "_site", ".quarto", "__pycache__"}
-REF = re.compile(r'((?:src|href)=")([^"]*?)(stagekit\.js|stagekit\.css|draw\.js)(\?v=[^"]*)?(")')
+REF = re.compile(r'((?:src|href)=")([^"]*?)(stagekit\.js|stagekit\.css|draw\.js|anim\.js)(\?v=[^"]*)?(")')
 
 
 def same(a, b):

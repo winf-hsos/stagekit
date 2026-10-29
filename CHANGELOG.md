@@ -25,7 +25,16 @@ alles, was ein Deck anfassen muss.
   `draw.g(name, …)` benennt Teile einer Zeichnung, `draw.image()` setzt ein Bild
   hinein. Das Notizfenster zeigt den Stand der Animation.
   *Decks:* nichts zu tun; nur wer animiert, bindet `anim.js` zwischen `draw.js`
-  und `deck.js` ein.
+  und `deck.js` ein. `tools/sync.py` kopiert `anim.js` mit in die Projekte.
+  *Projekte mit Website:* Ein `sync_decks.py`, das die Framework-Dateien für
+  die Website kopiert, muss `anim.js` mitnehmen, sobald ein Deck animiert.
+- **Regeln und Beispiel zu Animationen:** `docs/design-rules.md` regelt, wann
+  ein Agent von sich aus animiert (nur Abläufe, jeder Zwischenstand für sich
+  verständlich, höchstens rund drei Sekunden je Abschnitt, Zoom um 1,5 oder
+  2,5, Text auf Fotos auf abgedunkeltem Grund); die Regel „keine Übergänge“
+  gilt weiter für Folienwechsel und Text (Nicolas, 29.10.2026). API in
+  `docs/api.md`, Symbol 🎞️ im Entwurf, Demo-Deck in `examples/animations/`
+  (schrittweise, halbautomatisch, automatisch). *Decks:* nichts zu tun.
 - **`export.py` zählt Frames im fertig aufgebauten Deck** statt im Quelltext,
   weil Animationen ihre Schritte erst zur Laufzeit anmelden; die
   Schrittprüfung schaltet mit `showFrame` statt `next` weiter.

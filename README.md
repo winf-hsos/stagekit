@@ -13,6 +13,7 @@ What it adds to a plain HTML page:
 
 - **Drawings are SVG** (`draw.js`): boxes, arrows, wires carrying current, gates, lamps, switches, truth tables, verdicts, formulas. They scale without loss and read their colours from the theme.
 - **Demonstrators run on the slide** (`<div class="embed"><iframe …>`), not behind a link.
+- **Animations** (`anim.js`): a drawing can run in segments (draw, fade, move along a wire, recolour, count, zoom the camera). Every segment ends in a keyframe that is a build-up step, so the PDF and the contact sheet show each one; → plays the next segment, R replays the slide. See `examples/animations/`.
 - **Live polls** (`<section class="slide poll">`): the audience answers on their phones, the slide shows a QR code and the results.
 - **Speaker notes** in a second window (key N), kept in sync over a BroadcastChannel; fullscreen with F; print view with P; key M cycles the pointer: normal, laser pointer (a red dot; holding the mouse button draws a trail that fades), hidden (for a presenter with its own laser).
 - **Export** as PDF, one PNG per frame and a contact sheet via `tools/export.py` (headless Chrome). The PDF is vector: Chrome prints the print view directly, text stays text and drawings stay SVG. **Exception: embedded demonstrators may not print**; an `<iframe>` can stay empty in the PDF, and such decks need `--pdf-raster`.
@@ -24,6 +25,7 @@ What it adds to a plain HTML page:
 | `stagekit.css` | layout and typography; reads every value from the theme |
 | `stagekit.js` | runtime: title and agenda, location bar, steps, keyboard, notes window, print view, hash routing, live polls; carries the version (`window.stagekit.version`) |
 | `draw.js` | SVG helpers: `svg`, `box`, `label`, `line`, `arrow`, `wire`, `dot`, `gate`, `lamp`, `toggle`, `truthTable`, `verdict`, `formula`, `highlight`, `icon`, … |
+| `anim.js` | animations of drawings in segments: timeline, keyframes as build-up steps, `draw.g()` to name parts, `draw.image()` for pictures |
 | `themes/default.css` | the design tokens; template for a project's `theme.css` |
 | `template/deck.html` | starting point for a new deck |
 | `tools/theme.py` | writes `theme.css` from a `style.toml`; `[colors.light]` becomes `:root[data-theme="light"]`, switched on by `?theme=light` |
@@ -58,7 +60,7 @@ Symbols that `tools/icon.py` inserts come from [Bootstrap Icons](https://icons.g
 
 ## Keyboard
 
-→ ↓ space PgDn: next (steps first, then slides) · ← ↑ PgUp: back · Home/End · F: fullscreen · N: notes window · P: print view · M: pointer mode · click on the right or left fifth of the window: next/back. Inside an input field or a writable box (`contenteditable`) keys and clicks belong to the field.
+→ ↓ space PgDn: next (steps first, then slides) · ← ↑ PgUp: back · Home/End · F: fullscreen · N: notes window · P: print view · M: pointer mode · R: replay the animation of the slide · click on the right or left fifth of the window: next/back. Inside an input field or a writable box (`contenteditable`) keys and clicks belong to the field.
 
 ## Addresses
 

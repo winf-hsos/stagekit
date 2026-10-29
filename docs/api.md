@@ -1,8 +1,8 @@
 # API und Vorlagen
 
 Nachschlagedatei zum Skill `stagekit` (`SKILL.md`): das Gerüst eines Decks, die
-Zeichenfunktionen aus `draw.js`, Live-Abfragen und die Vorlage der
-`style.toml`. Beim Schreiben von HTML und `deck.js` daneben offen halten.
+Zeichenfunktionen aus `draw.js`, Live-Abfragen, Animationen (`anim.js`) und
+die Vorlage der `style.toml`. Beim Schreiben von HTML und `deck.js` daneben offen halten.
 
 ## API-Spickzettel
 
@@ -63,6 +63,54 @@ Live-Abfrage (braucht `data-live-url` am `div.deck`):
   <aside class="notes">…</aside>
 </section>
 ```
+
+## Animationen (anim.js)
+
+Eine Animation gehört zu einer Zeichnung und besteht aus Abschnitten. Jeder Abschnitt endet in einem Zwischenstand, der ein Aufbauschritt der Folie ist (Frame, PDF-Seite, Bild im Kontaktbogen). Im Vortrag spielt → den Weg zum nächsten Zwischenstand ab; ← und jeder Sprung zeigen den Zwischenstand sofort. Wann animiert wird, steht in `docs/design-rules.md` („Animationen zeigen Abläufe“).
+
+```html
+<script src="…/stagekit/draw.js"></script>
+<script src="…/stagekit/anim.js"></script>   <!-- zwischen draw.js und deck.js -->
+<script src="deck.js"></script>
+<script src="…/stagekit/stagekit.js"></script>
+```
+
+```js
+const d = window.draw;
+el("fig-net").innerHTML = d.svg(1680, 600,
+  d.g("link", d.line(240, 300, 1440, 300)),                     // d.g benennt, was sich ändert
+  d.g("route", d.line(334, 300, 1346, 300, { color: "none" })), // unsichtbarer Weg für along
+  d.g("packet", d.box(244, 272, 180, 56, "request")),           // steht am Anfang der Route
+  d.g("time", d.label(840, 540, "0 ms", { anchor: "middle" })));
+const a = d.anim("fig-net");                  // { auto, gap, autostart, first }
+a.step(a.draw("link"), a.show("packet"));     // Abschnitt 1: nacheinander
+a.step(a.along("packet", "route"), a.hold(),  // Abschnitt 2: hält, bis → kommt
+       a.count("time", 42, { suffix: " ms" }));
+a.step(a.camera([1000, 140, 672, 240]));      // Abschnitt 3: Kamerafahrt (viewBox)
+```
+
+| Baustein | Wirkung |
+|---|---|
+| `show(t)` / `hide(t)` | einblenden (beginnt unsichtbar) / ausblenden |
+| `draw(t)` | Linien und Rahmen zeichnen sich (beginnt ungezeichnet), Text und Pfeilspitzen erscheinen am Ende |
+| `move(t, dx, dy)` / `moveTo(t, x, y)` | verschieben um / Mitte nach x, y |
+| `along(t, weg, { reverse })` | Mitte folgt einer Linie oder einem Pfad |
+| `scale(t, s)` / `rotate(t, grad)` | um die eigene Mitte |
+| `color(t, farbe, { part })` | `part`: `"stroke"` (Rahmen, Standard), `"fill"` oder `"text"`; Farbnamen des Themes (`"yellow"`) |
+| `count(t, bis, { from, decimals, prefix, suffix })` | zählt die Zahl in einem Text hoch |
+| `pulse(t, { times })` / `swap(alt, neu)` | kurz größer und zurück / überblenden |
+| `camera([x, y, w, h])` | Zoom und Schwenk über die viewBox der Zeichnung |
+| `set(t, { opacity, x, y, scale, rotate, draw })` | Startzustand ausdrücklich setzen |
+| `wait(ms)` / `hold()` | Pause / anhalten bis → (halbautomatisch) |
+| `par(…)` / `seq(…)` | gleichzeitig / nacheinander (Standard in `step`) |
+
+Gemeinsame Optionen: `dur` in ms (Standard 800), `ease`: `"inOut"` (Standard), `"in"`, `"out"`, `"linear"`. Ziele sind Namen aus `d.g(name, …)` oder CSS-Selektoren innerhalb der Zeichnung. Bilder kommen mit `d.image(x, y, w, h, "img/…jpg", { fit })` in die Zeichnung; ein freigestelltes Objekt als PNG (`image.py --transparent`) lässt sich wie jede Gruppe bewegen, drehen und skalieren.
+
+Optionen der Animation: `auto: true` lässt die Abschnitte nach dem ersten → von selbst aufeinander folgen, mit `gap` ms Pause (Standard 600); `autostart: true` startet den ersten Abschnitt beim Betreten der Folie; `first` ist der Aufbauschritt des ersten Abschnitts (Standard 1), damit andere `data-step`-Elemente der Folie mit einem Abschnitt zusammen erscheinen können.
+
+Bedienung: → spielt den nächsten Abschnitt; läuft einer, springt er an sein Ende oder an den nächsten Haltepunkt; wartet er an einem Haltepunkt, läuft er weiter. ← zeigt den vorigen Zwischenstand. **R** spielt die Animation der Folie von vorn. Das Notizfenster zeigt den Stand („animation 2/3 waiting“). `?anim-t=0.3` zeigt beim Laden den Abschnitt des Frames zu 30 % (für Tests). Eine Zeichnung mit Animation wird einmal beim Laden gezeichnet und nicht über `data-on-step` neu geschrieben.
+
+Ein vollständiges Beispiel mit allen drei Betriebsarten liegt in `examples/animations/`.
 
 ## Vorlage style.toml
 

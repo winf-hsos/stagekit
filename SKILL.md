@@ -12,7 +12,7 @@ Diese Datei enthält den Ablauf und die Regeln in Kurzform. Ausführlich steht e
 | Datei | wann lesen |
 |---|---|
 | `docs/design-rules.md` | **vor dem Bau eines Decks ganz**: jede Gestaltungsregel mit Begründung und Grenzwerten |
-| `docs/api.md` | beim Schreiben von HTML und `deck.js`: Gerüst, Zeichenfunktionen, Live-Abfragen, Vorlage der `style.toml` |
+| `docs/api.md` | beim Schreiben von HTML und `deck.js`: Gerüst, Zeichenfunktionen, Live-Abfragen, Animationen, Vorlage der `style.toml` |
 | `docs/website.md` | nur wenn Decks auf eine Website kommen: Player, Sync-Skript, Abbildungen in heller Palette |
 
 ## Der Ablauf, in dieser Reihenfolge
@@ -33,7 +33,7 @@ Was der Nutzer schon mitgeliefert hat, wird nicht erneut gefragt; der Rest in **
 
 Der Satz entsteht zuerst als `entwurf.md` im Satzordner, nicht als HTML. Er wird iteriert, bis der Nutzer ihn **ausdrücklich freigibt**. Vor der Freigabe wird kein Deck gebaut, auch nicht „zur Ansicht“.
 
-Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortung; Symbolschlüssel als Tabelle (🎬 Abschnittsfolie, 📷 Foto, 🖼️ Zeichnung, 📊 Vergleich, 💬 Merksatz, ⌨️ Code, 🪜 Aufbau in Schritten, 🧪 Live-Moment, 🕹️ eingebetteter Demonstrator, 🗳️ Live-Abfrage); dann `# Die Folien`, gegliedert in `## Teil N: <titel> (<X> Folien)`, je Folie ein Block `### Folie N <symbole>` mit Folientext in Backticks, Elementen fett (**Bild:**, **Zeichnung:**, **Titel klein:**, **Text:**, **Demo:**), Sprechernotiz als **Dazu sagen.**, Live-Momente als **Live-Moment:**, Abfragen als **Abfrage:** mit Frage, Antworten und, bei Quizfragen, der richtigen. Die Kleinschreibung gilt nur für Folientext; die Prosa des Entwurfs ist normales Deutsch.
+Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortung; Symbolschlüssel als Tabelle (🎬 Abschnittsfolie, 📷 Foto, 🖼️ Zeichnung, 📊 Vergleich, 💬 Merksatz, ⌨️ Code, 🪜 Aufbau in Schritten, 🧪 Live-Moment, 🕹️ eingebetteter Demonstrator, 🗳️ Live-Abfrage, 🎞️ Animation); dann `# Die Folien`, gegliedert in `## Teil N: <titel> (<X> Folien)`, je Folie ein Block `### Folie N <symbole>` mit Folientext in Backticks, Elementen fett (**Bild:**, **Zeichnung:**, **Titel klein:**, **Text:**, **Demo:**), Sprechernotiz als **Dazu sagen.**, Live-Momente als **Live-Moment:**, Abfragen als **Abfrage:** mit Frage, Antworten und, bei Quizfragen, der richtigen. Animationen als **Animation:** mit Betriebsart (schrittweise, halbautomatisch, automatisch) und je Abschnitt einer Zeile, was sich bewegt und was danach zu sehen ist; ob eine Folie animiert wird, schlägt der Agent selbst vor (Regel in `docs/design-rules.md`). Die Kleinschreibung gilt nur für Folientext; die Prosa des Entwurfs ist normales Deutsch.
 
 ### 3. Bau des Decks (erst nach Freigabe)
 
@@ -49,6 +49,7 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 - **Fehlt der API-Schlüssel, wird gefragt.** `image.py` liest den Schlüssel nur aus der Umgebungsvariable `OPENAI_API_KEY` und bricht ohne sie mit einer Meldung ab, die sagt, was zu tun ist. Dann den Nutzer fragen, ob er die Variable setzen will; **keine Schlüsseldatei anlegen** (seit dem 29.10.2026 liest das Werkzeug keine mehr). **Nicht** die Fotofolie stillschweigend weglassen, **kein** Platzhalterbild, und den Satz nicht ohne Eröffnung bauen und das Fehlen erst am Ende erwähnen. Ein Foliensatz ohne Eröffnungsbild ist eine Entscheidung des Nutzers, kein Ausweichmanöver des Agenten.
 - Inhaltsfolie: `<h2>` kleine Überschrift, `.content` mit `.header`, `.statement`, `.lines`, `.code`, `.sidenote`, `.remark`; `.footnote`. Aufbau in Schritten mit `data-step="n"` an den Elementen, die später erscheinen; sie behalten ihren Platz. Ändert ein Schritt Inhalte (Text, Tabelle, Zeichnung per Hook), müssen die Container ihre Größe behalten: feste Höhen, Ausrichtung oben, gleich lange Texte.
 - Zeichnungen: SVG-Strings aus `draw.js` in ein `<div class="figure" id="…">`, geschrieben von `deck.js` beim Laden. Für Aufbau in Schritten je Schritt neu zeichnen über `data-on-show="fn"` / `data-on-step="fn"` (globale Funktionen mit `(slide, step)`).
+- **Animationen:** `anim.js` zwischen `draw.js` und `deck.js` laden, Teile mit `d.g(name, …)` benennen, Abschnitte mit `d.anim(id).step(…)` beschreiben; jeder Abschnitt ist ein Aufbauschritt. API in `docs/api.md`, wann und wie in `docs/design-rules.md`, Beispiel in `examples/animations/`. Nach dem Bau jeden Zwischenstand im Export ansehen und die Animation einmal im Browser abspielen.
 - Demonstratoren: `<div class="embed"><iframe src="…" title="…"></iframe></div>`. Auf der Folie steht sonst nur die kleine Überschrift.
 - Notizen: `<aside class="notes">` je Folie; sie erscheinen im Notizfenster (N).
 - Parallel zum Bau entsteht `skript.md`: der Text zum Nachlesen in Folienreihenfolge, als eigenständiger Text lesbar.
@@ -74,13 +75,14 @@ Jede Regel steht mit Begründung, Grenzwerten und Beispielen in `docs/design-rul
 
 - **Keine Stakkato-Sätze:** Eine Punchline ist ein ganzer Satz, der den Gedanken verbindet, keine Kette kurzer Sätze oder Schlagworte.
 - **Keine Zeitbezüge:** kein Datum, kein „next week“ oder „this semester“ und kein Verweis auf vorige oder folgende Sitzungen, damit ein Deck an jeder Stelle jedes Plans läuft.
-- Folientext klein geschrieben, aber nur bei englischen Sätzen; kein Kursiv, keine Übergänge; Abkürzungen und Eigennamen mit `keep-case` bzw. `keepCase: true`.
+- Folientext klein geschrieben, aber nur bei englischen Sätzen; kein Kursiv, keine Übergänge zwischen Folien, keine Effekte auf Text; Abkürzungen und Eigennamen mit `keep-case` bzw. `keepCase: true`.
 - **Acht Farben und genau vier Schriftgrößen** (20, 32, 48, 80 px), nur aus dem Theme und nie als Hex-Wert im Deck. Farbe ist Bedeutung: Blau verweist, Gelb heißt 1 oder „aktuell“, Grün und Rot bewerten.
 - **Codeschrift für alles, was der Rechner liest**, Bitfolgen in Vierergruppen und Stelle für Stelle ausgerichtet.
 - **Code auf Folien läuft kopiert sofort**, jeder Block hat seinen Kopierknopf, in R steht nach jeder Pipe eine neue Zeile, das Neue einer Folie ist blau (`.hl`), und Abbildungen aus Code tragen ihren Code unsichtbar als `figcode`.
 - **Adressen auf Folien sind Links.**
 - **Zeichnungen:** Leitungen hinter den Kästen (`d.layers`), Rahmen um die halbe Strichbreite vom Rand eingerückt, Beschriftungen mittig zu ihrem Gegenstand (`centerY`), mehrzeiliger Text im Kasten linksbündig und oben wie unten mit gleichem Abstand; Bewertung mit `d.verdict`, Hervorhebung mit `d.highlight`, Formeln mit `d.formula`, Verarbeitung mit `d.ipo`.
 - **Nichts läuft über seinen Platz hinaus**, und das wird vor dem Bau gerechnet: Zeichen × Größe × 0,6 plus Rand, Antworten einer Live-Abfrage bis rund 26 Zeichen, Fotos für Text links auf rund 64 % Höhe.
+- **Animationen zeigen Abläufe, keine Effekte:** Der Agent animiert von sich aus, wo der Sachverhalt in der Sache ein Ablauf ist (etwas bewegt sich, ein Verfahren arbeitet Schritt für Schritt, ein Blick geht ins Detail), und sonst nicht. Jeder Zwischenstand ist für sich verständlich, ein Abschnitt dauert höchstens rund drei Sekunden, Kamerafahrten zoomen um 1,5 oder 2,5, Text auf Fotos steht auf abgedunkeltem Grund.
 - **Live-Abfragen statt Kahoot**, anonym und nie zur Bewertung, mit sprechenden Kennungen, die sich nach dem ersten Einsatz nicht mehr ändern.
 - **Punchline** nur dort, wo ein Satz den Kern der Folie trägt, als `.punch` auf einer Folie mit `has-punch`.
 - Eine Aussage je Folie; Fotos werden erzeugt; Symbole aus Bootstrap Icons dezent und höchstens eines je Folie.

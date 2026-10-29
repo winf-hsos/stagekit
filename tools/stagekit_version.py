@@ -12,7 +12,7 @@ import re
 REPO = pathlib.Path(__file__).resolve().parents[1]
 
 # what a deck loads at runtime; tools/sync.py copies exactly these
-RUNTIME = ["stagekit.css", "stagekit.js", "draw.js",
+RUNTIME = ["stagekit.css", "stagekit.js", "draw.js", "anim.js",
            "fonts/RobotoMono-Regular.woff2", "fonts/NOTICE"]
 
 VERSION_RE = re.compile(r'const VERSION = "([^"]+)";')
@@ -32,14 +32,14 @@ def repo_version():
 
 
 def content_hash(folder):
-    """Short hash over the three code files, line endings ignored.
+    """Short hash over the code files, line endings ignored.
 
     Part of the cache buster (?v=0.1.0-1a2b3c): between two releases the
     version stays the same while the code may not, and a browser must still
     load the new files.
     """
     h = hashlib.sha1()
-    for name in ("stagekit.css", "stagekit.js", "draw.js"):
+    for name in ("stagekit.css", "stagekit.js", "draw.js", "anim.js"):
         p = pathlib.Path(folder) / name
         h.update(p.read_bytes().replace(b"\r\n", b"\n") if p.is_file() else b"")
     return h.hexdigest()[:6]
