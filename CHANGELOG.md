@@ -48,6 +48,12 @@ Die erste Version, **0.1.0**, umfasst auch alles unter „Vor den Versionen“.
   die Sitzung `stagekit` (in `SKILL.md` und `CONTRIBUTING.md`).
   *Agenten:* nicht mehr selbst im Repository ändern.
 - **README auf Englisch**, mit den neuen Werkzeugen. *Decks:* nichts zu tun.
+- **`tools/image.py` liest den Schlüssel nur noch aus `OPENAI_API_KEY`**
+  (Nicolas, 29.10.2026). Dateien wie `openai.key` im Projekt oder
+  `~/.openai.key` werden nicht mehr gesucht. Ohne die Variable bricht das
+  Werkzeug ab, mit einer Meldung, die sagt, wie man sie setzt.
+  *Projekte:* eine Schlüsseldatei, die noch irgendwo liegt, wird nicht mehr
+  gebraucht und kann nach Rücksprache weg.
 
 ## Vor den Versionen
 

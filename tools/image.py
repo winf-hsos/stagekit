@@ -11,12 +11,10 @@ OpenAI besser als gpt-image-2 bei halber Latenz; `gpt-image-2.5-sunburst` ist fu
 Arbeitsablaeufe gedacht, in denen Bearbeitungspraezision zaehlt, und braucht laenger.
 Beide kosten dieselben Token-Saetze. Qualitaet: low, medium, high, xhigh, max, auto.
 
-Der API-Schlüssel wird in dieser Reihenfolge gesucht:
-
-1. Umgebungsvariable `OPENAI_API_KEY`
-2. `openai.key` oder `tools/openai.key` im Arbeitsverzeichnis, dann aufwärts
-   durch die Elternordner (eine Zeile, nur der Schlüssel)
-3. `~/.openai.key`
+Der API-Schlüssel kommt nur aus der Umgebungsvariable `OPENAI_API_KEY`.
+Schlüsseldateien (`openai.key`, `~/.openai.key`) liest das Werkzeug seit dem
+29.10.2026 nicht mehr: Die Suche danach hatte dazu geführt, dass Kopien des
+Schlüssels in Projektordnern lagen.
 
 Transparenter Hintergrund: `background: "transparent"` zusammen mit
 `output_format: "png"` liefert ein PNG mit echtem Alpha-Kanal. Für Folienfotos auf schwarzem Grund meist
@@ -40,34 +38,16 @@ MODELS = {"flare": "gpt-image-2.5-flare", "sunburst": "gpt-image-2.5-sunburst"}
 MODEL = MODELS["flare"]
 
 
-def find_key_file():
-    """Die zuständige Schlüsseldatei finden, oder None."""
-    here = pathlib.Path.cwd()
-    for folder in [here, *here.parents]:
-        for candidate in (folder / "openai.key",
-                          folder / "tools" / "openai.key"):
-            if candidate.is_file():
-                return candidate
-    home = pathlib.Path.home() / ".openai.key"
-    if home.is_file():
-        return home
-    return None
-
-
 def read_api_key():
     key = os.environ.get("OPENAI_API_KEY", "").strip()
     if key:
         return key
-    key_file = find_key_file()
-    if key_file is not None:
-        key = key_file.read_text(encoding="utf-8").strip()
-        if key:
-            return key
     raise SystemExit(
-        "Kein API-Schlüssel gefunden. Entweder die Umgebungsvariable "
-        "OPENAI_API_KEY setzen oder den Schlüssel in `openai.key` im "
-        "Projekt (auch `tools/openai.key`) oder in `~/.openai.key` legen "
-        "(eine Zeile, nur der Schlüssel).")
+        "OPENAI_API_KEY ist nicht gesetzt, ohne Schlüssel entsteht kein Bild. "
+        "Den Schlüssel als Umgebungsvariable hinterlegen (Windows: "
+        "setx OPENAI_API_KEY \"sk-...\", dann ein neues Terminal öffnen) "
+        "oder den Nutzer fragen. Schlüsseldateien wie openai.key werden "
+        "nicht mehr gelesen; bitte keine anlegen.")
 
 
 def generate(prompt, target, size="1536x1024", quality="high",
