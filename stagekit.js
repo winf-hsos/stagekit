@@ -245,6 +245,17 @@
     return { update, syncSet, askKey, newSession, active: polls.length > 0 };
   })();
 
+  // --- animations (anim.js): every segment is a build-up step ------------------
+  // Like a poll, an animation announces its steps with empty data-step markers,
+  // so frames, PDF pages and the contact sheet count its keyframes.
+  (window.stagekitAnim ? window.stagekitAnim.all : []).forEach((a) => {
+    const fig = document.getElementById(a.figure), s = fig && fig.closest(".slide");
+    if (!s) return;
+    s._anims = (s._anims || []).concat(a);
+    a.onchange = () => broadcast();
+    for (let k = 0; k < a.steps; k++) s.insertAdjacentHTML("beforeend", `<span class="anim-step" data-step="${a.first + k}"></span>`);
+  });
+
   // --- assign parts and location bars ----------------------------------------
   const slides = $$(".slide", deck);
   let currentPart = null;
@@ -298,9 +309,11 @@
   }
 
   function showFrame(f) {
+    const before = frame;
     frame = Math.max(0, Math.min(frames.length - 1, f));
     const fr = frames[frame];
     const sameSlide = fr.slide === index && slides[index].classList.contains("current");
+    if (!sameSlide && slides[index]._anims) slides[index]._anims.forEach((a) => a.stop());
     index = fr.slide;
     const s = slides[index];
     s._step = fr.step;
@@ -311,12 +324,33 @@
     if (!sameSlide && s.dataset.onShow && typeof window[s.dataset.onShow] === "function") window[s.dataset.onShow](s, s._step);
     else if (sameSlide && s.dataset.onStep && typeof window[s.dataset.onStep] === "function") window[s.dataset.onStep](s, s._step);
     if (s.classList.contains("poll")) live.update(s, s._step);
+    // an animation plays only one frame forward on the same slide; any other
+    // way here (back, a jump, a fresh load) shows its keyframe at once
+    if (s._anims) {
+      s._anims.forEach((a) => a.frame(s._step, sameSlide && frame === before + 1));
+      if (!sameSlide && s._step === 0 && s._anims.some((a) => a.autostart)) {
+        const here = frame;
+        setTimeout(() => { if (frame === here) next(); }, 400);
+      }
+    }
     broadcast();
   }
   const frameOf = (slideIndex, step) => Math.max(0, frames.findIndex((fr) => fr.slide === slideIndex && fr.step === (step === undefined ? 0 : step)));
   function show(i, step) { showFrame(frameOf(Math.max(0, Math.min(slides.length - 1, i)), step === 99 ? slides[i]._steps[slides[i]._steps.length - 1] || 0 : step)); }
-  function next() { if (frame < frames.length - 1) showFrame(frame + 1); }
+  function next() {
+    // a running animation takes the key first: skip to its next stop, or go on after a hold
+    const s = slides[index];
+    if (s._anims && s._anims.some((a) => a.next())) { broadcast(); return; }
+    if (frame < frames.length - 1) showFrame(frame + 1);
+  }
   function prev() { if (frame > 0) showFrame(frame - 1); }
+  // R: the animations of this slide from the start (keyframe 0, then play on)
+  function replay() {
+    const s = slides[index];
+    if (!s._anims) return;
+    showFrame(frameOf(index, 0));
+    next();
+  }
 
   // --- notes window ------------------------------------------------------------
   const channel = ("BroadcastChannel" in window) ? new BroadcastChannel("stagekit-" + location.pathname) : null;
@@ -332,6 +366,7 @@
   function broadcast() {
     if (!channel) return;
     channel.postMessage({ index: frame, total: frames.length, step: slides[index]._step,
+      anim: slides[index]._anims ? slides[index]._anims.map((a) => a.status()).join(" · ") : "",
       heading: headingOf(slides[index]), notes: notesOf(slides[index]),
       nextHeading: headingOf(slides[index + 1]), nextNotes: notesOf(slides[index + 1]) });
   }
@@ -345,7 +380,7 @@
     document.body.innerHTML = `<div class="nv-clock" id="nv-clock"></div><h1 id="nv-h">notes</h1><div class="nv-current" id="nv-c">waiting for the deck…</div><div class="nv-next"><h1 id="nv-nh">next</h1><div id="nv-n"></div></div>`;
     if (channel) channel.onmessage = (ev) => {
       const m = ev.data;
-      $("#nv-h").textContent = `${m.index + 1} / ${m.total} · ${m.heading}${m.step ? " · step " + m.step : ""}`;
+      $("#nv-h").textContent = `${m.index + 1} / ${m.total} · ${m.heading}${m.step ? " · step " + m.step : ""}${m.anim ? " · " + m.anim : ""}`;
       $("#nv-c").innerHTML = m.notes || "<span style='color:#4a5259'>(no notes)</span>";
       $("#nv-nh").textContent = "next: " + (m.nextHeading || "end");
       $("#nv-n").innerHTML = m.nextNotes || "";
@@ -448,6 +483,7 @@
         const hook = k === 0 ? s.dataset.onShow : (s.dataset.onStep || s.dataset.onShow);
         if (hook && typeof window[hook] === "function") window[hook](s, st);
         if (s.classList.contains("poll")) live.update(s, st);
+        if (s._anims) s._anims.forEach((a) => a.frame(st, false));   // the keyframe of this step
         const el = k === steps.length - 1 ? s : s.cloneNode(true);
         if (el !== s) {
           // Der Klon wird VOR dem Original eingehaengt und traegt sonst dessen
@@ -600,6 +636,7 @@
       case "l": case "L": live.askKey(); break;           // live polls: the server's admin key
       case "c": case "C": live.newSession(); break;       // live polls: a new session code
       case "m": case "M": cursor.cycle(); break;          // cursor, laser pointer, cursor hidden
+      case "r": case "R": replay(); break;                // animations of this slide from the start
     }
   });
   document.addEventListener("click", (ev) => {

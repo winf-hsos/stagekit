@@ -16,7 +16,8 @@ Checks, in this order:
 4. tools/export.py exports tests/deck/selftest.html, which holds every kind of
    slide and building block: no frame may fail, no step may move the layout,
    no text may leave the four sizes;
-5. every frame is compared with tests/reference/<platform>/NN.png. Fonts
+5. every frame, and one frame half-way through an animation segment, is
+   compared with tests/reference/<platform>/. Fonts
    render slightly differently on each system, so there is one set of
    reference frames per platform; without one, this step is skipped.
 
@@ -46,6 +47,9 @@ REFERENCE = REPO / "tests" / "reference" / PLATFORM
 # counts as changed once more than 100 pixels differ by more than 16 of 255
 # in any channel; that still catches a short word in another colour.
 PIXEL_THRESHOLD, PIXEL_TOLERANCE = 16, 100
+# frame 18 of the test deck is segment 2 of its animation; at 0.3 of it the
+# packet is half-way along its route (the segment also holds the count)
+ANIM_FRAME = 18
 
 failures = []
 
@@ -143,14 +147,29 @@ def export(tmp, update):
     check(m is not None and m.group(1) == "0", "nur die vier Schriftgrößen",
           "; ".join(line.strip() for line in log.splitlines() if "px x" in line))
     pngs = sorted((out / "slides").glob("*.png"))
-    if update:
-        if REFERENCE.exists():
-            shutil.rmtree(REFERENCE)
-        REFERENCE.mkdir(parents=True)
-        for p in pngs:
-            shutil.copy(p, REFERENCE / p.name)
-        print(f"  neu    {len(pngs)} Referenzframes in tests/reference/{PLATFORM}/")
-    return pngs
+    return pngs + [midstate(out / "slides")]
+
+
+def midstate(folder):
+    """One frame half-way through an animation segment (?anim-t), so that the
+    interpolation between keyframes is checked as well, not only the keyframes."""
+    import export as ex
+    srv, port = ex.serve(REPO)
+    out = folder / "anim-half.png"
+    ex.run(ex.chrome(), ["--window-size=1920,1080", f"--screenshot={out}",
+                         f"http://127.0.0.1:{port}/tests/deck/selftest.html?slide={ANIM_FRAME}&anim-t=0.3"])
+    srv.shutdown()
+    check(out.is_file(), "Animation mitten in einem Abschnitt aufgenommen")
+    return out
+
+
+def write_references(pngs):
+    if REFERENCE.exists():
+        shutil.rmtree(REFERENCE)
+    REFERENCE.mkdir(parents=True)
+    for p in pngs:
+        shutil.copy(p, REFERENCE / p.name)
+    print(f"  neu    {len(pngs)} Referenzbilder in tests/reference/{PLATFORM}/")
 
 
 def compare(pngs, tmp):
@@ -201,7 +220,9 @@ def main():
     tools(tmp)
     if not a.quick:
         pngs = export(tmp, a.update)
-        if pngs and not a.update:
+        if pngs and a.update:
+            write_references(pngs)
+        elif pngs:
             compare(pngs, tmp)
     if failures:
         print(f"\n{len(failures)} Fehler. Arbeitsordner bleibt liegen: {tmp}")

@@ -13,6 +13,24 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Animationen auf Folien (`anim.js`):** Eine Zeichnung kann in Abschnitten
+  ablaufen: zeichnen, ein- und ausblenden, verschieben, entlang einer Leitung
+  fahren, drehen, skalieren, umfärben, hochzählen, pulsieren, überblenden,
+  Kamerafahrt über die viewBox. Jeder Abschnitt endet in einem Zwischenstand,
+  der ein Aufbauschritt ist, also eine eigene Seite im PDF und ein Bild im
+  Kontaktbogen. → spielt den nächsten Abschnitt (läuft er schon, springt er an
+  sein Ende), ← springt zum vorigen Zwischenstand, **R** spielt die Animation
+  der Folie von vorn. Haltepunkte (`hold()`) machen einen Abschnitt
+  halbautomatisch, `auto: true` lässt Abschnitte von selbst aufeinander folgen.
+  `draw.g(name, …)` benennt Teile einer Zeichnung, `draw.image()` setzt ein Bild
+  hinein. Das Notizfenster zeigt den Stand der Animation.
+  *Decks:* nichts zu tun; nur wer animiert, bindet `anim.js` zwischen `draw.js`
+  und `deck.js` ein.
+- **`export.py` zählt Frames im fertig aufgebauten Deck** statt im Quelltext,
+  weil Animationen ihre Schritte erst zur Laufzeit anmelden; die
+  Schrittprüfung schaltet mit `showFrame` statt `next` weiter.
+  *Decks:* nichts zu tun.
+
 - **Referenzframes für Linux** (`tests/reference/linux/`, erzeugt vom
   Workflow auf GitHub): Der Selbsttest vergleicht dort jetzt auch die Bilder.
   *Decks:* nichts zu tun.

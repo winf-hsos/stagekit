@@ -80,6 +80,14 @@ def serve(root):
 
 
 JOBS = min(8, os.cpu_count() or 1)
+RENDERED = None   # the deck's DOM after stagekit.js ran, see rendered()
+
+
+def rendered(ch, url):
+    """The deck's DOM after its scripts ran (Chrome --dump-dom), or None."""
+    res = subprocess.run([ch, "--headless=new", "--disable-gpu", "--virtual-time-budget=12000", "--dump-dom", url],
+                         capture_output=True, text=True, encoding="utf-8", errors="replace")
+    return res.stdout if '<section class="slide' in res.stdout else None
 
 
 def parallel(fn, items):
@@ -176,7 +184,9 @@ def step_counts(deck):
     stagekit.js: einen zum Aufdecken, bei einer Quizfrage (data-correct) einen
     zweiten fuer die richtige Antwort. Hier werden sie deshalb mitgezaehlt."""
     import re
-    html = deck.read_text(encoding="utf-8")
+    # The deck as the browser built it, where available: animations (anim.js)
+    # announce their steps only at runtime. The source text is the fallback.
+    html = RENDERED or deck.read_text(encoding="utf-8")
     sections = re.split(r'<section class="slide', html)[1:]
     counts = []
     for sec in sections:
@@ -213,7 +223,7 @@ f.onload = () => setTimeout(() => {
   // einer Rohseite; lieber kein Ergebnis, dann wird die Folie nachgeholt.
   if (!win.stagekit || !stylesLoaded(win)) { document.title = "STEPS:null"; return; }
   const snaps = [snap(win)];
-  for (let k = 0; k < n; k++) { win.stagekit.next(); snaps.push(snap(win)); }
+  for (let k = 0; k < n; k++) { win.stagekit.showFrame(win.stagekit.frame + 1); snaps.push(snap(win)); }
   const moved = [];
   for (let k = 1; k <= n; k++) {
     for (const key of Object.keys(snaps[k - 1])) {
@@ -401,6 +411,8 @@ def main():
     rel = deck.relative_to(root).as_posix()
     url = f"http://127.0.0.1:{port}/{rel}"
     ch = chrome()
+    global RENDERED
+    RENDERED = rendered(ch, url)
     frames = frames_of(deck)
     n = len(frames)
     print(f"{slide_count(url)} Folien, {n} Frames (Aufbauschritte einzeln), {url}")

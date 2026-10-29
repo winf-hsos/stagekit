@@ -25,3 +25,18 @@ document.getElementById("fig-circuit").innerHTML = d.svg(840, 250,
 document.getElementById("fig-formula").innerHTML = d.svg(1680, 300,
   d.formula(840, 150, "H = log_2(N)", { size: 80, anchor: "middle", centerY: 150 }),
   d.label(840, 260, "information in bits", { size: 32, anchor: "middle" }));
+
+// Animation: a packet travels from client to server. The zoom in segment 3 is
+// 2.5, so text of size 32 lands on 80 and the font check stays silent.
+document.getElementById("fig-anim").innerHTML = d.svg(1680, 500,
+  d.g("link", d.line(304, 240, 1376, 240)),
+  d.g("route", d.line(384, 240, 1292, 240, { color: "none" })),   // the packet's centre: 80 short of each box
+  d.g("client", d.box(4, 180, 300, 120, "client")),
+  d.g("server", d.box(1376, 180, 300, 120, "server")),
+  d.g("packet", d.box(304, 210, 160, 60, "data", { border: d.color("yellow") })),
+  d.g("bytes", d.label(840, 400, "0 bytes", { anchor: "middle" })));
+const a = d.anim("fig-anim");
+a.step(a.draw("link"), a.show("packet"));
+a.step(a.along("packet", "route", { dur: 1200 }), a.hold(),
+       a.par(a.color("server", "green"), a.count("bytes", 1500, { from: 0, suffix: " bytes" })));
+a.step(a.camera([1000, 140, 672, 200]));
