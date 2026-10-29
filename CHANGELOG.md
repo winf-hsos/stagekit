@@ -13,6 +13,10 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Referenzframes für Linux** (`tests/reference/linux/`, erzeugt vom
+  Workflow auf GitHub): Der Selbsttest vergleicht dort jetzt auch die Bilder.
+  *Decks:* nichts zu tun.
+
 ## 0.1.0 (2026-10-29)
 
 Die erste Version, **0.1.0**, umfasst auch alles unter „Vor den Versionen“.
