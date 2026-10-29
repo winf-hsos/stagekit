@@ -18,6 +18,12 @@ Die erste Version, **0.1.0**, umfasst auch alles unter „Vor den Versionen“.
 - **Versionen:** `stagekit.js` trägt eine Versionsnummer (`window.stagekit.version`),
   `tools/release.py` macht aus diesem Abschnitt ein Release mit Tag, und ein
   Tag auf GitHub erzeugt dort das Release mit diesen Notizen. *Decks:* nichts zu tun.
+- **`tools/sync.py` erneuert die Framework-Kopie eines Projekts:** kopiert die
+  Laufzeitdateien samt Codeschrift und schreibt in jedes Deck, das diese Kopie
+  lädt, die Cache-Kennung `?v=<version>-<prüfsumme>`; `--check` meldet nur.
+  `export.py` weist darauf hin, wenn ein Deck eine abweichende Kopie lädt.
+  *Projekte:* Kopien künftig damit erneuern statt von Hand; das
+  `sync_framework.py` von LiFi wird damit entbehrlich.
 
 ## Vor den Versionen
 

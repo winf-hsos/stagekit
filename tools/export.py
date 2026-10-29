@@ -353,6 +353,22 @@ def check_fonts(ch, url, deck):
           + (f", {ohne} ohne ergebnis" if ohne else ""))
 
 
+def warn_stale_copy(deck):
+    """Say so when the deck loads a framework copy that differs from this repository."""
+    import re
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    from stagekit_version import REPO, content_hash, version_of
+    m = re.search(r'src="([^"]*?)stagekit\.js', deck.read_text(encoding="utf-8", errors="ignore"))
+    if not m:
+        return
+    copy = (deck.parent / m.group(1)).resolve()
+    if copy == REPO or not (copy / "stagekit.js").is_file() or content_hash(copy) == content_hash(REPO):
+        return
+    print(f"  hinweis: das deck laedt die framework-kopie {copy} "
+          f"({version_of(copy) or 'ohne version'}), stagekit ist bei {version_of(REPO)} und weicht ab. "
+          f"erneuern mit: python {REPO / 'tools' / 'sync.py'} \"{copy}\"")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("deck")
@@ -388,6 +404,7 @@ def main():
     frames = frames_of(deck)
     n = len(frames)
     print(f"{slide_count(url)} Folien, {n} Frames (Aufbauschritte einzeln), {url}")
+    warn_stale_copy(deck)
     # Vektor nur, wenn die Druckansicht des Decks sie traegt
     vektor = a.pdf and not a.pdf_raster
     if vektor and print_view_ok(deck) is False:
