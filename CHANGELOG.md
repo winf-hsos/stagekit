@@ -1,12 +1,30 @@
 # Changelog
 
-Was sich an stagekit geändert hat, neueste oben. Je Eintrag: was sich geändert
-hat und, wo nötig, **was bestehende Decks tun müssen**. Gepflegt im selben
-Commit wie die Änderung (Regel in `SKILL.md`, Abschnitt „Änderungen an
-stagekit selbst“). Die Einträge bis zum 30.09.2026 sind am 01.10.2026 aus der
-Git-Historie nachgetragen.
+Was sich an stagekit geändert hat, neueste Version oben. Je Eintrag: was sich
+geändert hat und, wo nötig, **was bestehende Decks tun müssen**. Gepflegt im
+selben Commit wie die Änderung (Regel in `SKILL.md`, Abschnitt „Änderungen an
+stagekit selbst“).
 
-## 2026-10-29
+Neue Einträge kommen unter **Unveröffentlicht**. `tools/release.py` macht
+daraus eine Version: Es setzt die Nummer in `stagekit.js`, benennt den
+Abschnitt um und legt das Tag an. Versionsnummern nach SemVer: Patch für
+Korrekturen, Minor für Neues, das bestehende Decks nicht verändert, Major für
+alles, was ein Deck anfassen muss.
+
+## Unveröffentlicht
+
+Die erste Version, **0.1.0**, umfasst auch alles unter „Vor den Versionen“.
+
+- **Versionen:** `stagekit.js` trägt eine Versionsnummer (`window.stagekit.version`),
+  `tools/release.py` macht aus diesem Abschnitt ein Release mit Tag, und ein
+  Tag auf GitHub erzeugt dort das Release mit diesen Notizen. *Decks:* nichts zu tun.
+
+## Vor den Versionen
+
+Bis zum 29.10.2026 nach Datum gegliedert. Die Einträge bis zum 30.09.2026 sind
+am 01.10.2026 aus der Git-Historie nachgetragen.
+
+### 2026-10-29
 
 - **Beschreibbare Felder behalten ihre Tasten:** In einem Element mit
   `contenteditable` blättern Leertaste und Pfeile nicht mehr weiter, und N, F,
@@ -14,7 +32,7 @@ Git-Historie nachgetragen.
   Bisher galt das nur für `input` und `textarea` (Befund LiFi vom 25.09.2026,
   Deck `protocols`). *Decks:* nichts zu tun.
 
-## 2026-10-08
+### 2026-10-08
 
 - **Regel: keine Zeitbezüge in Decks** in `SKILL.md` (Gestaltungsregeln): kein
   „next week“, „this semester“, kein Datum und kein Verweis auf vorige oder
@@ -22,14 +40,14 @@ Git-Historie nachgetragen.
   Stelle jedes Plans läuft (Nicolas, 07.10.2026, für alle Lehrdecks).
   *Decks:* bei der nächsten Änderung auf Zeitbezüge durchsehen.
 
-## 2026-10-06
+### 2026-10-06
 
 - **Untertitel auf Trennfolien:** `<section class="slide part" data-part="…" data-subtitle="…">`
   setzt unter den Teilnamen eine graue Zeile in der Größe des Untertitels der
   Titelfolie (`.part-sub`). *Decks:* nichts zu tun; ohne `data-subtitle` bleibt
   die Trennfolie, wie sie war.
 
-## 2026-10-05
+### 2026-10-05
 
 - **Regel gegen übergelaufenen Text** in `SKILL.md` (Gestaltungsregeln): Breiten
   von Kästen, Spalten, Abfrageantworten und Fototext werden vor dem Bau
@@ -39,7 +57,7 @@ Git-Historie nachgetragen.
   weder Schritt- noch Schriftprüfung finden. *Decks:* nichts zu tun; bestehende
   Sätze bei der nächsten Änderung gegen die Regel ansehen.
 
-## 2026-10-01
+### 2026-10-01
 
 - **Startskript je Deck:** neues Werkzeug `tools/start_script.py` legt im
   Deckordner `start-presentation.cmd` an (Server in dem Ordner, der Deck und
@@ -54,7 +72,7 @@ Git-Historie nachgetragen.
   Effekt aneinander. *Decks:* bestehende Punchlines bei der nächsten
   Überarbeitung prüfen.
 
-## 2026-09-30
+### 2026-09-30
 
 - **Taste M** schaltet den Mauszeiger durch: normal, Laserpointer, ganz
   ausgeblendet; mit gedrückter Maustaste zieht der Laserpointer eine
@@ -63,7 +81,7 @@ Git-Historie nachgetragen.
 - **Druckansicht:** `figcode` wird im Druck ausgeblendet, Folien werden
   beschnitten.
 
-## 2026-09-29
+### 2026-09-29
 
 - **Code-Folien:** Hervorhebung des Neuen mit `.hl`; Abbildungen aus Code
   tragen den Code unsichtbar (`.figcode`) mit Kopierknopf und Augensymbol
@@ -75,7 +93,7 @@ Git-Historie nachgetragen.
   eines Moduls zu; Referenzserver ist `classroom-live`.
 - **SKILL:** R-Code auf Folien, nach jeder Pipe eine neue Zeile.
 
-## 2026-09-28
+### 2026-09-28
 
 - **Live-Abfragen als Baustein:** `.slide.poll` mit QR-Code, Sitzungscode,
   Live-Zeichen und Ergebnisbalken.
@@ -83,21 +101,21 @@ Git-Historie nachgetragen.
 - **export.py:** abgewiesene Verbindungen behoben (große Warteschlange),
   ungestylte Frames werden erkannt und nachgeholt.
 
-## 2026-09-24
+### 2026-09-24
 
 - **Deck-Dateien heißen nach dem Titel** statt `index.html`; das PDF
   übernimmt den Namen.
 
-## 2026-09-23
+### 2026-09-23
 
 - **Bootstrap Icons:** `tools/icon.py`, `draw.icon()` und Regel im SKILL.
 
-## 2026-09-16
+### 2026-09-16
 
 - **image.py** auf GPT Image 2.5 umgestellt: `flare` als Standard,
   `sunburst` wahlweise.
 
-## 2026-09-15
+### 2026-09-15
 
 - **PDF-Export vektoriell:** Chrome druckt die Klon-Ansicht; `--pdf-raster`
   für Decks mit eingebetteten Demonstratoren. *Decks:* Framework-Dateien
@@ -111,7 +129,7 @@ Git-Historie nachgetragen.
 - **Veröffentlichung vorbereitet:** MIT-Lizenz, Roboto Mono unter Apache 2.0
   (`fonts/NOTICE`), `slides/` ignoriert, README ohne den Vorgänger.
 
-## 2026-09-14
+### 2026-09-14
 
 - **Roboto Mono liegt im Framework** (`fonts/`, `@font-face`); `theme.py`
   ohne Google-Import.
@@ -121,13 +139,13 @@ Git-Historie nachgetragen.
 - **export.py:** schwarze Frames aus dem parallelen Aufnehmen werden einzeln
   nachgeholt.
 
-## 2026-09-13
+### 2026-09-13
 
 - **export.py:** Frames, Schritt- und Schriftprüfung parallel.
 - **figures.py** misst jede Abbildung (Abgeschnittenes, Leerraum); Regel zum
   Innenabstand in Kästen.
 
-## 2026-09-08 bis 2026-09-11
+### 2026-09-08 bis 2026-09-11
 
 - **Erste Fassung:** HTML-Folien mit SVG-Zeichnungen (`draw.js`),
   eingebetteten Demonstratoren und Theme; Teilfolien mit Notizen; jeder

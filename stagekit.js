@@ -29,7 +29,10 @@
 (function () {
   "use strict";
 
-  const $ = (sel, root) => (root || document).querySelector(sel);
+  // set by tools/release.py; tools/sync.py and tools/export.py read it from here
+  const VERSION = "0.1.0";
+
+  const $ =(sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
   const params = new URLSearchParams(location.search);
 
@@ -654,5 +657,5 @@
   showFrame(Number.isFinite(start) && start >= 0 ? start : 0);
   live.syncSet();
 
-  window.stagekit = { next, prev, show, showFrame, slides, frames, get index() { return index; }, get frame() { return frame; } };
+  window.stagekit = { version: VERSION, next, prev, show, showFrame, slides, frames, get index() { return index; }, get frame() { return frame; } };
 })();
