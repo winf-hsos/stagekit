@@ -5,7 +5,15 @@ description: Foliensätze als HTML mit stagekit entwerfen und bauen (SVG-Zeichnu
 
 # stagekit: Foliensätze als HTML entwerfen und bauen
 
-Dieses Skill beschreibt den verbindlichen Arbeitsablauf für Foliensätze mit `stagekit` (Dateien `stagekit.css`, `stagekit.js`, `draw.js`, `tools/`). `<stagekit>` steht im Folgenden für den Ordner, in dem das Repository liegt. Ein Deck ist eine HTML-Datei plus Notizen plus Zeichnungen in einem kleinen Skript; die Designwerte kommen aus der `theme.css` des Decks, erzeugt aus der `style.toml` des Projekts. Fehlt beides, lege die `style.toml` als ersten Schritt an (Vorlage unten) und erzeuge daraus die `theme.css`.
+Dieses Skill beschreibt den verbindlichen Arbeitsablauf für Foliensätze mit `stagekit` (Dateien `stagekit.css`, `stagekit.js`, `draw.js`, `tools/`). `<stagekit>` steht im Folgenden für den Ordner, in dem das Repository liegt. Ein Deck ist eine HTML-Datei plus Notizen plus Zeichnungen in einem kleinen Skript; die Designwerte kommen aus der `theme.css` des Decks, erzeugt aus der `style.toml` des Projekts. Fehlt beides, lege die `style.toml` als ersten Schritt an (Vorlage in `docs/api.md`) und erzeuge daraus die `theme.css`.
+
+Diese Datei enthält den Ablauf und die Regeln in Kurzform. Ausführlich steht es in drei Nachschlagedateien neben ihr:
+
+| Datei | wann lesen |
+|---|---|
+| `docs/design-rules.md` | **vor dem Bau eines Decks ganz**: jede Gestaltungsregel mit Begründung und Grenzwerten |
+| `docs/api.md` | beim Schreiben von HTML und `deck.js`: Gerüst, Zeichenfunktionen, Live-Abfragen, Vorlage der `style.toml` |
+| `docs/website.md` | nur wenn Decks auf eine Website kommen: Player, Sync-Skript, Abbildungen in heller Palette |
 
 ## Der Ablauf, in dieser Reihenfolge
 
@@ -29,6 +37,7 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 
 ### 3. Bau des Decks (erst nach Freigabe)
 
+- **Zuerst `docs/design-rules.md` lesen**, dann bauen; Gerüst und Zeichenfunktionen stehen in `docs/api.md`.
 - Deckordner mit `<deck>.html` (aus `template/deck.html`), `deck.js` für die Zeichnungen, `theme.css` (aus der `style.toml`: `python <stagekit>/tools/theme.py style.toml <ordner>/theme.css`), Fotos in `img/`.
 - **Die HTML-Datei heißt nach dem Deck, nicht `index.html`.** `<deck>` ist der Titel der Titelfolie als Kurzname: in der Sprache der Folien, klein geschrieben, Wörter mit Bindestrich getrennt, nur ASCII (ä → ae, ö → oe, ü → ue, ß → ss), Satzzeichen weg, höchstens etwa 50 Zeichen — bei langen Titeln das Thema, nicht der ganze Satz. Beispiel: „A Brief History of AI" → `a-brief-history-of-ai.html`. Das PDF übernimmt den Namen von selbst (`export.py` benennt es nach der HTML-Datei: `export/a-brief-history-of-ai.pdf`). Grund: Ein PDF namens `index.pdf` sagt im Download-Ordner, im Anhang einer Mail oder im Lernraum nicht, was es ist (Regel vom 24.09.2026). Bestehende Decks mit `index.html` behalten ihren Namen, bis sie jemand bewusst umbenennt; dann Verweise (Einbettungen, Sync-Skripte, Links) mitziehen.
 - Titelfolie: Titel und Untertitel nennen Modul oder Anlass und den Namen der vortragenden Person. **Ein Datum gehört nur auf einen Satz, der genau einmal gehalten wird** — eine Gremiensitzung, ein Vortrag, eine Verteidigung; dort ist der Termin Teil des Anlasses und benennt die Fassung, über die geredet wurde. **Bei allem, was wiederkehrt, bleibt das Datum weg**: Lehrveranstaltungen, Modul-Inputs, Vorlagen. Dort veraltet es im nächsten Semester und macht aus einem brauchbaren Satz einen, den man erst anfassen muss. Im Zweifel fragen, welcher der beiden Fälle vorliegt; die Frage gehört in den Basisinfo-Dialog zum Anlass (Regel vom 15.09.2026).
@@ -46,191 +55,45 @@ Format (verbindlich): Kopf mit `# Entwurf: Input „<titel>“`, Status, Verortu
 - Nach dem Bau: `python <stagekit>/tools/export.py <ordner>/<deck>.html` (PDF, PNGs, Kontaktbogen, **Schrittprüfung und Schriftprüfung**), Kontaktbogen und Einzelfolien **ansehen**, erst dann dem Nutzer melden. Die Schrittprüfung (`--steps`) schaltet jede Folie mit Aufbau durch und meldet jedes Element, das zwischen zwei Schritten seine Position ändert. **Ein Deck mit einer springenden Folie ist nicht fertig.** Häufigste Ursache: ein zentrierter Block, dessen Inhalt beim Schritt wächst (längerer Text, neue Tabelle, anderes Bild). Abhilfe: dem wachsenden Element eine feste Höhe (`min-height`) geben oder den Container oben ausrichten, und Texte je Schritt gleich lang halten.
 - **Die Voreinstellung für `--jobs` genügt, auch in OneDrive.** Bis zum 28.09.2026 kamen beim parallelen Export einzelne Frames als weiße Rohseite oder schwarz heraus, und Prüfungen blieben ohne Ergebnis: Der lokale Server nahm nur fünf wartende Verbindungen an und wies den Rest ab (`ERR_CONNECTION_REFUSED`, mal die Seite, mal nur `theme.css`). Seitdem ist die Warteschlange groß, und `export.py` erkennt solche Frames selbst (Pixel (5,5) muss `--bg` zeigen), holt sie nach und meldet, wie viele. Schritt- und Schriftprüfung wiederholen eine Folie ohne Ergebnis einmal. **Steht in der Ausgabe `WARNUNG` oder `ohne ergebnis`, ist der Export nicht fertig.** Ein `--jobs 2` als Vorsichtsmaßnahme ist nicht mehr nötig.
 - **Das PDF ist Vektor.** `export.py` lässt Chrome die Druckansicht (`?print`) direkt nach PDF drucken: Text bleibt Text, Zeichnungen bleiben SVG, nichts wird beim Zoomen pixelig, und die Datei ist rund ein Zehntel so groß. **Bei eingebetteten Demonstratoren entscheidet der Blick ins fertige PDF.** Ein `<iframe>` kann leer bleiben, muss aber nicht: Liegt der Demonstrator im selben Ursprung wie das Deck und ist schnell geladen, druckt er vollständig mit, Bedienelemente und Text als Text (am 15.09.2026 an einem Satz mit zwei lokalen Demonstratoren nachgesehen). Ist der Rahmen im PDF dagegen leer, den Satz mit `--pdf-raster` exportieren: Das baut das PDF aus den Frame-PNGs, also aus Bildern der Folien. Für Fotofolien ist beides gleich gut, ein Foto ist ohnehin ein Bild.
-- **Die Framework-Kopie im Deckordner muss aktuell sein.** Der Vektorweg braucht die Druckansicht, die je Aufbauschritt zeichnet und danach klont (Marker `print-clone-ids` in `stagekit.js`). Führt ein Deck eine ältere Kopie, fällt der Export von selbst auf den Bildweg zurück und sagt es; dann die drei Framework-Dateien in den Deckordner kopieren.
+- **Die Framework-Kopie im Projekt muss aktuell sein, und sie wird mit `tools/sync.py` erneuert, nicht von Hand.** `python <stagekit>/tools/sync.py <projektordner>` kopiert die Laufzeitdateien in den Ordner `stagekit/` des Projekts und setzt in jedem Deck, das ihn lädt, die Cache-Kennung; `--check` meldet nur. `export.py` sagt von selbst, wenn ein Deck eine abweichende Kopie lädt. Der Vektorweg braucht die Druckansicht, die je Aufbauschritt zeichnet und danach klont (Marker `print-clone-ids` in `stagekit.js`); führt ein Deck eine sehr alte Kopie, fällt der Export auf den Bildweg zurück und sagt es.
 - **Jedes Deck bekommt ein Startskript** (Regel vom 01.10.2026): `python <stagekit>/tools/start_script.py <ordner>/<deck>.html` legt im Deckordner `start-presentation.cmd` an. Ein Doppelklick startet einen lokalen Server in dem Ordner, der Deck und Framework enthält (das Werkzeug liest die Tiefe aus dem Verweis auf `stagekit/`), und öffnet das Deck im Browser; Live-Abfragen und eingebettete Demonstratoren brauchen diese echte Adresse. Der Port folgt fest aus dem Decknamen (8800–8899), zwei Decks laufen also nebeneinander. Das Skript wird erzeugt, nicht von Hand geschrieben; nach dem Umbenennen oder Verschieben eines Decks neu erzeugen. Ein älteres `Vortrag starten.cmd` ersetzt das Werkzeug von selbst.
 - Zum Ansehen beim Bauen genügt derselbe Server (`python -m http.server <port> --bind 127.0.0.1` in dem Ordner, der Deck und Framework enthält), Adresse mit `?slide=N` für einen bestimmten Frame; nach änderungen Strg+F5. Einzelne Frames prüft man mit Chrome headless: `chrome --headless=new --window-size=1200,675 --virtual-time-budget=3000 --screenshot=<png> <url>?slide=N`.
 - **Jeder Aufbauschritt ist eine Folie mit eigener Nummer** (Zähler, Adresse, PDF, Kontaktbogen). Folienverweise in `skript.md` zählen deshalb Frames.
 
-### 4. Einbindung in eine Website (der Player)
+### 4. Einbindung in eine Website und 5. Abbildungen für Webseiten
 
-Ein Deck laedt Framework und Bilder ueber relative Pfade; auf einer fremden Seite muss es fuer sich stehen. Zwei Schritte:
-
-**a) Deck kopieren.** Ein Sync-Skript im einbettenden Projekt (in einer Quarto-Website etwa als `pre-render` eingehaengt) kopiert `<deck>.html`, `deck.js`, `theme.css` und nur die tatsaechlich geladenen Bilder in einen erzeugten Ordner, schreibt die Framework-Pfade auf einen gemeinsamen `stagekit/`-Ordner daneben um und nimmt das PDF aus `export/` als `<name>.pdf` mit. **Nur schreiben, was sich geaendert hat**, sonst dreht ein laufender `quarto preview` endlos, weil jeder Neubau das Skript erneut ausloest.
-
-**b) Player einsetzen.** Das Deck bringt seine Bedienung selbst mit: `?bar=1` blendet oben rechts eine Leiste ein mit zurueck, Zaehler, vor, Vollbild, "in eigenem Tab oeffnen" und, wenn `?pdf=<pfad>` mitgegeben wird, dem PDF. Alles als Symbol mit Tooltip; unter dem Rahmen steht dadurch kein Link mehr. Im Iframe hat die Tastatur erst nach einem Klick den Fokus, deshalb ist die Leiste dort Pflicht.
-
-In Quarto in einem `{=html}`-Block (Markdown-Links wuerden im Rohblock nicht gerendert):
-
-```html
-<div class="deck-embed">
-  <iframe src="../assets/decks/<name>/<name>.html?bar=1&pdf=../<name>.pdf"
-          title="<decktitel>" allowfullscreen loading="lazy"></iframe>
-</div>
-```
-
-Dazu einmal im Stylesheet:
-
-```scss
-.deck-embed {
-  margin: 1rem 0 1.5rem;
-  iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 1px solid #ddd; background: #000; }
-}
-```
-
-Der `pdf`-Pfad ist relativ zur HTML-Datei des Decks, nicht zur einbettenden Seite. `allowfullscreen` ist noetig, damit der Vollbildknopf und die Taste F wirken. Fotos, die ein Deck per Canvas ausliest, muessen aus demselben Ursprung kommen (ins `img/` des Decks kopieren), sonst verweigert der Browser die Pixel.
-
-### 5. Abbildungen für Webseiten aus dem Deck
-
-Die Zeichnungen eines Decks sind reine SVG-Strings und können als Abbildungen einer Website dienen, in einer hellen Palette. Dazu:
-
-- **Benannte Zusatzfarben, wenn Farbe Struktur ist.** Trägt ein Satz Farben, die etwas bezeichnen statt zu bewerten (Konzeptfamilien einer Karte, Gruppen, Teile), stehen sie als eigene Tabelle in der `style.toml`, etwa `[colors.families]` mit `transfer = "D6336C"`. `theme.py` schreibt daraus `--families-transfer`, und `deck.js` liest sie mit `d.color("families-transfer")`; so bleibt das Deck frei von Hex-Werten, und die Website-Fassung bekommt dieselben Werte (oder eigene unter `[colors.light.families]`). Solche Farben tragen dann **nur** diese Bedeutung: In derselben Zeichnung urteilt nichts über Rot oder Gelb aus der Achterpalette (Regel vom 15.09.2026).
-- `[colors.light]` in der `style.toml` mit denselben Schlüsseln wie `[colors]`; `theme.py` schreibt daraus `:root[data-theme="light"]`, und `draw.js` schaltet den Block ein, wenn `?theme=light` in der Adresse steht. Die Rollen bleiben: „yellow“ ist weiter die Farbe für 1, aktuell und Strom, „white“ die des Wichtigsten.
-- Zeichenfunktionen in `deck.js` geben ihr SVG **zurück** und schreiben es nur in ihr Element, wenn es das gibt (`if ($("fig-x")) …`); der Start des Decks steht unter `if ($("erstes-element"))`, damit `deck.js` auch ohne Folien lädt. Was die Website braucht, wird als `window.deckNN = {…}` veröffentlicht.
-- `figures.js` im Deckordner: `window.figures = { "name": () => svg, "anderes": async () => svg }`. Jede Funktion liefert ein komplettes SVG aus `draw.js`; für Tafeln gibt es `d.table(x, y, headers, rows, {cw, rh, size, hl})` als SVG-Fassung der HTML-Wahrheitstafel. Beschriftungen in der Sprache des Satzes (`[stagekit] language`), Codeschrift für Bits, dieselben Größen wie auf den Folien.
-- `python <stagekit>/tools/figures.py <ordner>/<deck>.html --out <ordner> --theme light` schreibt je Abbildung `<name>.svg` (Roboto Mono eingebettet, Breite und Höhe aus der viewBox). **Das Skript misst dabei jede Abbildung** und meldet am Ende, was über die viewBox hinausläuft („links 22 px abgeschnitten“) und was unter der Zeichnung leer bleibt. Beides sieht man der SVG-Datei nicht an: Der Text steht vollständig darin, der Browser schneidet ihn nur ab. Gemessen wird mit den echten Schriftbreiten, nachdem die Codeschrift geladen ist, also genau das, was der Leser sieht. **Ein Deck mit einem Befund ist nicht fertig**: Abgeschnittenes wird enger gesetzt, Leerraum wird aus der viewBox-Höhe herausgenommen. Trägt eine Zeichnung einen Aufbau in Schritten, ruft `figures.js` sie im letzten Schritt auf, damit die viewBox zum vollen Inhalt passt. **Jede Abbildung danach trotzdem als Screenshot auf Weiß ansehen** (Chrome headless mit `--default-background-color=ffffffff` auf die SVG-Datei): zu enge Spalten, Kollisionen und Farben, die auf hellem Grund verschwinden, findet keine Messung.
+Steht in `docs/website.md`: wie ein Sync-Skript ein Deck für eine Website kopiert, wie der Player (`?bar=1`) eingebettet wird und wie `tools/figures.py` die Zeichnungen eines Decks als SVG in heller Palette ausgibt.
 
 ### 6. Danach: die HTML-Datei ist die Quelle
 
 Änderungen laufen direkt an `<deck>.html` und `deck.js`, nicht über einen Neubau. Jede inhaltliche Änderung zieht dieselbe Änderung in `skript.md` nach sich, im selben Arbeitsgang.
 
-## Änderungen an stagekit selbst: CHANGELOG.md
-
-Jede Änderung am Framework (`stagekit.css`, `stagekit.js`, `draw.js`, `fonts/`), an den Werkzeugen in `tools/`, an der Vorlage oder an den Regeln dieser Datei bekommt **im selben Commit** einen Eintrag in `CHANGELOG.md` (Regel vom 01.10.2026). Neueste oben, je Datum ein Abschnitt, je Änderung eine Zeile: was sich geändert hat und, wo nötig, **was bestehende Decks tun müssen** (etwa „Framework-Dateien neu in den Deckordner kopieren“ oder „Startskript neu erzeugen“). Ohne diesen Hinweis erfährt ein Projekt mit eigener Framework-Kopie nicht, dass es nachziehen muss. Ein Commit ohne Eintrag ist nicht fertig; reine Tippfehler in der SKILL.md brauchen keinen.
-
 ## Gestaltungsregeln (Kurzfassung)
 
-- **Keine Stakkato-Sätze** (Regel vom 01.10.2026, Nicolas mag sie nicht). Nicht zwei, drei kurze Sätze oder Halbsätze hintereinander als Effekt: „a chatbot talks. an agent acts. let's find out how.“, „no slides. no exam. just build.“, „plan · read · write · run“ als Satzersatz. Das betrifft Punchlines, Merksätze, Titelzeilen, Untertitel und Sprechernotizen gleichermaßen. Eine Punchline ist **ein** ganzer Satz, der den Gedanken verbindet, statt ihn in Schlagworte zu hacken: „a chatbot only answers, while an agent acts on its own until the goal is reached.“ Ein einzelner kurzer Satz nach einem längeren ist erlaubt; eine Kette davon nicht. Aufzählungen in Schritten (🪜) sind keine Stakkato-Sätze, solange jede Zeile für sich ein Punkt der Liste ist. Gilt auch für Entwürfe: Steht im `entwurf.md` eine Stakkato-Punchline, wird sie dort umformuliert, bevor gebaut wird.
-- **Keine Zeitbezüge und keine zeitlichen Abhängigkeiten** (Regel vom 07.10.2026, Nicolas, für alle Lehrdecks). In Folien, Fußnoten, Sprechernotizen und Skripten steht nichts, was das Deck an einen Termin oder eine Reihenfolge bindet: kein „next week“, „this semester“, „in the next session“, „last time“, kein Datum, kein Verweis darauf, was vorher oder nachher dran war. Ein Deck soll an jeder Stelle jedes Plans laufen können, auch wenn eine Sitzung verschoben wird oder ein Thema in ein anderes Modul wandert. Termine stehen im Ablaufplan des Moduls, nicht im Deck. Gilt auch für Entwürfe: Steht im `entwurf.md` ein Zeitbezug, wird er dort entfernt, bevor gebaut wird.
-- Folientext kleingeschrieben (`--lowercase` im Theme; **nur bei englischen Sätzen**, ein deutscher Satz behält seine Großbuchstaben, `language = "de"` in der `style.toml` schaltet es ab), kein Kursiv, keine Übergänge. Code, Eigennamen und Abkürzungen wie RAM, CPU, LLM bleiben groß: im HTML mit `class="keep-case"`, in Zeichnungen mit `keepCase: true`.
-- Acht Farben, **genau vier Schriftgrößen**, nur aus dem Theme: `var(--tiny)`, `var(--small)`, `var(--normal)`, `var(--large)` (20, 32, 48, 80 px auf der 1920er Leinwand) und in Zeichnungen `size: 20 | 32 | 48 | 80`. Keine anderen Pixelwerte, auch nicht „ein bisschen kleiner, damit es passt“: Passt es nicht, wird das Layout geändert, nicht die Größe. Der Export prüft das (`--fonts`) und meldet jede fremde Größe. Nie Hex-Werte im Deck. Farbe ist Bedeutung: Blau verweist, Gelb merkt an und zeigt „aktuell“, Rot ist der sparsame Hingucker.
-- **Codeschrift für alles, was der Rechner liest:** Bits, Bytes, Hex-Adressen, Binärzahlen, Bezeichner, Formeln (`var(--mono)` bzw. `mono: true`), ohne Ausnahme und auf jeder Folie gleich. Bitfolgen in Vierergruppen mit Leerzeichen; Bytes, die untereinander stehen (Addition, Vergleich), Stelle für Stelle ausgerichtet: Bits rechtsbündig an einer gemeinsamen Kante, Gleichheitszeichen fest, Dezimalzahlen rechtsbündig.
-- **Live-Abfragen statt Kahoot** (Regel vom 28.09.2026). Eine Folie `<section class="slide poll" data-poll="<kennung>">` stellt dem Publikum eine Frage, die es am Handy beantwortet; die Folie zeigt QR-Code, Sitzungscode, einen Zähler und im nächsten Schritt das Ergebnis als Balken. Geschrieben werden nur zwei Elemente, den Rest baut `stagekit.js`: `<div class="poll-q">frage</div>` und `<ol class="poll-opts"><li>antwort</li><li data-correct>richtige antwort</li></ol>`, dazu wie immer `<aside class="notes">`. Mit `data-correct` wird es eine Quizfrage („quick quiz“, ein Schritt mehr: die richtige Antwort grün), ohne eine Umfrage („quick poll“). Schritt 0 öffnet die Frage (rotes pulsierendes „live“, schimmernde leere Balken), Schritt 1 schließt sie und deckt auf. Am `div.deck` stehen `data-live-url` (der Abfrage-Server, **nie in stagekit selbst**) und `data-live-series` (Name des Fragensets, Standard: Dateiname), dazu wahlweise `data-live-module` (Kurzname des Moduls, etwa `dup`: der Server legt die Sitzungen dann unter dem jüngsten Kurs dieses Moduls ab, so bleibt das Deck semesterunabhängig). Bedienung am Vortragsrechner: Taste **L** hinterlegt den Admin-Schlüssel des Servers im Browser (localStorage, nie in einer Datei, nie im Chat), Taste **C** beginnt eine neue Sitzung; eine Sitzung (sechsstelliger Code) gilt für den Tag, das Deck meldet mit Schlüssel sein ganzes Fragenset an den Server. Ohne Schlüssel zeigt die Folie nur, was der Server hat; in der Druckansicht und im PDF geht nichts ins Netz, dort steht der allgemeine QR-Code. **Wann:** vorab erfragen, worauf der Vortrag später Bezug nehmen kann (Vorwissen, Selbsteinschätzung gegen einen kurzen Wissenscheck, Haltungen), und kurze Wiederholungsquizzes; nie zur Bewertung, immer anonym. Kennungen je Deck eindeutig und sprechend (`byte-values`, nicht `q3`), und nicht mehr ändern, sobald eine Frage gelaufen ist, sonst zerfallen die gespeicherten Ergebnisse. Heute nur Einfachauswahl. Der Server muss diese Schnittstelle bieten (Referenz: `winf-hsos/classroom-live`): `POST /api/live/sessions` (`{series, title, module}`) → `{code}`, `POST /api/live/sets`, `POST /api/live/{code}/open`, `POST /api/live/{code}/close/{id}`, `GET /api/live/{code}/results/{id}` → `{state, counts, total}`, `GET /api/live/{code}/qr.svg`, `GET /api/live/qr.svg`; Admin-Aufrufe mit dem Kopf `X-Admin-Key`, CORS offen für `/api/live`.
-- **Jeder Codeblock hat einen Kopierknopf** (Regel vom 28.09.2026). `stagekit.js` hängt ihn automatisch an jedes `.code` einer Folie: ein Symbol (Bootstrap Icons „copy“), kein Text, rechts neben dem Block, nach dem Klick kurz ein grüner Haken; in der Druckansicht und damit im PDF ausgeblendet. Nichts dafür von Hand einbauen. Daraus folgt für den Bau: Code auf Folien so setzen, dass er kopiert **sofort läuft**, also vollständige Zeilen, echte Einrückung, keine Auslassungen wie `...` mitten im Programm; Zeilen entweder als Text mit Zeilenumbrüchen oder je Zeile ein `<div>` (beides wird richtig kopiert). Rechts vom Block rund 80 px frei lassen, dort sitzt der Knopf.
-- **R-Code auf Folien: nach jeder Pipe eine neue Zeile** (Regel vom 29.09.2026). Nach jedem `|>` beginnt eine neue Zeile, der nächste Schritt zwei Leerzeichen eingerückt, auch wenn nur ein Schritt folgt: `survey |>` und darunter `  count(D044stadtf)`, nie `survey |> count(D044stadtf)` in einer Zeile. Dasselbe gilt für `+` zwischen den Schichten von `ggplot()`. Der Code auf der Folie ist derselbe, den die Studierenden kopieren; er folgt deshalb den Konventionen des Kurses, nicht der kürzesten Schreibweise. Passt ein Block dann nicht mehr auf die Folie, wird er auf zwei Folien geteilt oder in `small` gesetzt, nicht wieder in eine Zeile gezogen.
-- **Code-Folien heben hervor, worum es auf der Folie geht** (Regel vom 29.09.2026). Der Befehl, Operator oder das Argument, das eine Folie einführt, steht im Codeblock in Blau: `<span class="hl">filter</span>(Q002alter &gt;= 60)`. Nur das, was auf dieser Folie neu ist oder besprochen wird, meist ein bis drei Stellen, nicht jede Funktion; bekannter Code bleibt weiß. Blau, nicht Gelb: Gelb heißt in Zeichnungen schon „aktueller Schritt“. Der Kopierknopf kopiert den Text ohne Auszeichnung, die Hervorhebung stört also nicht.
-- **Adressen auf Folien sind Links** (Regel vom 29.09.2026). Jede URL, die auf einer Folie steht (Download-Seite, Repository, Quelle in der Fußnote), ist ein `<a href="https://…" target="_blank" rel="noopener">`, damit das Publikum sie im geteilten Deck anklicken kann. Sichtbar steht die kurze Form ohne `https://`, das Ziel ist die volle Adresse. Ein Klick auf einen Link schaltet die Folie nicht weiter (stagekit.js lässt `a` aus), und Chrome übernimmt die Links ins PDF. Nennt eine Fußnote ein Buch oder eine Seite, die online steht, wird der Titel verlinkt.
-- **Abbildungen aus Code bekommen einen Kopierknopf, aber keinen Code auf der Folie** (Regel vom 29.09.2026). Eine Abbildung, die mit ggplot2 oder anderem Code entsteht, trägt den Code, der sie erzeugt, als `<div class="code figcode">…</div>` auf ihrer Folie: unsichtbar, nur der Kopierknopf erscheint oben rechts auf Höhe der Überschrift, und links daneben ein Knopf mit Augensymbol („show code“): Er legt den Code in einem leicht durchscheinenden Fenster über die Folie, mit Schließen-Symbol; Escape, Weiterblättern oder das Auge schließen es wieder. Im PDF erscheint keins von beidem. Der Code selbst steht nur dort auf einer Folie, wo er eingeführt wird. Der kopierte Code ist der, den das Publikum selbst schreiben würde, ohne das Folien-Design (`theme_stagekit()`, Farben); das Skript, das die Abbildung für die Folie zeichnet, benutzt denselben Code plus Design.
-- **Zeigt eine Zeichnung echte Farben, trägt daneben keine Palettenfarbe Bedeutung.** Sobald die Flächen für sich selbst stehen, also für rotes, grünes, blaues Licht statt für eine Rolle, konkurrieren zwei Lesarten um dieselbe Farbe: Rot ist dann gleichzeitig das gesendete Symbol und der Warnhinweis. Die Zeichnung verliert dadurch nicht an Schönheit, sondern an Eindeutigkeit. In so einer Zeichnung sind Beschriftungen, Zeiger und Marken deshalb **weiß**, und das Urteil trägt die Punchline darunter, nicht die Farbe im Bild. Rot im Kasten auf rotem Grund ist ohnehin schlecht lesbar; das ist nur das sichtbare Symptom. **Ausnahmen sind erlaubt, wenn sie begründet sind** und die Begründung als Kommentar neben der Zeichenfunktion steht: etwa wenn genau ein Element markiert werden muss, das in keiner der gezeigten echten Farben vorkommt (ein gelber Taktimpuls über roten und grünen Symbolen), oder wenn eine Zeichnung nur teilweise echte Farben zeigt und der bewertete Teil sauber davon getrennt liegt.
-- **Gelb heißt 1 oder „aktuell“**, sonst nichts: leuchtende Leitungen, gesetzte Bits, die markierte Zelle, die aktuelle Tafelzeile. Braucht eine zweite Betonung eine Farbe (etwa aufgefüllte Nullen), nimmt sie Grün; Rot bleibt der Warnhinweis.
-- **Verbinder liegen hinter dem Shape, in das sie führen.** Kein Strich darf auf einem Rahmen oder in einem Kasten sichtbar bleiben: erst alle Linien zeichnen, dann die Kaesten (`layers(wires, boxes, labels)`), und Kaesten mit Hintergrundfüllung, die den Linienrest abdeckt (`box()` füllt dafür seit dem 08.09.2026 standardmässig mit `--bg`). Dasselbe gilt für Pfeile: Die Spitze endet an der Kante, nicht darin.
-- Zeichnungen: Linien und Rahmen in `--white` oder `--gray-light`, Strom in Gelb, Inaktives in `--gray-dark`. Leitungen nur waagerecht und senkrecht, mit `d.layers(wires, gates, labels)` hinter den Gattern; Eingaben als Kippschalter (`d.toggle`), Ausgaben als Lampen (`d.lamp`); Zeichnung so groß wie die Fläche erlaubt, nur über die viewBox skaliert.
-- Tabellen: Wahrheitstafeln mit `.tt` (`.tt.large` neben großen Zeichnungen), schriftliche Addition mit `table.sum` (Zeile `carries` für die überträge in Bitgröße, Summenzeile mit Strich). Tabellen ohne Rahmenlinien-Wildwuchs: Kopf und Zeilen aus dem Framework, keine eigenen Rahmen.
-- **Der `.content`-Block deckt die ganze Folie ab** und zentriert senkrecht; ein hoher Block läuft deshalb unter die überschrift. Dann `style="top: 150px"` (oder eine Klasse) setzen, damit der Block unter der überschrift zentriert. Abstände zwischen Zeilen und Spalten großzügig (40 bis 60 px), zwischen Beschriftung und Wert mindestens 100 px.
-- **Formeln werden gesetzt, nicht getippt.** Kein `log2(x)`, kein `x^2` im Fließtext: `d.formula(x, y, "H = log_2(N)")` setzt die Formel in Codeschrift, `_` stellt tief, `^` hoch, geschweifte Klammern fassen zusammen (`H_{before}`). Tief- und Hochgestelltes läuft automatisch in der nächstkleineren der vier erlaubten Größen, die Schriftprüfung bleibt also still. Für alles, was darüber hinausgeht (Brüche, Summen, Wurzeln), gibt es in HTML-Decks bewusst nichts: Solche Formeln gehören in dieser Lehre auf die Konzeptseite, wo Quarto sie satzt, nicht auf eine Folie.
-- **Mehrere Zeilen in einem Kasten stehen linksbündig, nicht zentriert.** Sobald in einem Kasten mehr als eine Zeile steht (eine Codetabelle, mehrere Zuweisungen, eine Aufzählung), werden die Zeilen an einer gemeinsamen linken Kante ausgerichtet, damit Gleichheitszeichen, Doppelpunkte und Werte untereinander liegen; der Block als ganzes sitzt optisch mittig im Kasten. Zentriert wird nur eine einzelne Zeile. Praktisch: die linke Kante aus der längsten Zeile ausrechnen (`x + (breite - laengste.length * size * 0.6) / 2`) und alle Zeilen dort mit `d.label(links, …)` absetzen, ohne `anchor`. Zentrierte Codezeilen sehen aus wie ein Textabsatz und sind an der Stelle, an der man vergleichen will, unlesbar.
+Jede Regel steht mit Begründung, Grenzwerten und Beispielen in `docs/design-rules.md`; diese Liste erinnert nur daran.
 
-- **Nichts läuft über seinen Platz hinaus, und das wird gerechnet, bevor gebaut wird** (Regel vom 05.10.2026). Abgeschnittener oder übergelaufener Text ist der häufigste Fehler in fertigen Sätzen, weil der Export nur Sprünge und Schriftgrößen prüft, nicht, ob ein Text in seinen Platz passt. An einem einzigen Satz liefen am 05.10.2026 fünf Dinge über: eine Beschriftung über den Kastenrand, Antworten einer Live-Abfrage ineinander, eine Listenzeile in einer zu schmalen `cols3`-Spalte, Haken über die zweite Textzeile eines `verdict`-Kastens und Fototext ins Foto. Darum gilt für jede Stelle, an der Text auf begrenztem Platz steht:
-  - **Kasten in einer Zeichnung:** Breite gegen die längste Zeile rechnen, `Zeichen × Größe × 0,6` (Arial; Codeschrift ebenso), plus 20 Einheiten Rand je Seite; die Rechnung als Kommentar neben die Geometrie. Passt es nicht, wird der Kasten breiter oder der Text kürzer, nie die Schrift kleiner.
-  - **`verdict`-Kasten mit zwei Zeilen:** mindestens 164 hoch bei `size: 32`, mit `inset: 36`; erst dann sitzt das Zeichen unter der zweiten Zeile statt auf ihr.
-  - **Live-Abfrage:** jede Antwort höchstens rund 26 Zeichen; längere brechen um, und die Zeilen der Optionen laufen ineinander. Die Frage selbst darf zwei Zeilen haben.
-  - **Spalten (`cols3`, `two`):** die längste Zeile bei 48 px gegen die Spaltenbreite rechnen (Folieninhalt 1680 breit, abzüglich der Lücken). Braucht eine Spalte nur ein Bild oder Logo, bekommt sie eine feste schmale Breite (`grid-template-columns: minmax(0, 1fr) 300px minmax(0, 1fr)`), damit die Textspalten Platz haben.
-  - **Rahmen am Rand der Zeichenfläche:** Ein SVG-Strich liegt zur Hälfte außerhalb seiner Kante, und die viewBox schneidet diese Hälfte ab. Ein Kasten bei `x = 0` oder bis `x = breite` hat links oder rechts einen halb so dicken Rahmen, was im Kontaktbogen niemand sieht und auf der Leinwand jeder (05.10.2026, Bewertungskästen über die volle Breite). Darum jeden Kasten, jede Linie und jeden Pfeil um mindestens die halbe Strichbreite einrücken, bei `width: 2` also 2 Einheiten (bei `width: 4` 3), und die Einrückung als Kommentar notieren.
-  - **Fotofolien:** Ein Foto mit voller Höhe (`height: 100%`) ist 1920 breit und liegt unter dem ganzen Fototext. Für Text links das Foto auf rund 64 % Höhe setzen (dann beginnt es bei etwa x 690) und `.photo-text` auf 30 % Breite begrenzen.
-  - **Prüfen, nicht hoffen:** Jede Folie mit solchen Stellen im Export in voller Größe ansehen, und zwar jeden Aufbauschritt, denn ein Element, das erst im letzten Schritt erscheint, läuft auch erst dort über.
-- **Text in einem Kasten hält Abstand zum unteren Rand.** Ein Kasten wird nach seinem Inhalt bemessen, nicht der Inhalt nach dem Kasten. Faustregel: unter der letzten Zeile bleibt mindestens eine halbe Zeilenhöhe frei, bei `size: 48` also rund 40 Einheiten zwischen der Mitte der letzten Zeile und der Unterkante. Wer nur bis zur Grundlinie rechnet, vergisst die Unterlängen, und der Text klebt am Rahmen.
+- **Keine Stakkato-Sätze:** Eine Punchline ist ein ganzer Satz, der den Gedanken verbindet, keine Kette kurzer Sätze oder Schlagworte.
+- **Keine Zeitbezüge:** kein Datum, kein „next week“ oder „this semester“ und kein Verweis auf vorige oder folgende Sitzungen, damit ein Deck an jeder Stelle jedes Plans läuft.
+- Folientext klein geschrieben, aber nur bei englischen Sätzen; kein Kursiv, keine Übergänge; Abkürzungen und Eigennamen mit `keep-case` bzw. `keepCase: true`.
+- **Acht Farben und genau vier Schriftgrößen** (20, 32, 48, 80 px), nur aus dem Theme und nie als Hex-Wert im Deck. Farbe ist Bedeutung: Blau verweist, Gelb heißt 1 oder „aktuell“, Grün und Rot bewerten.
+- **Codeschrift für alles, was der Rechner liest**, Bitfolgen in Vierergruppen und Stelle für Stelle ausgerichtet.
+- **Code auf Folien läuft kopiert sofort**, jeder Block hat seinen Kopierknopf, in R steht nach jeder Pipe eine neue Zeile, das Neue einer Folie ist blau (`.hl`), und Abbildungen aus Code tragen ihren Code unsichtbar als `figcode`.
+- **Adressen auf Folien sind Links.**
+- **Zeichnungen:** Leitungen hinter den Kästen (`d.layers`), Rahmen um die halbe Strichbreite vom Rand eingerückt, Beschriftungen mittig zu ihrem Gegenstand (`centerY`), mehrzeiliger Text im Kasten linksbündig und oben wie unten mit gleichem Abstand; Bewertung mit `d.verdict`, Hervorhebung mit `d.highlight`, Formeln mit `d.formula`, Verarbeitung mit `d.ipo`.
+- **Nichts läuft über seinen Platz hinaus**, und das wird vor dem Bau gerechnet: Zeichen × Größe × 0,6 plus Rand, Antworten einer Live-Abfrage bis rund 26 Zeichen, Fotos für Text links auf rund 64 % Höhe.
+- **Live-Abfragen statt Kahoot**, anonym und nie zur Bewertung, mit sprechenden Kennungen, die sich nach dem ersten Einsatz nicht mehr ändern.
+- **Punchline** nur dort, wo ein Satz den Kern der Folie trägt, als `.punch` auf einer Folie mit `has-punch`.
+- Eine Aussage je Folie; Fotos werden erzeugt; Symbole aus Bootstrap Icons dezent und höchstens eines je Folie.
+- **Vor dem Melden jede Folie einzeln in voller Größe ansehen**, jeden Aufbauschritt, nicht nur den Kontaktbogen.
 
-- **Ein Textblock in einem Kasten hält oben und unten denselben Abstand zur Kante.** Gemessen wird an der sichtbaren Ober- und Unterkante des Textes, also an der Mitte der ersten Zeile minus ihrer halben Schriftgröße und an der Mitte der letzten plus deren halber Größe, nicht an den Grundlinien und nicht an den Zeilenmitten. Eine Zeile in 48 px reicht 24 px über und unter ihre Mitte hinaus, eine in 32 px nur 16: Wer die Zeilenmitten gleichmäßig verteilt, bekommt unten zu wenig Luft, sobald die letzte Zeile größer ist als die erste, und genau das fällt an einem Kasten sofort auf. Passt der Block nicht, wächst der Kasten; die Zeilenabstände bleiben. Die Rechnung gehört als Kommentar neben den Kasten, damit die nächste Änderung sie nachziehen kann.
-- **Das IPO-Modell als fertiges Element.** Zeigt eine Zeichnung eine Verarbeitung, also Eingabe, Kasten, Ausgabe, wird sie mit `d.ipo(y, input, processing, output, {level, active, monoBox})` gezeichnet und nicht von Hand: eine Zeile mit fester Geometrie, damit dieselbe Aussage in jedem Satz gleich aussieht. Ob ein Projekt das Modell zu einem wiederkehrenden Element macht und wo es stehen soll, entscheidet das Projekt; diese Regel gehört in dessen eigene Anweisungen, nicht hierher.
-- **Eine Textstelle hervorheben heißt: ein Kasten über die ganze Stelle.** Wer in einem Satz „the sun" markiert, legt einen durchscheinenden Kasten in der Bedeutungsfarbe (Gelb: das, worum es gerade geht) über die sieben Zeichen zusammen, nicht sieben Kästchen nebeneinander, und die Zeichen darin wechseln in dieselbe Farbe. Immer über `d.highlight(x, w, centerY, size, {color})`: Die Höhe kommt aus der Schriftgröße (1,4 em), der Rand ist oben und unten gleich, der Kasten hat keinen Rahmen. Höhe oder Ränder von Hand zu raten ist der Fehler, den dieses Element verhindert (Regel vom 14.09.2026).
-- **Beschriftungen sitzen mittig zu dem, was sie beschriften.** Ein Label neben einem Kasten wird nicht an einer selbst ausgerechneten Grundlinie abgesetzt, sondern an der Mitte des Kastens: `d.label(x, y, text, { centerY: kastenMitte })` bestimmt die Grundlinie selbst, auch bei mehreren Zeilen. Von Hand gesetzte Grundlinien sind der häufigste Grund dafür, dass ein zweizeiliges Label sichtbar zu tief steht: Eine Zeile sitzt auf der Mitte, zwei Zeilen hängen darunter. Dasselbe gilt für Werte neben Formen, Erklärzeilen an Kästen und Achsenbeschriftungen an Balken. **Abweichungen nur mit Grund** und dann sichtbar begründet: wenn mehrere Beschriftungen an einer gemeinsamen Kante ausgerichtet werden (Eingabe-Labels rechtsbündig vor dem Pfeil), wenn eine Beschriftung bewusst an der Oberkante einer Spalte steht, oder wenn zwei Labels sonst kollidieren würden.
-- **Bewertung: grüner Rahmen mit Haken, roter Rahmen mit Kreuz.** Die bessere Lösung, die richtige Antwort, der Weg, der trägt: Der Kasten bekommt einen grünen Rahmen und mittig an seinem unteren Rand einen kleinen grünen Haken. Das Gegenstück bekommt Rahmen und Kreuz in Rot, in derselben Größe und an derselben Stelle. Immer über `d.verdict(x, y, w, h, text, ok, opts)` zeichnen, nie von Hand, damit das Zeichen auf jeder Folie gleich aussieht und gleich sitzt; `ok` ist `true`, `false` oder `null` für den Fall, dass das Urteil erst in einem späteren Schritt erscheint (gleicher Kasten, gleiche Textlage, nur ohne Zeichen). Steht ein bewerteter Kasten neben unbewerteten, bekommen auch die `verdict(..., null, {border: …})`, sonst sitzt ihr Text höher als der der Nachbarn. Kein zweites Zeichen für dieselbe Aussage: Die Farbe des Rahmens sagt es schon, der Haken wiederholt sie für den, der sie nicht sieht.
-- **Demonstratoren auf Folien** laden mit `?embed=1` (Kopfzeile, Fußzeile und Hinweise ausgeblendet) und ihren Startparametern in der Adresse, in `.embed.z125` oder `.z150`, damit die Bedienelemente auf der Leinwand lesbar sind. Die Folie trägt nur die kleine überschrift `try it: …`. **Nach dem Export einmal ins PDF sehen**: Lokale, schnell geladene Demonstratoren drucken mit; bleibt der Rahmen leer, hilft `--pdf-raster`.
-- **Foto-Folien:** Eröffnung und Schluss als Symbolfoto rechts, Frage oder Satz links (`.photo` und `.photo-text`), Fußnote `image: ai-generated (<modell>)`. Pfeile in einen Kasten liegen auf dessen Mittelachse; Eingabe-Labels rechtsbündig vor dem Pfeil, Ausgabe-Labels linksbündig dahinter.
-- Eine Aussage je Folie. Wenig Text; die Aussage steckt im Bild, der Rest in den Notizen.
-- **Symbole aus Bootstrap Icons, wo ein Symbol etwas sagt.** Für kleine, eindeutige Zeichen (Kalender für einen Termin, Kreislauf für eine Schleife, Schloss für Sicherheit, Uhr für Zeit) gibt es Bootstrap Icons (https://icons.getbootstrap.com, MIT-Lizenz). `python <stagekit>/tools/icon.py --search <begriff>` findet passende Namen, `python <stagekit>/tools/icon.py <name>` gibt ein `<svg>` für das HTML aus, `--js` die Pfade für `d.icon(x, y, size, paths, {color})` in einer Zeichnung. Regeln: **dezent** — das Symbol begleitet eine Aussage, es trägt sie nicht; neben einer Überschrift so groß wie deren Schrift und in ihrer Farbe (Grau, etwa `display: flex; gap: 16px` in der `.header`-Zeile), in einer Zeichnung in `--gray` oder in der Bedeutungsfarbe des Elements, das es markiert (die Schleife gelb, wenn die Schleife gelb ist). **Sparsam** — eines je Folie, nie als Aufzählungszeichen, nie als Schmuck einer Folie ohne Aussage. Farbe nur aus dem Theme (`fill="currentColor"` mit `color: var(--gray)`), nie Hex. Der Kommentar mit Name, Version und Lizenz, den das Werkzeug mitliefert, bleibt im HTML bzw. in `deck.js` stehen. Ein Symbol ersetzt kein erzeugtes Foto: Stimmung und Szene kommen weiter aus `tools/image.py`, das Symbol ist das kleine Zeichen daneben (Regel vom 23.09.2026).
-- **Punchline:** nur dort, wo ein Satz den Kern der Folie trägt, nicht auf jeder Folie. Wenn, dann als `<div class="punch">` am unteren Rand, immer in der kleinen Größe, immer an derselben Stelle; die Folie bekommt dazu die Klasse `has-punch`, damit der Inhalt darüber Abstand hält. **Die Punchline verschiebt den Inhalt nicht** (Regel vom 29.09.2026): `has-punch` verkürzt die Inhaltsfläche oben und unten um dasselbe Maß, ein zentrierter Block steht also mit und ohne Punchline an derselben Stelle in der Mitte der Folie. Nie eine gelbe Zeile frei in eine Zeichnung setzen.
-- **Beschriftungen in Zeichnungen:** Achsen-, Ein- und Ausgabelabels in `small` (32), Werte und Bits in `normal` (48) oder `small`, nie größer als der Fließtext der Folie; Bildunterschriften und Erklärzeilen in `small` und Grau. Ein Foliensatz benutzt für dieselbe Textsorte überall dieselbe Größe.
-- **Gleiche Inhalte, gleiche Stelle:** Steht dieselbe Tabelle oder Zeichnung auf zwei aufeinanderfolgenden Folien, steht sie pixelgleich an derselben Stelle (gleiches Raster, feste Höhen). Die Schrittprüfung deckt das innerhalb einer Folie ab; zwischen Folien muss es der Bau sicherstellen und per Screenshot-Differenz prüfen.
-- **Vor dem Melden jede Folie einzeln in voller Größe ansehen,** nicht nur den Kontaktbogen: abgeschnittene Beschriftungen, Texte, die in Kästen zu tief sitzen, fehlende Linien und Kollisionen sieht man nur so.
-- **Mauszeiger beim Vortrag: Taste M** (seit 30.09.2026). Sie schaltet reihum: normaler Zeiger, **Laserpointer** (der Zeiger verschwindet, ein roter Leuchtpunkt folgt der Maus) und **ausgeblendet** (kein Zeiger, für einen digitalen Presenter mit eigenem Laserpointer). Im Laserpointer-Modus zeichnet gedrückt gehaltene Maustaste eine rote Spur, statt Text zu markieren: Sie bleibt kurz stehen und verblasst dann langsam (zusammen gut drei Sekunden), zum vorübergehenden Hervorheben; ein Folienwechsel löscht sie, und ein Zug blättert auch am Rand nicht weiter. Ein kurzer Hinweis unten nennt den Modus; der Browser merkt ihn sich je Deck. Über einem eingebetteten Demonstrator oder Video zeigt der Browser dessen eigenen Zeiger, das lässt sich von außen nicht ändern. Druckansicht und PDF zeigen nichts davon. Nichts im Deck nötig, die Taste gehört zum Framework; ältere Decks bekommen sie mit einer aktuellen Kopie von `stagekit.js` und `stagekit.css`.
-- **Cache-Buster:** `stagekit.css`, `stagekit.js`, `draw.js` und `deck.js` mit `?v=<datum>` einbinden und die Zahl bei jeder Änderung hochzählen, sonst zeigt der Browser des Nutzers alte Fassungen.
+## Änderungen an stagekit selbst
 
-## API-Spickzettel
+Seit dem 29.10.2026 pflegt ein eigener Agent stagekit (Sitzung `stagekit`, Ordner `02 - Lehrinhalte\stagekit` im Hochschulordner). **Alle anderen ändern nichts im Repository und committen nicht.** Ein Wunsch oder ein Fehler am Framework geht als Meldung in die eigene `STATUS.md` unter „Für die zentrale Stelle relevant“ oder als Frage per Direktnachricht an die Sitzung `stagekit`; Aufträge erteilt nur die zentrale Stelle. Bis die Änderung da ist, hilft sich ein Deck selbst, mit einer eigenen Regel im Deck und nie in seiner Kopie des Frameworks, denn die überschreibt `tools/sync.py` beim nächsten Erneuern. Neue Fassungen kommen über `tools/sync.py` ins Projekt, und was ein Deck danach tun muss, steht im `CHANGELOG.md`.
 
-```html
-<div class="deck" data-title="…" data-subtitle="…" data-parts='["a","b"]' data-part-colors='{"a":"#009ee3"}'>
-  <section class="slide title"></section>
-  <section class="slide agenda"></section>
-  <section class="slide part" data-part="a"></section>
-  <section class="slide">
-    <h2>heading</h2>
-    <div class="content">
-      <div class="header">header</div>
-      <div class="statement">statement</div>
-      <div class="lines mono"><div>line one</div><div data-step="1">line two, on step 1</div></div>
-      <div class="sidenote">sidenote</div><div class="remark">remark</div>
-    </div>
-    <div class="footnote">footnote</div>
-    <aside class="notes">notes</aside>
-  </section>
-  <section class="slide"><h2>drawing</h2><div class="figure" id="f1"></div></section>
-  <section class="slide"><h2>demo</h2><div class="embed"><iframe src="…"></iframe></div></section>
-  <section class="slide"><img class="photo" src="img/x.png"><div class="photo-text">question?</div><div class="footnote">image: ai-generated (gpt-image-2.5-flare)</div></section>
-</div>
-<!-- Reihenfolge ist Pflicht: deck.js VOR stagekit.js. stagekit ruft beim ersten
-     Anzeigen die data-on-show-Funktionen auf; stehen sie danach, fehlen sie noch.
-     Sichtbar wird das erst im Export, wo jeder Frame frisch mit ?slide=N laedt. -->
-<script src="…/stagekit/draw.js"></script>
-<script src="deck.js"></script>
-<script src="…/stagekit/stagekit.js"></script>
-```
+Für den Pfleger gilt:
 
-```js
-const d = window.draw;                       // Farben kommen aus dem Theme
-d.svg(w, h, ...parts)                        // Rahmen (viewBox)
-d.box(x, y, w, h, text, {border, fill, color, size, mono, dashed, rx})
-d.verdict(x, y, w, h, text, ok, opts)   // grüner Rahmen mit Haken (true), roter mit Kreuz (false), ohne Zeichen (null)
-d.mark(cx, cy, ok, {size})             // nur das Zeichen, überall gleich groß
-d.icon(x, y, size, paths, {color})     // Bootstrap-Icons-Symbol; paths aus `tools/icon.py <name> --js`, Standardfarbe Grau
-d.highlight(x, w, centerY, size, {color, opacity, pad, rx})  // Kasten über eine ganze Textstelle, Höhe aus der Schriftgröße
-d.ipo(y, input, processing, output, {level, active, monoBox})  // IPO-Zeile mit fester Geometrie: Eingabe, Kasten, Ausgabe
-d.color("families-transfer")           // benannte Zusatzfarbe aus [colors.<tabelle>] der style.toml
-d.formula(x, y, "H = log_2(N)", {size, color, anchor, centerY})  // _ tief, ^ hoch, {} gruppiert
-d.label(x, y, text, {size, color, anchor, mono, lineHeight, centerY})  // "\n" bricht um; centerY: mittig zu dieser Hoehe
-d.line(x1, y1, x2, y2, {color, width, dashed});  d.arrow(x1, y1, x2, y2, {color, width})
-d.wire([[x,y],…], on);  d.dot(x, y, on);  d.gate("and|or|xor|not|nand|nor", x, y, on)
-d.lamp(x, y, on, caption);  d.toggle(x, y, on, label)
-d.truthTable(["a","b"], ["out"], [{in:[0,0], out:[0]}, …], nowIndex)   // HTML-Tabelle
-```
-
-Hooks: `data-on-show="fn"` und `data-on-step="fn"` auf einer Folie rufen `window.fn(slide, step)`.
-
-Live-Abfrage (braucht `data-live-url` am `div.deck`):
-
-```html
-<section class="slide poll" data-poll="byte-values">
-  <div class="poll-q">how many different values can one byte hold?</div>
-  <ol class="poll-opts"><li>8</li><li>16</li><li data-correct>256</li><li>no idea</li></ol>
-  <aside class="notes">…</aside>
-</section>
-```
-
-## Vorlage style.toml
-
-```toml
-[colors]
-background = "000000"
-white = "FFFFFF"
-gray_light = "B6BEC6"
-gray = "7D868F"
-gray_dark = "4A5259"
-blue = "009EE3"
-green = "4ADE80"
-yellow = "FFD23F"
-red = "FF4D6D"
-
-[fonts]
-text = "Arial"
-code = "Roboto Mono"
-
-[sizes]
-large = 40
-normal = 24
-small = 16
-tiny = 10
-
-[stagekit]
-language = "en"    # Sprache aller Folien, auch der Beispiele; einmal festgelegt
-lowercase = true   # optional; ohne Angabe: ja bei "en", nein bei "de"
-margin = 120
-```
+- **Jede Änderung** am Framework (`stagekit.css`, `stagekit.js`, `draw.js`, `fonts/`), an den Werkzeugen in `tools/`, an der Vorlage, an dieser Datei oder an `docs/` bekommt **im selben Commit** einen Eintrag unter „Unveröffentlicht“ im `CHANGELOG.md` (Regel vom 01.10.2026): was sich geändert hat und, wo nötig, **was bestehende Decks tun müssen**. Ohne diesen Hinweis erfährt ein Projekt mit eigener Framework-Kopie nicht, dass es nachziehen muss. Ein Commit ohne Eintrag ist nicht fertig; reine Tippfehler brauchen keinen.
+- **Vor jedem Commit `python tools/selftest.py`.** Soll eine Änderung das Aussehen von Folien ändern, die gemeldeten Frames ansehen und mit `--update` übernehmen, im selben Commit.
+- **Rückwärtskompatibel bleiben.** Was bestehende Decks verändert, braucht Nicolas' Wort und eine neue Hauptversion.
+- **Releases werden gebündelt.** `python tools/release.py patch|minor|major` macht aus „Unveröffentlicht“ eine Version mit Tag; gepusht wird nur auf Nicolas' ausdrückliches Wort (`git push origin main vX.Y.Z`), weil jeder Push sofort veröffentlicht. Den Rest erledigt GitHub: Das Tag wird zum Release, und der Selbsttest läuft dort bei jedem Push mit.
+- Code, Kommentare, Commit-Nachrichten, README und `CONTRIBUTING.md` sind englisch; diese Datei, `docs/` und `CHANGELOG.md` bleiben deutsch, weil sie Regeln für die Decks sind.

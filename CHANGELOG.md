@@ -36,6 +36,17 @@ Die erste Version, **0.1.0**, umfasst auch alles unter „Vor den Versionen“.
 - **`tools/figures.py`:** ungültige Escape-Sequenz im eingebetteten JavaScript
   behoben, die Python 3.14 schon anmahnt und eine spätere Fassung ablehnen
   wird. *Decks:* nichts zu tun.
+- **`SKILL.md` aufgeteilt:** Sie behält Ablauf, Regeln in Kurzform und den Weg
+  für Änderungen (47 KB auf 18 KB). Die Gestaltungsregeln stehen vollständig
+  in `docs/design-rules.md` (vor dem Bau ganz lesen), Gerüst, Zeichen-API,
+  Live-Abfragen und `style.toml`-Vorlage in `docs/api.md`, Player und
+  Website-Abbildungen in `docs/website.md`. Am Inhalt der Regeln ändert sich
+  nichts außer der Cache-Kennung, die jetzt `tools/sync.py` setzt.
+  *Decks:* nichts zu tun.
+- **Weg für Änderungswünsche:** Nur der stagekit-Agent ändert und committet im
+  Repository; andere Agenten melden Wünsche in ihrer `STATUS.md` oder fragen
+  die Sitzung `stagekit` (in `SKILL.md` und `CONTRIBUTING.md`).
+  *Agenten:* nicht mehr selbst im Repository ändern.
 
 ## Vor den Versionen
 
