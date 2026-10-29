@@ -115,6 +115,7 @@ body.print .slide .code.figcode { display: none; }
 .slide.part .content { justify-content: center; }
 .slide.part .part-text { font-size: var(--large); }
 .slide.part .part-n { font-size: var(--small); color: var(--gray); font-family: var(--mono); }
+.slide.part .part-sub { font-size: var(--small); color: var(--gray); margin-top: 0.8em; }
 
 /* --- the location bar: which part are we in -------------------------------- */
 .location {

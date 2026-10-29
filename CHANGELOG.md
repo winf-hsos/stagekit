@@ -14,6 +14,13 @@ Git-Historie nachgetragen.
   Stelle jedes Plans läuft (Nicolas, 07.10.2026, für alle Lehrdecks).
   *Decks:* bei der nächsten Änderung auf Zeitbezüge durchsehen.
 
+## 2026-10-06
+
+- **Untertitel auf Trennfolien:** `<section class="slide part" data-part="…" data-subtitle="…">`
+  setzt unter den Teilnamen eine graue Zeile in der Größe des Untertitels der
+  Titelfolie (`.part-sub`). *Decks:* nichts zu tun; ohne `data-subtitle` bleibt
+  die Trennfolie, wie sie war.
+
 ## 2026-10-05
 
 - **Regel gegen übergelaufenen Text** in `SKILL.md` (Gestaltungsregeln): Breiten

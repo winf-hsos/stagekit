@@ -55,7 +55,7 @@
     if (!bare(s)) return;
     const name = s.dataset.part;
     const n = parts.indexOf(name) + 1;
-    s.insertAdjacentHTML("afterbegin", `<div class="content"><div class="part-n">${n ? "part " + n : ""}</div><div class="part-text">${name}</div></div>`);
+    s.insertAdjacentHTML("afterbegin", `<div class="content"><div class="part-n">${n ? "part " + n : ""}</div><div class="part-text">${name}</div>${s.dataset.subtitle ? `<div class="part-sub">${s.dataset.subtitle}</div>` : ""}</div>`);
   });
 
   /* --- live polls ---------------------------------------------------------------
