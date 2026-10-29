@@ -581,6 +581,8 @@
   document.addEventListener("keydown", (ev) => {
     const tag = document.activeElement && document.activeElement.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "IFRAME") return;
+    // writable boxes on a slide (contenteditable) take their keys, too
+    if (document.activeElement && document.activeElement.isContentEditable) return;
     // a code window closes with Escape and whenever the frame changes
     if (ev.key === "Escape") { closeOverlays(); return; }
     if (["ArrowRight", "ArrowDown", " ", "PageDown", "ArrowLeft", "ArrowUp", "PageUp", "Home", "End"].includes(ev.key)) { closeOverlays(); cursor.clear(); }
@@ -598,7 +600,7 @@
     }
   });
   document.addEventListener("click", (ev) => {
-    if (ev.target.closest("a, button, input, iframe, [data-no-advance]")) return;
+    if (ev.target.closest("a, button, input, textarea, iframe, [data-no-advance]") || ev.target.isContentEditable) return;
     closeOverlays();
     if (ev.clientX > window.innerWidth * 0.8 || ev.clientX < window.innerWidth * 0.2) cursor.clear();
     if (ev.clientX > window.innerWidth * 0.8) next();

@@ -6,6 +6,14 @@ Commit wie die Änderung (Regel in `SKILL.md`, Abschnitt „Änderungen an
 stagekit selbst“). Die Einträge bis zum 30.09.2026 sind am 01.10.2026 aus der
 Git-Historie nachgetragen.
 
+## 2026-10-29
+
+- **Beschreibbare Felder behalten ihre Tasten:** In einem Element mit
+  `contenteditable` blättern Leertaste und Pfeile nicht mehr weiter, und N, F,
+  P und M schalten nichts mehr um; ein Klick hinein blättert auch am Rand nicht.
+  Bisher galt das nur für `input` und `textarea` (Befund LiFi vom 25.09.2026,
+  Deck `protocols`). *Decks:* nichts zu tun.
+
 ## 2026-10-08
 
 - **Regel: keine Zeitbezüge in Decks** in `SKILL.md` (Gestaltungsregeln): kein
