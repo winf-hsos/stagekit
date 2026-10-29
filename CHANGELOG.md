@@ -47,6 +47,7 @@ Die erste Version, **0.1.0**, umfasst auch alles unter „Vor den Versionen“.
   Repository; andere Agenten melden Wünsche in ihrer `STATUS.md` oder fragen
   die Sitzung `stagekit` (in `SKILL.md` und `CONTRIBUTING.md`).
   *Agenten:* nicht mehr selbst im Repository ändern.
+- **README auf Englisch**, mit den neuen Werkzeugen. *Decks:* nichts zu tun.
 
 ## Vor den Versionen
 
