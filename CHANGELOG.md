@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.2.0 (2026-10-29)
+
 - **Animationen auf Folien (`anim.js`):** Eine Zeichnung kann in Abschnitten
   ablaufen: zeichnen, ein- und ausblenden, verschieben, entlang einer Leitung
   fahren, drehen, skalieren, umfärben, hochzählen, pulsieren, überblenden,
