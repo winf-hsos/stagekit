@@ -33,7 +33,7 @@ from export import chrome  # noqa: E402
 
 FONT = HERE.parent / "fonts" / "RobotoMono-Regular.woff2"
 
-HARNESS = """<!DOCTYPE html>
+HARNESS = r"""<!DOCTYPE html>
 <html data-theme="{theme}"><head><meta charset="utf-8">
 <link rel="stylesheet" href="theme.css">
 <link rel="stylesheet" href="{stagekit}/stagekit.css">

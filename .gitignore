@@ -4,3 +4,4 @@ slides/
 openai.key
 .openai.key
 tools/.icons/
+selftest-out/

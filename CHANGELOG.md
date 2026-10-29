@@ -24,6 +24,18 @@ Die erste Version, **0.1.0**, umfasst auch alles unter „Vor den Versionen“.
   `export.py` weist darauf hin, wenn ein Deck eine abweichende Kopie lädt.
   *Projekte:* Kopien künftig damit erneuern statt von Hand; das
   `sync_framework.py` von LiFi wird damit entbehrlich.
+- **Selbsttest:** `python tools/selftest.py` prüft die Syntax aller Dateien,
+  `theme.py`, `sync.py`, `start_script.py` und `release.py`, exportiert das
+  Testdeck `tests/deck/selftest.html` (jede Folienart, jeder Baustein) mit
+  Schritt- und Schriftprüfung und vergleicht jeden Frame mit
+  `tests/reference/<plattform>/`. Auf GitHub läuft er bei jedem Push.
+  *Decks:* nichts zu tun.
+- **Vorlage:** Die Beispielzeichnung in `template/deck.html` ist jetzt 1680
+  breit; vorher kam ihre Beschriftung durch die Skalierung mit 90 px heraus,
+  außerhalb der vier Größen. *Decks:* nichts zu tun.
+- **`tools/figures.py`:** ungültige Escape-Sequenz im eingebetteten JavaScript
+  behoben, die Python 3.14 schon anmahnt und eine spätere Fassung ablehnen
+  wird. *Decks:* nichts zu tun.
 
 ## Vor den Versionen
 

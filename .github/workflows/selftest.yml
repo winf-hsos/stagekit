@@ -1,0 +1,46 @@
+# Runs tools/selftest.py on every push and pull request. Fonts render a little
+# differently on Linux than on Windows, so frames are only compared once
+# tests/reference/linux/ exists; run this workflow by hand with "update" to
+# get those frames as an artifact, check them and commit them.
+name: selftest
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      update:
+        description: "write reference frames for Linux (artifact reference-linux)"
+        type: boolean
+        default: false
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Allow Chrome's sandbox (Ubuntu 24.04 restricts user namespaces)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Install Pillow
+        run: pip install pillow
+      - name: Self-test
+        run: python tools/selftest.py --out selftest-out ${{ inputs.update && '--update' || '' }}
+      - name: Work folder (frames, differences)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selftest-out
+          path: selftest-out
+      - name: Reference frames for Linux
+        if: inputs.update
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-linux
+          path: tests/reference/linux

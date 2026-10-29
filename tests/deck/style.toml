@@ -1,0 +1,35 @@
+# Theme of the self-test deck: the template from SKILL.md, plus one named
+# extra colour so that [colors.<table>] is covered as well.
+[colors]
+background = "000000"
+white = "FFFFFF"
+gray_light = "B6BEC6"
+gray = "7D868F"
+gray_dark = "4A5259"
+blue = "009EE3"
+green = "4ADE80"
+yellow = "FFD23F"
+red = "FF4D6D"
+
+[colors.families]
+represent = "F5A623"
+
+[colors.light]
+background = "FFFFFF"
+white = "000000"
+
+[fonts]
+text = "Arial"
+code = "Roboto Mono"
+
+[sizes]
+large = 40
+normal = 24
+small = 16
+tiny = 10
+
+[stagekit]
+language = "en"
+lowercase = true
+margin = 120
+parts = { "basics" = "009EE3", "drawings" = "4ADE80" }

@@ -48,10 +48,11 @@
      Zeichnungen, weil er jeden Frame frisch mit ?slide=N laedt. -->
 <script src="../../stagekit/draw.js"></script>
 <script>
-  // drawings go here; each writes into its figure once
+  // drawings go here; each writes into its figure once. A viewBox 1680 wide
+  // fills the figure 1:1, so sizes 20, 32, 48 and 80 come out as written.
   const d = window.draw;
-  document.getElementById("fig-example").innerHTML = d.svg(600, 200,
-    d.box(20, 60, 200, 80, "input"), d.arrow(220, 100, 360, 100), d.box(360, 60, 200, 80, "output"));
+  document.getElementById("fig-example").innerHTML = d.svg(1680, 200,
+    d.box(400, 60, 360, 80, "input"), d.arrow(760, 100, 920, 100), d.box(920, 60, 360, 80, "output"));
 </script>
 <script src="../../stagekit/stagekit.js"></script>
 </body>
