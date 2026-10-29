@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.1.0 (2026-10-29)
+
 Die erste Version, **0.1.0**, umfasst auch alles unter „Vor den Versionen“.
 
 - **Versionen:** `stagekit.js` trägt eine Versionsnummer (`window.stagekit.version`),
