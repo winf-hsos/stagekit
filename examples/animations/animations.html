@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>animations with stagekit</title>
+  <!-- Demo of anim.js: one example per way to run an animation. It loads the
+       framework straight from the repository; a real deck loads its project
+       copy (tools/sync.py). -->
+  <link rel="stylesheet" href="../../themes/default.css">
+  <link rel="stylesheet" href="../../stagekit.css">
+</head>
+<body>
+<div class="deck" data-title="animations with stagekit" data-subtitle="three examples to try with the keyboard"
+     data-parts='["step by step", "semi-automatic", "automatic"]'>
+
+  <section class="slide title"></section>
+  <section class="slide agenda"></section>
+
+  <section class="slide">
+    <h2>how to drive an animation</h2>
+    <div class="content">
+      <div class="lines">
+        <div><span class="keep-case">→</span> plays the next segment, or finishes the one that is running</div>
+        <div><span class="keep-case">←</span> goes back to the previous resting state</div>
+        <div><span class="keep-case">R</span> plays the animation of the slide from the start</div>
+      </div>
+      <div class="sidenote">every resting state is a page of its own in the PDF.</div>
+    </div>
+    <aside class="notes">The three examples show the three ways an animation can run: every segment on its own key press, a segment that stops half-way until the presenter goes on, and a sequence that runs on its own once started.</aside>
+  </section>
+
+  <section class="slide part" data-part="step by step" data-subtitle="every segment waits for the next key"></section>
+
+  <section class="slide">
+    <h2>bubble sort, the first pass</h2>
+    <div class="figure" id="fig-sort"></div>
+    <aside class="notes">Each key press compares the next pair and swaps it if the left value is larger. After the first pass the largest value has bubbled to the end and turns green.</aside>
+  </section>
+
+  <section class="slide part" data-part="semi-automatic" data-subtitle="a segment stops at a hold until you go on"></section>
+
+  <section class="slide">
+    <h2>a request and its reply</h2>
+    <div class="figure" id="fig-net"></div>
+    <aside class="notes">First key: the links appear. Second key: the request travels to the router and stops there, so we can talk about what a router does; the next key sends it on to the server. Third key: the reply travels back while the clock counts the round trip.</aside>
+  </section>
+
+  <section class="slide part" data-part="automatic" data-subtitle="started once, the segments follow each other"></section>
+
+  <section class="slide">
+    <h2>from the board to the chip</h2>
+    <div class="figure" id="fig-zoom"></div>
+    <div class="footnote">image: ai-generated (gpt-image-2.5-flare)</div>
+    <aside class="notes">One key press starts the whole sequence: the camera moves onto the processor, a frame marks it, and the number of transistors counts up. R plays it again.</aside>
+  </section>
+
+</div>
+<script src="../../draw.js"></script>
+<script src="../../anim.js"></script>
+<script src="deck.js"></script>
+<script src="../../stagekit.js"></script>
+</body>
+</html>

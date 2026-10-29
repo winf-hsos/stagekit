@@ -5,3 +5,4 @@ openai.key
 .openai.key
 tools/.icons/
 selftest-out/
+examples/**/img/original/
