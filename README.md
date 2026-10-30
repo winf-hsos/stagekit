@@ -60,7 +60,7 @@ Symbols that `tools/icon.py` inserts come from [Bootstrap Icons](https://icons.g
 
 ## Keyboard
 
-→ ↓ space PgDn: next (steps first, then slides) · ← ↑ PgUp: back · Home/End · F: fullscreen · N: notes window · P: print view · M: pointer mode · R: replay the animation of the slide · click on the right or left fifth of the window: next/back. Inside an input field or a writable box (`contenteditable`) keys and clicks belong to the field.
+→ ↓ space PgDn: next (steps first, then slides) · ← ↑ PgUp: back · Home/End · a number and Enter: go to that frame (1 Enter is the start) · F: fullscreen · N: notes window · P: print view · M: pointer mode · R: replay the animation of the slide · click on the right or left fifth of the window: next/back. Inside an input field or a writable box (`contenteditable`) keys and clicks belong to the field.
 
 ## Addresses
 

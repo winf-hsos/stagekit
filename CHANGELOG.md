@@ -13,6 +13,14 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Mit Zahl und Enter zu einer Folie springen** (Nicolas, 30.10.2026), wie in
+  Google Slides: „45“ und Enter geht zu Frame 45, „1“ und Enter an den Anfang.
+  Die Zahl ist die des Zählers unten rechts (Frames, wie `#45`); während des
+  Tippens zeigt der Zähler sie gelb an. Rücktaste löscht eine Ziffer, Escape,
+  jede andere Taste oder drei Sekunden Pause verwerfen die Eingabe; eine Zahl
+  über dem Ende führt zum letzten Frame. *Decks:* nichts zu tun; Projekte mit
+  eigener Kopie bekommen es mit `tools/sync.py`.
+
 ## 0.2.0 (2026-10-29)
 
 - **Animationen auf Folien (`anim.js`):** Eine Zeichnung kann in Abschnitten

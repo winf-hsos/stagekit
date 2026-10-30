@@ -616,12 +616,41 @@
     };
   })();
 
+  /* --- jump by number: digits, then Enter --------------------------------------
+   * As in Google Slides: "45" and Enter goes to frame 45, "1" and Enter to the
+   * start. The number is the one in the counter (frames, like #45). While
+   * digits are typed the counter shows them; Escape, any other key or three
+   * seconds without a key drop them. */
+  const jump = (() => {
+    let digits = "", timer = 0;
+    function show() {
+      counter.classList.toggle("typing", digits !== "");
+      counter.textContent = digits ? `→ ${digits}` : `${frame + 1} / ${frames.length}`;
+    }
+    function clear() { clearTimeout(timer); digits = ""; show(); }
+    function type(d) {
+      digits = (digits + d).replace(/^0+(?=\d)/, "").slice(0, 4);
+      clearTimeout(timer); timer = setTimeout(clear, 3000);
+      show();
+    }
+    function back() { digits = digits.slice(0, -1); show(); }
+    function go() { const n = Number(digits); clear(); showFrame(Math.max(1, Math.min(frames.length, n)) - 1); }
+    return { type, back, go, clear, get active() { return digits !== ""; } };
+  })();
+
   // --- keys ----------------------------------------------------------------------
   document.addEventListener("keydown", (ev) => {
     const tag = document.activeElement && document.activeElement.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "IFRAME") return;
     // writable boxes on a slide (contenteditable) take their keys, too
     if (document.activeElement && document.activeElement.isContentEditable) return;
+    if (/^[0-9]$/.test(ev.key) && !ev.ctrlKey && !ev.metaKey && !ev.altKey) { jump.type(ev.key); return; }
+    if (jump.active) {
+      if (ev.key === "Enter") { ev.preventDefault(); jump.go(); return; }
+      if (ev.key === "Backspace") { ev.preventDefault(); jump.back(); return; }
+      jump.clear();
+      if (ev.key === "Escape") return;
+    }
     // a code window closes with Escape and whenever the frame changes
     if (ev.key === "Escape") { closeOverlays(); return; }
     if (["ArrowRight", "ArrowDown", " ", "PageDown", "ArrowLeft", "ArrowUp", "PageUp", "Home", "End"].includes(ev.key)) { closeOverlays(); cursor.clear(); }
