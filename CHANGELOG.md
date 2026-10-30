@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.3.0 (2026-10-30)
+
 - **Selbsttest auf GitHub fest auf Ubuntu 26.04** statt `ubuntu-latest`, dem
   System, auf dem die Linux-Referenzbilder entstanden sind; ein anderes Abbild
   könnte Schriften anders zeichnen und den Bildvergleich ohne Grund rot
