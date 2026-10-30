@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.4.0 (2026-10-30)
+
 - **Animationen rückwärts abspielen** (Nicolas, 30.10.2026): Mit
   `back: "play"` spielt ← den Abschnitt in doppeltem Tempo rückwärts bis
   zum vorigen Zwischenstand, auch aus einem laufenden Abschnitt heraus; ein
