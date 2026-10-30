@@ -66,7 +66,8 @@ el("fig-zoom").innerHTML = d.svg(1680, 804,
   d.g("cpu-box", d.box(700, 219, 231, 236, "", { border: d.color("yellow"), fill: "none" })),
   d.g("cpu-label", d.label(686, 337, "CPU", { anchor: "end", centerY: 337, keepCase: true, color: d.color("yellow") })),
   d.g("transistors", d.label(816, 478, "0 billion transistors", { anchor: "middle", centerY: 478 })));
-const zoom = d.anim("fig-zoom", { auto: true, gap: 500 });
+// back: "play" -- zooming out again is the reverse of zooming in and tells nothing wrong
+const zoom = d.anim("fig-zoom", { auto: true, gap: 500, back: "play" });
 zoom.step(zoom.camera([481, 175.2, 672, 321.6], { dur: 2500 }));
 zoom.step(zoom.par(zoom.show("spot", { dur: 1000 }), zoom.draw("cpu-box", { dur: 1000 })));
 zoom.step(zoom.show("cpu-label", { dur: 400 }), zoom.show("transistors", { dur: 400 }),

@@ -324,10 +324,12 @@
     if (!sameSlide && s.dataset.onShow && typeof window[s.dataset.onShow] === "function") window[s.dataset.onShow](s, s._step);
     else if (sameSlide && s.dataset.onStep && typeof window[s.dataset.onStep] === "function") window[s.dataset.onStep](s, s._step);
     if (s.classList.contains("poll")) live.update(s, s._step);
-    // an animation plays only one frame forward on the same slide; any other
-    // way here (back, a jump, a fresh load) shows its keyframe at once
+    // an animation plays one frame forward on the same slide, and with
+    // back: "play" one frame back as well; any other way here (a jump, a fresh
+    // load) shows its keyframe at once
     if (s._anims) {
-      s._anims.forEach((a) => a.frame(s._step, sameSlide && frame === before + 1));
+      const how = !sameSlide ? null : frame === before + 1 ? "play" : frame === before - 1 ? "back" : null;
+      s._anims.forEach((a) => a.frame(s._step, how));
       if (!sameSlide && s._step === 0 && s._anims.some((a) => a.autostart)) {
         const here = frame;
         setTimeout(() => { if (frame === here) next(); }, 400);
@@ -343,7 +345,12 @@
     if (s._anims && s._anims.some((a) => a.next())) { broadcast(); return; }
     if (frame < frames.length - 1) showFrame(frame + 1);
   }
-  function prev() { if (frame > 0) showFrame(frame - 1); }
+  function prev() {
+    // an animation running backwards takes ← first and jumps to its keyframe
+    const s = slides[index];
+    if (s._anims && s._anims.some((a) => a.prev && a.prev())) { broadcast(); return; }
+    if (frame > 0) showFrame(frame - 1);
+  }
   // R: the animations of this slide from the start (keyframe 0, then play on)
   function replay() {
     const s = slides[index];

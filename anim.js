@@ -38,7 +38,9 @@
  * Common options: dur (default 800), ease ("inOut" default, "in", "out", "linear").
  * Animation options: auto (segments follow each other on their own, with gap
  * ms in between), autostart (the first segment starts on entering the slide),
- * first (the build-up step of the first segment, default 1).
+ * first (the build-up step of the first segment, default 1), back ("jump",
+ * the default: ← shows the previous keyframe at once; "play": ← runs the
+ * segment backwards at backSpeed, default 2, and a second ← jumps).
  *
  * Everything is computed from the time alone: render(t) starts from the
  * initial state and applies every tween up to t. That makes jumps exact and
@@ -92,6 +94,7 @@
     const a = {
       figure, auto: !!opts.auto, gap: opts.gap === undefined ? 600 : opts.gap,
       autostart: !!opts.autostart, first: opts.first || 1,
+      back: opts.back === "play" ? "play" : "jump", backSpeed: opts.backSpeed || 2,
       segments: [], initial: [],
     };
     const tw = (t, prop, to, o = {}, extra = {}) => Object.assign({ type: "tw", t, prop, to, dur: o.dur === undefined ? DUR : o.dur, ease: o.ease || "inOut" }, extra);
@@ -288,10 +291,10 @@
     }
 
     // --- playing -------------------------------------------------------------------
-    let key = 0, t = 0, stopAt = 0, playing = false, waiting = false, raf = 0, last = 0, autoTimer = 0;
+    let key = 0, t = 0, stopAt = 0, playing = false, waiting = false, raf = 0, last = 0, autoTimer = 0, rewinding = false;
     const N = () => a.segments.length;
     const keyOf = (step) => clamp(step - a.first + 1, 0, N());
-    function stop() { cancelAnimationFrame(raf); raf = 0; clearTimeout(autoTimer); playing = false; waiting = false; }
+    function stop() { cancelAnimationFrame(raf); raf = 0; clearTimeout(autoTimer); playing = false; waiting = false; rewinding = false; }
     function seek(k, frac) {
       stop(); key = k;
       t = frac === undefined || k === 0 ? T[k] : lerp(T[k - 1], T[k], frac);
@@ -303,6 +306,7 @@
     // auto, let the next one follow after the gap)
     function arrived() {
       cancelAnimationFrame(raf); raf = 0; playing = false;
+      if (rewinding) { rewinding = false; if (a.onchange) a.onchange(); return; }
       waiting = t < T[key];
       if (a.onchange) a.onchange();                       // the notes window shows the state
       if (waiting) return;
@@ -322,26 +326,51 @@
       };
       raf = requestAnimationFrame(tick);
     }
+    // back: "play" -- the segment runs backwards to the keyframe before it, at
+    // twice the speed, from wherever it is now; holds are passed over
+    function rewind() {
+      cancelAnimationFrame(raf); clearTimeout(autoTimer);
+      playing = true; waiting = false; rewinding = true; stopAt = T[key]; last = performance.now();
+      const tick = (now) => {
+        t = Math.max(stopAt, t - (now - last) * a.backSpeed); last = now;
+        render(t);
+        if (t > stopAt) raf = requestAnimationFrame(tick);
+        else arrived();
+      };
+      raf = requestAnimationFrame(tick);
+    }
     let firstCall = true;
-    // called by stagekit.js whenever the slide shows a frame
-    a.frame = (step, play) => {
+    // called by stagekit.js whenever the slide shows a frame; how is "play"
+    // (one frame forward), "back" (one frame back) or nothing (a jump)
+    a.frame = (step, how) => {
       if (!ready && !setup()) return;                      // T, the segment times, come from setup
       const k = keyOf(step);
       const frac = firstCall && params.has("anim-t") ? clamp(parseFloat(params.get("anim-t"))) : undefined;
       firstCall = false;
-      if (play && k === key + 1) { seek(key); key = k; run(); }
+      if ((how === "play" || how === true) && k === key + 1) { seek(key); key = k; run(); }   // true: stagekit.js 0.2
+      else if (how === "back" && a.back === "play" && k === key - 1) {
+        // from the current time if the segment is still under way, else from its end
+        const from = t > T[k] && t <= T[key] ? t : T[key];
+        stop(); key = k; t = from; rewind();
+      }
       else seek(k, frac);
     };
     // → while the animation is busy: true when it took the key
     // → while it is playing skips to the next hold or the end of the segment;
     // → while it waits at a hold plays on
     a.next = () => {
+      if (rewinding) { t = stopAt; render(t); arrived(); return true; }
       if (waiting) { run(); return true; }
       if (playing) { t = stopAt; render(t); arrived(); return true; }
       return false;
     };
+    // ← while it runs backwards: straight to the keyframe
+    a.prev = () => {
+      if (rewinding) { t = stopAt; render(t); arrived(); return true; }
+      return false;
+    };
     a.stop = stop;
-    a.status = () => `animation ${key}/${N()}${playing ? " running" : waiting ? " waiting" : ""}`;
+    a.status = () => `animation ${key}/${N()}${rewinding ? " rewinding" : playing ? " running" : waiting ? " waiting" : ""}`;
     all.push(a);
     return a;
   }

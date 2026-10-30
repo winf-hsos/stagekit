@@ -82,7 +82,7 @@ el("fig-net").innerHTML = d.svg(1680, 600,
   d.g("route", d.line(334, 300, 1346, 300, { color: "none" })), // unsichtbarer Weg für along
   d.g("packet", d.box(244, 272, 180, 56, "request")),           // steht am Anfang der Route
   d.g("time", d.label(840, 540, "0 ms", { anchor: "middle" })));
-const a = d.anim("fig-net");                  // { auto, gap, autostart, first }
+const a = d.anim("fig-net");                  // { auto, gap, autostart, first, back }
 a.step(a.draw("link"), a.show("packet"));     // Abschnitt 1: nacheinander
 a.step(a.along("packet", "route"), a.hold(),  // Abschnitt 2: hält, bis → kommt
        a.count("time", 42, { suffix: " ms" }));
@@ -106,9 +106,9 @@ a.step(a.camera([1000, 140, 672, 240]));      // Abschnitt 3: Kamerafahrt (viewB
 
 Gemeinsame Optionen: `dur` in ms (Standard 800), `ease`: `"inOut"` (Standard), `"in"`, `"out"`, `"linear"`. Ziele sind Namen aus `d.g(name, …)` oder CSS-Selektoren innerhalb der Zeichnung. Bilder kommen mit `d.image(x, y, w, h, "img/…jpg", { fit })` in die Zeichnung; ein freigestelltes Objekt als PNG (`image.py --transparent`) lässt sich wie jede Gruppe bewegen, drehen und skalieren.
 
-Optionen der Animation: `auto: true` lässt die Abschnitte nach dem ersten → von selbst aufeinander folgen, mit `gap` ms Pause (Standard 600); `autostart: true` startet den ersten Abschnitt beim Betreten der Folie; `first` ist der Aufbauschritt des ersten Abschnitts (Standard 1), damit andere `data-step`-Elemente der Folie mit einem Abschnitt zusammen erscheinen können.
+Optionen der Animation: `auto: true` lässt die Abschnitte nach dem ersten → von selbst aufeinander folgen, mit `gap` ms Pause (Standard 600); `autostart: true` startet den ersten Abschnitt beim Betreten der Folie; `first` ist der Aufbauschritt des ersten Abschnitts (Standard 1), damit andere `data-step`-Elemente der Folie mit einem Abschnitt zusammen erscheinen können; `back: "play"` lässt ← den Abschnitt rückwärts abspielen statt zum vorigen Zwischenstand zu springen, in `backSpeed`-fachem Tempo (Standard 2).
 
-Bedienung: → spielt den nächsten Abschnitt; läuft einer, springt er an sein Ende oder an den nächsten Haltepunkt; wartet er an einem Haltepunkt, läuft er weiter. ← zeigt den vorigen Zwischenstand. **R** spielt die Animation der Folie von vorn. Das Notizfenster zeigt den Stand („animation 2/3 waiting“). `?anim-t=0.3` zeigt beim Laden den Abschnitt des Frames zu 30 % (für Tests). Eine Zeichnung mit Animation wird einmal beim Laden gezeichnet und nicht über `data-on-step` neu geschrieben.
+Bedienung: → spielt den nächsten Abschnitt; läuft einer, springt er an sein Ende oder an den nächsten Haltepunkt; wartet er an einem Haltepunkt, läuft er weiter. ← zeigt den vorigen Zwischenstand, mit `back: "play"` spult es den Abschnitt dorthin zurück (auch aus einem laufenden Abschnitt heraus), und ein zweites ← springt sofort. **R** spielt die Animation der Folie von vorn. Das Notizfenster zeigt den Stand („animation 2/3 waiting“). `?anim-t=0.3` zeigt beim Laden den Abschnitt des Frames zu 30 % (für Tests). Eine Zeichnung mit Animation wird einmal beim Laden gezeichnet und nicht über `data-on-step` neu geschrieben.
 
 Ein vollständiges Beispiel mit allen drei Betriebsarten liegt in `examples/animations/`.
 

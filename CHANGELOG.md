@@ -13,6 +13,14 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Animationen rückwärts abspielen** (Nicolas, 30.10.2026): Mit
+  `back: "play"` spielt ← den Abschnitt in doppeltem Tempo rückwärts bis
+  zum vorigen Zwischenstand, auch aus einem laufenden Abschnitt heraus; ein
+  zweites ← springt sofort. Ohne die Option springt ← wie bisher. Regel in
+  `docs/design-rules.md`: nur für umkehrbare Abläufe wie Kamerafahrten, nie
+  für Abläufe mit Richtung. Im Demo-Deck bei der Kamerafahrt.
+  *Decks:* nichts zu tun.
+
 ## 0.3.0 (2026-10-30)
 
 - **Selbsttest auf GitHub fest auf Ubuntu 26.04** statt `ubuntu-latest`, dem
