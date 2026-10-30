@@ -2,6 +2,10 @@
 # differently on Linux than on Windows, so frames are only compared once
 # tests/reference/linux/ exists; run this workflow by hand with "update" to
 # get those frames as an artifact, check them and commit them.
+# The runner is pinned to ubuntu-26.04, where the Linux reference frames were
+# made (2026-10-29): another image may draw fonts slightly
+# differently, and the frame comparison would fail without any change here.
+# Moving to another image means new reference frames in the same step.
 name: selftest
 
 on:
@@ -17,16 +21,16 @@ on:
 
 jobs:
   selftest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
-      - name: Allow Chrome's sandbox (Ubuntu 24.04 restricts user namespaces)
+          node-version: "24"
+      - name: Allow Chrome's sandbox (Ubuntu restricts user namespaces since 24.04)
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Install Pillow
         run: pip install pillow
@@ -34,13 +38,13 @@ jobs:
         run: python tools/selftest.py --out selftest-out ${{ inputs.update && '--update' || '' }}
       - name: Work folder (frames, differences)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: selftest-out
           path: selftest-out
       - name: Reference frames for Linux
         if: inputs.update
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reference-linux
           path: tests/reference/linux

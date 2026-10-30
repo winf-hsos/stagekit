@@ -13,6 +13,12 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Selbsttest auf GitHub fest auf Ubuntu 26.04** statt `ubuntu-latest`, dem
+  System, auf dem die Linux-Referenzbilder entstanden sind; ein anderes Abbild
+  könnte Schriften anders zeichnen und den Bildvergleich ohne Grund rot
+  machen. Die Actions laufen jetzt in Version 7 auf Node 24.
+  *Decks:* nichts zu tun.
+
 - **Mit Zahl und Enter zu einer Folie springen** (Nicolas, 30.10.2026), wie in
   Google Slides: „45“ und Enter geht zu Frame 45, „1“ und Enter an den Anfang.
   Die Zahl ist die des Zählers unten rechts (Frames, wie `#45`); während des
