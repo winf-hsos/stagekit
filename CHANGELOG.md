@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.5.0 (2026-11-04)
+
 - **Drittes Bewertungszeichen „Vorsicht“** (Vorschlag Hands-on Computer
   Science auf Anregung von Nicolas, 03.11.2026): `d.verdict(…, "caution")`
   zeichnet den Kasten gelb mit einem gelben Warndreieck an der Stelle von
