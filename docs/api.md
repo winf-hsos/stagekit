@@ -38,8 +38,9 @@ die Vorlage der `style.toml`. Beim Schreiben von HTML und `deck.js` daneben offe
 const d = window.draw;                       // Farben kommen aus dem Theme
 d.svg(w, h, ...parts)                        // Rahmen (viewBox)
 d.box(x, y, w, h, text, {border, fill, color, size, mono, dashed, rx})
-d.verdict(x, y, w, h, text, ok, opts)   // grüner Rahmen mit Haken (true), roter mit Kreuz (false), ohne Zeichen (null)
+d.verdict(x, y, w, h, text, ok, opts)   // grüner Rahmen mit Haken (true), roter mit Kreuz (false), gelber mit Warndreieck ("caution"), ohne Zeichen (null)
 d.mark(cx, cy, ok, {size})             // nur das Zeichen, überall gleich groß
+d.keys(x, cy, ["ctrl", "c"], {color})  // Tastenkappen mit "+" dazwischen, 56 hoch, x linke Kante, cy Mitte; d.keys.width(names) = Gesamtbreite
 d.icon(x, y, size, paths, {color})     // Bootstrap-Icons-Symbol; paths aus `tools/icon.py <name> --js`, Standardfarbe Grau
 d.highlight(x, w, centerY, size, {color, opacity, pad, rx})  // Kasten über eine ganze Textstelle, Höhe aus der Schriftgröße
 d.ipo(y, input, processing, output, {level, active, monoBox})  // IPO-Zeile mit fester Geometrie: Eingabe, Kasten, Ausgabe

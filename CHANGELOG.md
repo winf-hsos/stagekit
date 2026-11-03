@@ -13,6 +13,21 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Drittes Bewertungszeichen „Vorsicht“** (Vorschlag Hands-on Computer
+  Science auf Anregung von Nicolas, 03.11.2026): `d.verdict(…, "caution")`
+  zeichnet den Kasten gelb mit einem gelben Warndreieck an der Stelle von
+  Haken und Kreuz, für eine Behauptung, die noch niemand geprüft hat;
+  `d.mark(cx, cy, "caution")` zeichnet nur das Dreieck. Textlage wie bei den
+  anderen Urteilen.
+  *Decks:* nichts zu tun. Wer sich mit `verdict(…, null, {border: yellow})`
+  plus `d.icon` beholfen hat, kann auf `"caution"` umstellen.
+- **Tastenkappen für Tastenkürzel** (Vorschlag Hands-on Computer Science auf
+  Anregung von Nicolas, 30.10.2026): `d.keys(x, cy, ["ctrl", "shift", "m"])`
+  zeichnet Kappen mit grauem „+“ dazwischen, `d.keys.width(names)` liefert
+  ihre Gesamtbreite; im Fließtext `<kbd>ctrl</kbd> + <kbd>c</kbd>` im selben
+  Aussehen.
+  *Decks:* nichts zu tun.
+
 ## 0.4.0 (2026-10-30)
 
 - **Animationen rückwärts abspielen** (Nicolas, 30.10.2026): Mit

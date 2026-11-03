@@ -7,8 +7,10 @@
  *   svg(w, h, ...parts)               the frame
  *   box(x, y, w, h, text, opts)       rounded box with centred text
  *   verdict(x, y, w, h, text, ok, opts)  box framed green with a check, or red with a cross, centred at its bottom;
+ *                                     ok "caution": yellow with a warning sign (a claim not checked yet);
  *                                     ok null keeps the same layout without a mark (no verdict yet)
- *   mark(cx, cy, ok, opts)           just the check or cross, same size everywhere
+ *   mark(cx, cy, ok, opts)           just the check, cross or warning sign, same size everywhere
+ *   keys(x, cy, names, opts)         keycaps for a shortcut, "+" between them; keys.width(names) is their width
  *   icon(x, y, size, paths, opts)    a Bootstrap Icons symbol (paths from tools/icon.py --js); opts: color
  *   formula(x, y, text, opts)         a set formula: _ subscript, ^ superscript, {} groups
  *   label(x, y, text, opts)           text; opts: size, color, anchor, mono, keepCase,
@@ -125,6 +127,12 @@
    * Hand, damit das Zeichen auf jeder Folie gleich aussieht und gleich sitzt. */
   function mark(cx, cy, ok, o = {}) {
     const c = C();
+    if (ok === "caution") {
+      // Warndreieck statt Haken: die Aussage ist noch nicht geprueft. Etwas
+      // groesser als Haken und Kreuz, weil das Dreieck seine Flaeche nicht fuellt.
+      const size = o.size ? o.size * 40 / 34 : 40;
+      return icon(cx - size / 2, cy - size / 2, size, WARNING, { color: o.color || c.yellow });
+    }
     const col = o.color || (ok ? c.green : c.red);
     const r = (o.size || 34) / 2;
     const w = o.width || 7;
@@ -133,6 +141,9 @@
     const a = r * 0.72;
     return `<path d="M${cx - a},${cy - a} L${cx + a},${cy + a} M${cx + a},${cy - a} L${cx - a},${cy + a}" ${stil}/>`;
   }
+
+  // Bootstrap Icons "exclamation-triangle-fill" 1.11.3 (MIT, (c) The Bootstrap Authors)
+  const WARNING = '<path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>';
 
   /* Symbol aus Bootstrap Icons in einer Zeichnung. `paths` sind die inneren
    * Pfade eines Symbols (viewBox 16 x 16), wie `python tools/icon.py <name> --js`
@@ -151,7 +162,10 @@
     // seine eigene Groesse, damit es auf jeder Folie gleich aussieht.
     // ok === null: noch kein Urteil. Gleicher Kasten, gleiche Textlage, kein
     // Zeichen; so springt nichts, wenn das Urteil erst spaeter erscheint.
-    const col = ok === null || ok === undefined ? (o.border || c.light) : (ok ? c.green : c.red);
+    // ok === "caution": eine Behauptung, die noch niemand geprueft hat; gelb,
+    // mit Warndreieck an der Stelle des Hakens.
+    const col = ok === null || ok === undefined ? (o.border || c.light)
+      : ok === "caution" ? c.yellow : (ok ? c.green : c.red);
     const inset = o.inset || 44;
     // Der Text sitzt mittig ueber dem Zeichen, nicht mittig im Kasten: sonst
     // rueckt eine lange Aussage dem Haken auf den Leib.
@@ -163,6 +177,33 @@
     if (ok === null || ok === undefined) return s;
     return s + mark(x + w / 2, y + h - inset, ok, { size: o.markSize });
   }
+
+  /* Tastenkappen fuer ein Tastenkuerzel: keys(x, cy, ["ctrl", "shift", "m"]).
+   * x ist die linke Kante der ersten Kappe, cy die Mitte der Zeile. Jede Kappe
+   * ist dunkel mit grauem Rand und einer grauen Kante 6 darunter, die Taste in
+   * der Codeschrift 32 (19,2 je Zeichen) plus 36, 56 hoch; dazwischen ein graues
+   * "+" in 48 Abstand. keys.width(names) liefert die Gesamtbreite, damit die
+   * Erklaerung dahinter ohne Raten sitzt. Ein einzelner Name geht auch als Text. */
+  const KEY_GAP = 48;
+  const keyWidth = (name) => Math.round(String(name).length * 19.2 + 36);
+  function keys(x, cy, names, o = {}) {
+    const c = C();
+    const parts = [];
+    let at = x;
+    [].concat(names).forEach((name, i) => {
+      if (i) {
+        parts.push(label(at + KEY_GAP / 2, 0, "+", { size: 32, color: c.gray, anchor: "middle", centerY: cy }));
+        at += KEY_GAP;
+      }
+      const w = keyWidth(name), y = cy - 28;
+      parts.push(`<rect x="${at}" y="${y + 6}" width="${w}" height="56" rx="8" fill="${c.gray}"/>` +
+        `<rect x="${at}" y="${y}" width="${w}" height="56" rx="8" fill="${c.dark}" stroke="${c.gray}" stroke-width="2"/>` +
+        label(at + w / 2, 0, name, { size: 32, mono: true, anchor: "middle", centerY: cy, keepCase: true, color: o.color || c.white }));
+      at += w;
+    });
+    return parts.join("");
+  }
+  keys.width = (names) => [].concat(names).reduce((sum, n, i) => sum + keyWidth(n) + (i ? KEY_GAP : 0), 0);
 
   /* Formelsatz. Die Projektregel verlangt gesetzte Formeln statt getippter
    * ("log2(x)" ist keine Formel). Notation: `_` stellt tief, `^` hoch, und
@@ -304,5 +345,5 @@
   /* color(name) liest eine benannte Zusatzfarbe des Themes, etwa "families-transfer"
    aus [colors.families] der style.toml; so bleibt ein Deck frei von Hex-Werten. */
   const color = (name) => css("--" + name);
-  window.draw = { svg, layers, label, box, verdict, mark, icon, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C, color };
+  window.draw = { svg, layers, label, box, verdict, mark, keys, icon, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C, color };
 })();

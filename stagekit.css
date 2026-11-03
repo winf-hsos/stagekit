@@ -47,6 +47,11 @@ a { color: var(--blue); text-decoration: none; }
 .lines.mono, .mono { font-family: var(--mono); }
 .lines > div, .code > div { min-height: 1.35em; }
 .code { font-family: var(--mono); font-size: var(--normal); color: var(--white); white-space: pre; }
+/* a key in running text, <kbd>ctrl</kbd> + <kbd>c</kbd>: the same cap as d.keys() in a drawing,
+ * dark with a gray rim and a gray edge below, the key in the code font */
+.slide kbd { font-family: var(--mono); font-size: 1em; text-transform: none; color: var(--white);
+             background: var(--gray-dark); border: 2px solid var(--gray); border-radius: 8px;
+             box-shadow: 0 0.18em 0 var(--gray); padding: 0 0.55em; margin: 0 0.1em; white-space: nowrap; }
 .code .kw { color: var(--blue); }
 .code .num { color: var(--yellow); }
 /* the copy button stagekit.js adds to every code block: to the right of the
