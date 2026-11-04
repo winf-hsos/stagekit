@@ -101,13 +101,29 @@ a.step(a.camera([1000, 140, 672, 240]));      // Abschnitt 3: Kamerafahrt (viewB
 | `count(t, bis, { from, decimals, prefix, suffix })` | zählt die Zahl in einem Text hoch |
 | `pulse(t, { times })` / `swap(alt, neu)` | kurz größer und zurück / überblenden |
 | `camera([x, y, w, h])` | Zoom und Schwenk über die viewBox der Zeichnung |
-| `set(t, { opacity, x, y, scale, rotate, draw })` | Startzustand ausdrücklich setzen |
+| `set(t, { opacity, x, y, scale, rotate, draw, idle })` | Startzustand ausdrücklich setzen; `idle: "pulse"` (oder `{ kind, … }`) bewegt t schon im Zwischenstand 0 |
+| `idle(t, art, o)` / `still(t, art)` | ab hier Bewegung im Leerlauf / beenden (ohne `art` alle von t), siehe unten |
 | `wait(ms)` / `hold()` | Pause / anhalten bis → (halbautomatisch) |
 | `par(…)` / `seq(…)` | gleichzeitig / nacheinander (Standard in `step`) |
 
 Gemeinsame Optionen: `dur` in ms (Standard 800), `ease`: `"inOut"` (Standard), `"in"`, `"out"`, `"linear"`. Ziele sind Namen aus `d.g(name, …)` oder CSS-Selektoren innerhalb der Zeichnung. Bilder kommen mit `d.image(x, y, w, h, "img/…jpg", { fit })` in die Zeichnung; ein freigestelltes Objekt als PNG (`image.py --transparent`) lässt sich wie jede Gruppe bewegen, drehen und skalieren.
 
 Optionen der Animation: `auto: true` lässt die Abschnitte nach dem ersten → von selbst aufeinander folgen, mit `gap` ms Pause (Standard 600); `autostart: true` startet den ersten Abschnitt beim Betreten der Folie; `first` ist der Aufbauschritt des ersten Abschnitts (Standard 1), damit andere `data-step`-Elemente der Folie mit einem Abschnitt zusammen erscheinen können; `back: "play"` lässt ← den Abschnitt rückwärts abspielen statt zum vorigen Zwischenstand zu springen, in `backSpeed`-fachem Tempo (Standard 2).
+
+**Bewegung im Leerlauf** läuft weiter, solange die Zeichnung an einem Zwischenstand oder Haltepunkt wartet, bis `still(t)` sie beendet:
+
+| Art | Wirkung | Optionen |
+|---|---|---|
+| `"pulse"` | wird ruhig größer und kleiner | `to` (Standard 1,06), `period` in ms (1600) |
+| `"blink"` | wird blasser und wieder voll | `min` (Deckkraft, Standard 0,35), `period` (1600) |
+| `"flow"` | Striche wandern die Linie entlang, für Leitungen und Datenwege | `dash`, `gap` (je 12), `speed` pro Sekunde (80), `reverse` |
+
+```js
+a.step(a.draw("link"), a.show("packet"), a.idle("packet", "pulse"));   // wartet pulsierend auf →
+a.step(a.still("packet"), a.along("packet", "route"), a.idle("link", "flow"));
+```
+
+`flow` strichelt nur Linien und Pfade der Gruppe; Kästen, Punkte, Pfeilspitzen und Text bleiben ganz. Die Bewegung läuft nur auf der Folie, die gerade gezeigt wird. Im Druck, im Export, im Selbsttest (Chrome headless), mit `?anim-t` und bei der Systemeinstellung „Bewegung reduzieren“ steht sie still: `pulse` und `blink` zeigen dann die Zeichnung unverändert, `flow` eine gestrichelte Linie. Technisch legt sie um jedes Ziel eine Gruppe `<g class="sk-idle">` und bewegt diese, deshalb verträgt sie sich mit allen Bausteinen oben.
 
 Bedienung: → spielt den nächsten Abschnitt; läuft einer, springt er an sein Ende oder an den nächsten Haltepunkt; wartet er an einem Haltepunkt, läuft er weiter. ← zeigt den vorigen Zwischenstand, mit `back: "play"` spult es den Abschnitt dorthin zurück (auch aus einem laufenden Abschnitt heraus), und ein zweites ← springt sofort. **R** spielt die Animation der Folie von vorn. Das Notizfenster zeigt den Stand („animation 2/3 waiting“). `?anim-t=0.3` zeigt beim Laden den Abschnitt des Frames zu 30 % (für Tests). Eine Zeichnung mit Animation wird einmal beim Laden gezeichnet und nicht über `data-on-step` neu geschrieben.
 

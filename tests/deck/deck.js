@@ -39,7 +39,9 @@ document.getElementById("fig-anim").innerHTML = d.svg(1680, 500,
   d.g("packet", d.box(304, 210, 160, 60, "data", { border: d.color("yellow") })),
   d.g("bytes", d.label(840, 400, "0 bytes", { anchor: "middle" })));
 const a = d.anim("fig-anim");
-a.step(a.draw("link"), a.show("packet"));
-a.step(a.along("packet", "route", { dur: 1200 }), a.hold(),
-       a.par(a.color("server", "green"), a.count("bytes", 1500, { from: 0, suffix: " bytes" })));
+// Idle motion: the packet pulses while it waits to be sent, and once it has
+// arrived the link shows a flow; both stand still in the export and the self-test.
+a.step(a.draw("link"), a.show("packet"), a.idle("packet", "pulse"));
+a.step(a.still("packet"), a.along("packet", "route", { dur: 1200 }), a.hold(),
+       a.par(a.color("server", "green"), a.count("bytes", 1500, { from: 0, suffix: " bytes" })), a.idle("link", "flow"));
 a.step(a.camera([1000, 140, 672, 200]));

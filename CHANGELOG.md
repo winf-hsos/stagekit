@@ -13,6 +13,16 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Bewegung im Leerlauf für Animationen:** `a.idle(t, "flow" | "pulse" |
+  "blink", o)` lässt ein Ziel weiterlaufen, solange die Zeichnung an einem
+  Zwischenstand oder Haltepunkt wartet, etwa Strom, der durch eine Leitung
+  fließt; `a.still(t)` beendet es, `a.set(t, { idle: "pulse" })` setzt es schon
+  für den Zwischenstand 0. Die Bewegung läuft nur im Vortrag auf der gezeigten
+  Folie und steht im Druck, im Export, im Selbsttest und bei „Bewegung
+  reduzieren“ still (`flow` dann als gestrichelte Linie). Regel in
+  `docs/design-rules.md`.
+  *Decks:* nichts zu tun.
+
 ## 0.6.0 (2026-11-04)
 
 - **Schriftprüfung sieht vergrößerte Gruppen:** `export.py --fonts` rechnet

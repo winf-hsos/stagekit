@@ -31,7 +31,12 @@
  *   pulse(t, o)                    grow and shrink, o.times (default 2)
  *   swap(out, in, o)               cross-fade two targets
  *   camera([x, y, w, h], o)        zoom and pan: animates the viewBox of the drawing
- *   set(t, props)                  start state: opacity, x, y, scale, rotate, draw
+ *   set(t, props)                  start state: opacity, x, y, scale, rotate, draw, idle
+ *   idle(t, kind, o)               from here on t keeps moving while the drawing rests:
+ *                                  "pulse" (o.to 1.06, o.period 1600), "blink" (o.min 0.35,
+ *                                  o.period 1600), "flow" for lines and wires (o.dash 12,
+ *                                  o.gap 12, o.speed 80 per second, o.reverse)
+ *   still(t, kind)                 ends idle motion of t (only kind, if given)
  *   wait(ms), hold()               pause; hold waits for → (semi-automatic)
  *   par(...items), seq(...items)
  *
@@ -45,7 +50,13 @@
  * Everything is computed from the time alone: render(t) starts from the
  * initial state and applies every tween up to t. That makes jumps exact and
  * the export deterministic. ?anim-t=0.5 shows the frame's segment half-way,
- * for the self-test. */
+ * for the self-test.
+ *
+ * Idle motion is the one exception: it runs on the wall clock, but only on the
+ * current slide of a talk. In ?print, with ?anim-t, in headless Chrome (export,
+ * self-test) and with prefers-reduced-motion it stands still in its rest pose,
+ * which is the drawing itself (flow: dashes at offset 0). It moves a wrapper
+ * <g class="sk-idle"> around each target, so it never fights the tweens. */
 
 (function () {
   "use strict";
@@ -86,9 +97,28 @@
     if (item.type === "par") return item.items.reduce((m, c) => Math.max(m, layout(c, t0, out)), t0);
     if (item.type === "wait") return t0 + item.dur;
     if (item.type === "hold") { out.holds.push(t0); return t0; }
+    if (item.type === "idle") { out.idles.push(Object.assign({}, item, { start: t0 })); return t0; }
     out.tweens.push(Object.assign({}, item, { start: t0 }));
     return t0 + item.dur;
   }
+
+  // --- idle motion: one loop for all animations ---------------------------------------
+  const IDLE = { pulse: 1, blink: 1, flow: 1 };
+  const FROZEN = params.has("print") || params.has("anim-t") || /HeadlessChrome/.test(navigator.userAgent) ||
+    !!navigator.webdriver || !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  let loopRaf = 0;
+  function loop(now) {
+    loopRaf = 0;
+    const live = all.filter((a) => a._idle && a._idle());
+    live.forEach((a) => a._paint(now));
+    if (live.length) loopRaf = requestAnimationFrame(loop);
+  }
+  function wake() { if (!FROZEN && !loopRaf) loopRaf = requestAnimationFrame(loop); }
+  document.addEventListener("visibilitychange", wake);
+  // flow dashes lines and paths; boxes, dots, arrow heads and text in the same group stay whole
+  const css = document.createElement("style");
+  css.textContent = ".sk-flow :is(rect, circle, ellipse, polygon, text, tspan):not([stroke-dasharray]) { stroke-dasharray: none; }";
+  document.head.appendChild(css);
 
   function anim(figure, opts = {}) {
     const a = {
@@ -122,8 +152,13 @@
     a.par = (...items) => ({ type: "par", items });
     a.seq = (...items) => ({ type: "seq", items });
     a.set = (t, props) => { a.initial.push({ t, props }); return a; };
+    a.idle = (t, kind, o = {}) => {
+      if (!IDLE[kind]) throw new Error(`stagekit.anim: unknown idle motion "${kind}" (pulse, blink, flow)`);
+      return { type: "idle", t, kind, o };
+    };
+    a.still = (t, kind) => ({ type: "idle", t, kind, off: true });
     a.step = (...items) => {
-      const out = { tweens: [], holds: [] };
+      const out = { tweens: [], holds: [], idles: [] };
       out.dur = layout({ type: "seq", items }, 0, out);
       a.segments.push(out);
       return a;
@@ -131,7 +166,7 @@
     Object.defineProperty(a, "steps", { get: () => a.segments.length });
 
     // --- resolving targets (lazily: the figure is drawn when deck.js runs) -------------
-    let ready = false, root, svgRoot, T = [0], tweens = [], holds = [], init = {}, numFmt = {};
+    let ready = false, root, svgRoot, T = [0], tweens = [], holds = [], idles = [], init = {}, numFmt = {};
     const nodes = {};
     function find(sel) {
       if (sel === null) return svgRoot ? [svgRoot] : [];
@@ -147,10 +182,17 @@
       if (!root) return false;
       svgRoot = root.querySelector("svg");
       // absolute times: segment k runs from T[k-1] to T[k]
-      T = [0]; tweens = []; holds = [];
+      T = [0]; tweens = []; holds = []; idles = [];
+      // idle motion from a.set(t, {idle}) is there from keyframe 0 (segment 0)
+      a.initial.forEach(({ t, props }) => {
+        if (!props.idle) return;
+        const v = typeof props.idle === "string" ? { kind: props.idle } : props.idle;
+        idles.push(Object.assign(a.idle(t, v.kind, v), { seg: 0, start: 0 }));
+      });
       a.segments.forEach((s, k) => {
         s.tweens.forEach((x, i) => tweens.push(Object.assign({}, x, { start: T[k] + x.start, order: k * 1e4 + i })));
         s.holds.forEach((h) => holds.push(T[k] + h));
+        (s.idles || []).forEach((x) => idles.push(Object.assign({}, x, { start: T[k] + x.start, seg: k + 1 })));
         T.push(T[k] + s.dur);
       });
       tweens.sort((x, y) => x.start - y.start || x.order - y.order);
@@ -166,7 +208,11 @@
         const implied = x.implicit || (x.prop === "num" && x.from !== undefined ? { num: x.from } : null);
         if (implied) init[key] = Object.assign(init[key] || {}, implied);
       });
-      a.initial.forEach(({ t, props }) => { init[t] = Object.assign(init[t] || {}, props); });
+      a.initial.forEach(({ t, props }) => {
+        const rest = Object.assign({}, props);
+        delete rest.idle;
+        if (Object.keys(rest).length) init[t] = Object.assign(init[t] || {}, rest);
+      });
       ready = true;
       return true;
     }
@@ -252,7 +298,68 @@
         }
       });
       flush(state);
+      if (idles.length) settle();
     }
+
+    // --- idle motion: which targets move while the drawing rests ---------------------
+    // An idle item counts once playback has reached it: in an earlier segment, or
+    // in the current one at or before t. Rewinding counts the segment it leaves
+    // as not reached, so its idle motion stops at once.
+    const wrappers = new Map();      // node -> { w, on: Map(kind -> { o, since, item }) }
+    function settle() {
+      const want = new Map();         // "target|kind" -> item
+      idles.forEach((x) => {
+        if (x.seg > key || (x.seg === key && x.start > t)) return;
+        if (x.off) Array.from(want.keys()).forEach((k) => { if (k.startsWith(x.t + "|") && (!x.kind || k === x.t + "|" + x.kind)) want.delete(k); });
+        else want.set(x.t + "|" + x.kind, x);
+      });
+      const now = performance.now(), live = new Set();
+      want.forEach((x) => find(x.t).forEach((n) => {
+        if (!n.ownerSVGElement || !n.parentNode) return;
+        let r = wrappers.get(n);
+        if (!r) {
+          const w = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          w.setAttribute("class", "sk-idle");
+          n.parentNode.insertBefore(w, n); w.appendChild(n);
+          wrappers.set(n, r = { w, on: new Map() });
+        }
+        const was = r.on.get(x.kind);
+        // the phase starts at rest when the motion begins, and keeps running after that
+        r.on.set(x.kind, { o: x.o, item: x, since: was && was.item === x ? was.since : now });
+        live.add(r.on.get(x.kind));
+      }));
+      wrappers.forEach((r) => r.on.forEach((v, k) => { if (!live.has(v)) r.on.delete(k); }));
+      paint(now);
+      wake();
+    }
+    function paint(now) {
+      const age = (v) => (FROZEN ? 0 : now - v.since);
+      const wave = (v, period) => (1 - Math.cos(2 * Math.PI * age(v) / (period || 1600))) / 2;   // 0 at rest
+      wrappers.forEach((r) => {
+        const w = r.w, pulse = r.on.get("pulse"), blink = r.on.get("blink"), flow = r.on.get("flow");
+        if (pulse) {
+          const k = 1 + ((pulse.o.to || 1.06) - 1) * wave(pulse, pulse.o.period);
+          let c = { x: 0, y: 0 };
+          try { const b = w.getBBox(); c = { x: b.x + b.width / 2, y: b.y + b.height / 2 }; } catch (e) { /* not rendered */ }
+          w.setAttribute("transform", `translate(${+c.x.toFixed(2)} ${+c.y.toFixed(2)}) scale(${+k.toFixed(4)}) translate(${+(-c.x).toFixed(2)} ${+(-c.y).toFixed(2)})`);
+        } else w.removeAttribute("transform");
+        w.style.opacity = blink ? String(+(1 - (1 - (blink.o.min === undefined ? 0.35 : blink.o.min)) * wave(blink, blink.o.period)).toFixed(3)) : "";
+        if (flow) {
+          const dash = flow.o.dash || 12, gap = flow.o.gap === undefined ? 12 : flow.o.gap;
+          const off = ((flow.o.speed || 80) * age(flow) / 1000) % (dash + gap);
+          w.classList.add("sk-flow");
+          w.style.strokeDasharray = `${dash} ${gap}`;
+          w.style.strokeDashoffset = String(+(flow.o.reverse ? off : -off).toFixed(2));
+        } else {
+          w.classList.remove("sk-flow");
+          w.style.strokeDasharray = ""; w.style.strokeDashoffset = "";
+        }
+      });
+    }
+    // true while this animation has idle motion on the slide the audience sees
+    a._idle = () => !!root && !document.hidden && !!root.closest(".slide.current") &&
+      Array.from(wrappers.values()).some((r) => r.on.size > 0);
+    a._paint = paint;
 
     function flush(state) {
       Object.entries(state).forEach(([key, s]) => {
