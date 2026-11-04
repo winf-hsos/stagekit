@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.6.0 (2026-11-04)
+
 - **Schriftprüfung sieht vergrößerte Gruppen:** `export.py --fonts` rechnet
   SVG-Text jetzt über seine Bildschirmmatrix um, also einschließlich jedes
   `scale()` einer umgebenden Gruppe. Bisher zählte nur die viewBox, und eine
