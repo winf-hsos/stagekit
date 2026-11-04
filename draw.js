@@ -21,8 +21,8 @@
  *   wire(pts, on)                     polyline, lit (yellow) or not (gray)
  *   dot(x, y, on)                     junction
  *   gate(type, x, y, on)              and/or/xor/not/nand/nor/xnor, 56 x 40, no label
- *   lamp(x, y, on, text)              output lamp with a caption below
- *   toggle(x, y, on, text)            a switch symbol (static on slides)
+ *   lamp(x, y, on, text, opts)        output lamp with a caption below; opts: size (default 16)
+ *   toggle(x, y, on, text, opts)      a switch symbol (static on slides); opts: size (default 18)
  *   truthTable(inputs, outputs, rows, now)   an HTML table (not SVG)
  *   table(x, y, headers, rows, opts)  an SVG table for figures; opts: cw, rh, size, hl
  *
@@ -303,16 +303,23 @@
     return b;
   }
 
-  function lamp(x, y, on, text) {
+  /* lamp() und toggle() sind fuer Schaltungen gebaut, die vergroessert in eine
+   * Zeichnung kommen (<g transform="scale(2)">). Die Beschriftung muss dann so
+   * klein sein, dass sie nach dem Vergroessern eine der vier Groessen trifft:
+   * bei scale(2) { size: 16 } fuer 32. Die Standardwerte 16 und 18 sind alt und
+   * bleiben, damit bestehende Zeichnungen nicht springen. */
+  function lamp(x, y, on, text, o = {}) {
     const c = C();
+    const size = o.size || 16;
     return `<circle cx="${x}" cy="${y}" r="13" fill="${on ? c.yellow : c.bg}" stroke="${on ? c.yellow : c.light}" stroke-width="3"/>` +
       (on ? `<circle cx="${x}" cy="${y}" r="21" fill="${c.yellow}" opacity="0.18"/>` : "") +
-      (text ? label(x, y + 36, text, { size: 16, color: c.gray, anchor: "middle", mono: true }) : "");
+      (text ? label(x, y + 20 + size, text, { size, color: c.gray, anchor: "middle", mono: true }) : "");
   }
 
-  function toggle(x, y, on, text) {
+  function toggle(x, y, on, text, o = {}) {
     const c = C();
-    return (text ? label(x - 28, y + 6, text, { size: 18, color: c.light, anchor: "end", mono: true }) : "") +
+    const size = o.size || 18;
+    return (text ? label(x - 28, y + Math.round(size * 0.35), text, { size, color: c.light, anchor: "end", mono: true }) : "") +
       `<rect x="${x - 20}" y="${y - 10}" width="40" height="20" rx="10" fill="${on ? c.yellow : c.bg}" stroke="${on ? c.yellow : c.light}" stroke-width="2"/>` +
       `<circle cx="${on ? x + 10 : x - 10}" cy="${y}" r="7" fill="${on ? c.bg : c.light}"/>`;
   }

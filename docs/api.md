@@ -49,7 +49,7 @@ d.formula(x, y, "H = log_2(N)", {size, color, anchor, centerY})  // _ tief, ^ ho
 d.label(x, y, text, {size, color, anchor, mono, lineHeight, centerY})  // "\n" bricht um; centerY: mittig zu dieser Hoehe
 d.line(x1, y1, x2, y2, {color, width, dashed});  d.arrow(x1, y1, x2, y2, {color, width})
 d.wire([[x,y],…], on);  d.dot(x, y, on);  d.gate("and|or|xor|not|nand|nor", x, y, on)
-d.lamp(x, y, on, caption);  d.toggle(x, y, on, label)
+d.lamp(x, y, on, caption, {size});  d.toggle(x, y, on, label, {size})   // vergrößert gezeichnet (scale(2)) mit {size: 16}, damit 32 herauskommt
 d.truthTable(["a","b"], ["out"], [{in:[0,0], out:[0]}, …], nowIndex)   // HTML-Tabelle
 ```
 

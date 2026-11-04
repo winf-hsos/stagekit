@@ -302,9 +302,16 @@ f.onload = () => setTimeout(() => {
     const hasText = Array.from(e.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim());
     if (!hasText) return;
     let size = parseFloat(win.getComputedStyle(e).fontSize);
-    // SVG-Text: font-size in viewBox-Einheiten, auf Folienpixel umrechnen
+    // SVG-Text: font-size in Zeichnungseinheiten, auf Folienpixel umrechnen.
+    // Die Bildschirmmatrix des Texts enthaelt viewBox und jedes scale() einer
+    // umgebenden Gruppe; die viewBox allein liess <g transform="scale(2)"> aus.
     const svg = e.closest("svg");
-    if (svg) { const vb = svg.viewBox.baseVal; const r = svg.getBoundingClientRect(); const scale = parseFloat(cs.getPropertyValue("--scale")) || 1; if (vb && vb.width) size = size * (r.width / scale) / vb.width; }
+    if (svg) {
+      const scale = parseFloat(cs.getPropertyValue("--scale")) || 1;
+      const m = (e.closest("text") || e).getScreenCTM && (e.closest("text") || e).getScreenCTM();
+      if (m) size = size * Math.hypot(m.a, m.b) / scale;
+      else { const vb = svg.viewBox.baseVal; const r = svg.getBoundingClientRect(); if (vb && vb.width) size = size * (r.width / scale) / vb.width; }
+    }
     size = Math.round(size);
     if (!allowed.some((a) => Math.abs(a - size) <= 2)) { const key = (e.tagName + (e.id ? "#" + e.id : "") + " " + size + "px"); bad[key] = (bad[key] || 0) + 1; }
   });

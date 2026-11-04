@@ -13,6 +13,18 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Schriftprüfung sieht vergrößerte Gruppen:** `export.py --fonts` rechnet
+  SVG-Text jetzt über seine Bildschirmmatrix um, also einschließlich jedes
+  `scale()` einer umgebenden Gruppe. Bisher zählte nur die viewBox, und eine
+  Beschriftung von 18 in `<g transform="scale(2)">` ging als 18 durch statt
+  als 36.
+  *Decks:* nichts zu tun; die Prüfung meldet solche Stellen jetzt.
+- **`d.lamp` und `d.toggle` mit Schriftgröße:** `{size}` als fünftes
+  Argument, damit eine vergrößert gezeichnete Schaltung eine der vier Größen
+  trifft (bei `scale(2)` `{size: 16}` für 32). Ohne die Option bleibt alles
+  wie bisher.
+  *Decks:* nichts zu tun.
+
 ## 0.5.0 (2026-11-04)
 
 - **Drittes Bewertungszeichen „Vorsicht“** (Vorschlag Hands-on Computer
