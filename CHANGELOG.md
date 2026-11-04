@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.7.0 (2026-11-04)
+
 - **Bewegung im Leerlauf für Animationen:** `a.idle(t, "flow" | "pulse" |
   "blink", o)` lässt ein Ziel weiterlaufen, solange die Zeichnung an einem
   Zwischenstand oder Haltepunkt wartet, etwa Strom, der durch eine Leitung
