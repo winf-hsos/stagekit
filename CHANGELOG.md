@@ -13,6 +13,14 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Decks werden direkt gebaut:** Der Ablauf in `SKILL.md` geht nach den
+  Basisinfos gleich zum Bau; das gebaute Deck mit Kontaktbogen und PDF ist
+  das Feedback-Material, Rückmeldungen nennen Frames und laufen direkt in
+  HTML, `deck.js` und `skript.md`. Ein Markdown-Entwurf (`entwurf.md`)
+  entsteht nur noch, wenn der Nutzer ihn ausdrücklich verlangt; sein Format
+  bleibt dasselbe.
+  *Decks:* nichts zu tun; betrifft nur, wie Agenten neue Sätze anlegen.
+
 ## 0.7.0 (2026-11-04)
 
 - **Bewegung im Leerlauf für Animationen:** `a.idle(t, "flow" | "pulse" |
