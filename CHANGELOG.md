@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.7.1 (2026-11-15)
+
 - **Decks werden direkt gebaut:** Der Ablauf in `SKILL.md` geht nach den
   Basisinfos gleich zum Bau; das gebaute Deck mit Kontaktbogen und PDF ist
   das Feedback-Material, Rückmeldungen nennen Frames und laufen direkt in
