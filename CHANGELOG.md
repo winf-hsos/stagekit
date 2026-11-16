@@ -13,6 +13,14 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **`d.ipo()` richtet Eingabe und Ausgabe mittig zum Pfeil aus:** Bisher
+  standen sie (und `level`) ab einer festen Grundlinie, sodass zweizeilige
+  Texte unter dem Pfeil hingen; jetzt sitzen sie wie der Text im Kasten
+  mittig auf Höhe `y + 65` (gemeldet von Hands-on Computer Science).
+  Einzeilige Zeilen verschieben sich um 0,2 px, also nicht sichtbar.
+  *Decks:* nichts zu tun; wer eine IPO-Zeile wegen zweizeiliger Texte selbst
+  zeichnet, kann nach `tools/sync.py` wieder `d.ipo()` nehmen.
+
 ## 0.7.1 (2026-11-15)
 
 - **Decks werden direkt gebaut:** Der Ablauf in `SKILL.md` geht nach den

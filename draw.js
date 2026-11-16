@@ -105,18 +105,19 @@
    * Output), damit das Modell auf jeder Folie gleich aussieht, wo ein Konzept
    * Daten verarbeitet: Kompression, Verschluesselung, Filter, Pruefsumme.
    * y ist die Oberkante der 130 px hohen Zeile; `level` steht klein links davor;
-   * `active: false` zeichnet die Zeile zurueckgenommen. */
+   * `active: false` zeichnet die Zeile zurueckgenommen. Eingabe, Ausgabe und
+   * `level` sitzen mittig zum Pfeil (y + 65), auch zweizeilig. */
   function ipo(y, input, processing, output, o = {}) {
     const c = C();
     const col = o.active === false ? c.dark : (o.color || c.light);
     const x = o.x || 0;
     const parts = [];
-    if (o.level) parts.push(label(x + 60, y + 76, o.level, { size: 32, color: o.active === false ? c.dark : c.gray }));
-    parts.push(label(x + 300, y + 76, input, { size: 32, color: col, anchor: "middle", mono: !!o.monoIn }));
+    if (o.level) parts.push(label(x + 60, 0, o.level, { centerY: y + 65, size: 32, color: o.active === false ? c.dark : c.gray }));
+    parts.push(label(x + 300, 0, input, { centerY: y + 65, size: 32, color: col, anchor: "middle", mono: !!o.monoIn }));
     parts.push(arrow(x + 440, y + 65, x + 565, y + 65, { color: col, width: 3, head: 16 }));
     parts.push(box(x + 580, y, 500, 130, processing, { border: col, color: col, size: 32, mono: !!o.monoBox, keepCase: !!o.keepCase, width: 3, rx: 10 }));
     parts.push(arrow(x + 1095, y + 65, x + 1220, y + 65, { color: col, width: 3, head: 16 }));
-    parts.push(label(x + 1380, y + 76, output, { size: 32, color: col, anchor: "middle", mono: !!o.monoOut }));
+    parts.push(label(x + 1380, 0, output, { centerY: y + 65, size: 32, color: col, anchor: "middle", mono: !!o.monoOut }));
     return parts.join("");
   }
 
