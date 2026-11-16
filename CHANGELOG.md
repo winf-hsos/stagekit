@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.7.2 (2026-11-16)
+
 - **`d.ipo()` richtet Eingabe und Ausgabe mittig zum Pfeil aus:** Bisher
   standen sie (und `level`) ab einer festen Grundlinie, sodass zweizeilige
   Texte unter dem Pfeil hingen; jetzt sitzen sie wie der Text im Kasten
