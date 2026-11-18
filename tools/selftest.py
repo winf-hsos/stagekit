@@ -162,7 +162,7 @@ def new_decks(project):
 def export(tmp, update):
     print("4 Export des Testdecks")
     out = tmp / "export"
-    rc, log = run(TOOLS / "export.py", DECK / "selftest.html", "--png", "--steps", "--fonts", "--out", out)
+    rc, log = run(TOOLS / "export.py", DECK / "selftest.html", "--sheet", "--steps", "--fonts", "--out", out)
     if not check(rc == 0, "export.py läuft", log.strip()[-2000:] if rc else ""):
         return None
     m = re.search(r"(\d+) Frames", log)
@@ -179,7 +179,34 @@ def export(tmp, update):
     check(m is not None and m.group(1) == "0", "nur die vier Schriftgrößen",
           "; ".join(line.strip() for line in log.splitlines() if "px x" in line))
     pngs = sorted((out / "slides").glob("*.png"))
+    if pngs:
+        preview(out)
     return pngs + [midstate(out / "slides")]
+
+
+def preview(out):
+    from PIL import Image, ImageChops
+    # A frame inside the JS-defined animation must select its whole build,
+    # including the initial state. A written range may cross a slide boundary.
+    for request, expected in [("18", range(16, 20)), ("19-20", range(19, 21))]:
+        rc, log = run(TOOLS / "export.py", DECK / "selftest.html", "--out", out, "--frames", request)
+        if not check(rc == 0, f"Vorschau {request} läuft", log if rc else ""):
+            continue
+        match = re.search(r"^sheet: (.+)$", log, re.M)
+        if not check(bool(match), "Vorschau meldet den Kontaktbogen"):
+            continue
+        sheet = pathlib.Path(match[1].strip())
+        pngs = sorted((sheet.parent / "slides").glob("*.png"))
+        names = [f"{f:02d}.png" for f in expected]
+        check(sheet.parent.parent == out.with_name(out.name + "-preview")
+              and [p.name for p in pngs] == names, "Vorschau separat mit den gewählten Framenummern")
+        with Image.open(sheet) as compact, Image.open(out / "sheet.png") as complete:
+            check(compact.size == (len(expected) * 320, 198), "Kontaktbogen passt zur Framezahl")
+            for i, f in enumerate(expected):
+                x, y = (f - 1) % 6 * 320, (f - 1) // 6 * 198
+                tile = complete.crop((x, y, x + 320, y + 198))
+                check(ImageChops.difference(compact.crop((i * 320, 0, (i + 1) * 320, 198)), tile).getbbox() is None,
+                      f"Kontaktbild und Beschriftung für Frame {f} wie im Gesamtexport")
 
 
 def midstate(folder):

@@ -19,6 +19,9 @@ Schriften und Einbettungen so laden wie im Browser.
            werden bis zu dreimal nachgeholt und gezaehlt; was danach noch
            fehlerhaft ist, meldet eine WARNUNG.
   --sheet  Kontaktbogen aus den PNGs, 6 Spalten, nummeriert, nach DIR/sheet.png
+  --frames N|N-M  Preview PNGs and a compact contact sheet. N includes all
+           builds of its slide; N-M selects exactly those inclusive frame numbers.
+           Each run has its own directory beside the complete output directory.
   --fonts  Schriftpruefung: jede Folie wird auf Textgroessen ausserhalb der vier
            Stufen des Themes (tiny, small, normal, large) durchsucht, auch in
            SVG-Zeichnungen. Meldet Folie, Element und Groesse.
@@ -36,11 +39,13 @@ import os
 import argparse
 import http.server
 import pathlib
+import re
 import shutil
 import socketserver
 import subprocess
 import sys
 import threading
+import tempfile
 import urllib.request
 from urllib.parse import quote
 
@@ -387,6 +392,26 @@ def warn_stale_copy(deck):
           f"erneuern mit: python {REPO / 'tools' / 'sync.py'} \"{copy}\"")
 
 
+def frame_request(value):
+    if not re.fullmatch(r"[1-9][0-9]*(?:-[1-9][0-9]*)?", value):
+        raise argparse.ArgumentTypeError("expected a positive frame number or an inclusive range, e.g. 12 or 12-15")
+    first, separator, last = value.partition("-")
+    if separator and int(last) < int(first):
+        raise argparse.ArgumentTypeError("end frame must be at least the start frame")
+    return int(first), int(last) if separator else None
+
+
+def preview_frames(request, frames):
+    first, last = request
+    if (last or first) > len(frames):
+        raise ValueError(f"requested frame exceeds the deck's {len(frames)} frames")
+    if last is None:
+        slide = frames[first - 1][0]
+        numbers = [f for f, (s, _) in enumerate(frames, start=1) if s == slide]
+        first, last = numbers[0], numbers[-1]
+    return range(first, last + 1)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("deck")
@@ -394,6 +419,8 @@ def main():
     ap.add_argument("--pdf-raster", action="store_true", dest="pdf_raster")
     ap.add_argument("--png", action="store_true")
     ap.add_argument("--sheet", action="store_true")
+    ap.add_argument("--frames", type=frame_request, metavar="N|N-M",
+                    help="preview the complete slide containing frame N, or the exact inclusive range N-M")
     ap.add_argument("--steps", action="store_true")
     ap.add_argument("--fonts", action="store_true")
     ap.add_argument("--out", default=None)
@@ -404,11 +431,14 @@ def main():
         JOBS = max(1, a.jobs)
     if a.pdf_raster:
         a.pdf = True
-    if not (a.pdf or a.png or a.sheet or a.steps or a.fonts):
+    if a.frames:
+        if a.pdf or a.steps or a.fonts:
+            ap.error("--frames produces preview PNGs and a contact sheet; use a full export for PDF or layout checks")
+        a.png = a.sheet = True
+    elif not (a.pdf or a.png or a.sheet or a.steps or a.fonts):
         a.pdf = a.png = a.sheet = a.steps = a.fonts = True
     deck = pathlib.Path(a.deck).resolve()
     out = pathlib.Path(a.out).resolve() if a.out else deck.parent / "export"
-    out.mkdir(parents=True, exist_ok=True)
     # Server auf dem gemeinsamen Vorfahren von Deck und stagekit, damit relative Pfade tragen
     root = pathlib.Path(deck.anchor)
     for parent in deck.parents:
@@ -418,6 +448,14 @@ def main():
     srv, port = serve(root)
     rel = deck.relative_to(root).as_posix()
     url = f"http://127.0.0.1:{port}/{quote(rel)}"
+    try:
+        return export_deck(a, deck, out, url)
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def export_deck(a, deck, out, url):
     ch = chrome()
     global RENDERED
     RENDERED = rendered(ch, url)
@@ -425,6 +463,19 @@ def main():
     n = len(frames)
     print(f"{slide_count(url)} Folien, {n} Frames (Aufbauschritte einzeln), {url}")
     warn_stale_copy(deck)
+    numbers = range(1, n + 1)
+    if a.frames:
+        if RENDERED is None:
+            raise SystemExit("Cannot read the rendered deck's frame map for the preview.")
+        try:
+            numbers = preview_frames(a.frames, frames)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
+        previews = out.with_name(out.name + "-preview")
+        previews.mkdir(parents=True, exist_ok=True)
+        out = pathlib.Path(tempfile.mkdtemp(prefix=f"{numbers[0]:02d}-{numbers[-1]:02d}-", dir=previews))
+        print(f"preview: frames {numbers[0]}-{numbers[-1]} of {n}")
+    out.mkdir(parents=True, exist_ok=True)
     # Vektor nur, wenn die Druckansicht des Decks sie traegt
     vektor = a.pdf and not a.pdf_raster
     if vektor and print_view_ok(deck) is False:
@@ -436,7 +487,7 @@ def main():
         sl = out / "slides"
         sl.mkdir(exist_ok=True)
         aufnehmen = lambda f: run(ch, ["--window-size=1920,1080", f"--screenshot={sl / f'{f:02d}.png'}", f"{url}?slide={f}"])  # noqa: E731
-        parallel(aufnehmen, range(1, n + 1))
+        parallel(aufnehmen, numbers)
         # Misslungene Aufnahmen einzeln nachholen. Zwei Arten:
         # schwarz: aufgenommen vor dem ersten Zeichnen; jede Folie zeigt
         #   mindestens die Ortsangabe, also nie reines Schwarz.
@@ -457,7 +508,7 @@ def main():
             return None
         nachgeholt = set()
         for versuch in range(3):
-            kaputt = {f: e for f in range(1, n + 1) if (e := fehler(f))}
+            kaputt = {f: e for f in numbers if (e := fehler(f))}
             if not kaputt:
                 break
             arten = ", ".join(f"{art}: {[f for f, e in kaputt.items() if e == art]}"
@@ -466,11 +517,13 @@ def main():
             nachgeholt |= set(kaputt)
             for f in kaputt:
                 aufnehmen(f)
-        rest = {f: e for f in range(1, n + 1) if (e := fehler(f))}
+        rest = {f: e for f in numbers if (e := fehler(f))}
         if rest:
             print(f"  WARNUNG: frames weiterhin fehlerhaft: {rest} "
                   f"(pixel (5,5) soll --bg {bg} zeigen; randlos gefuellte folie?)")
-        print(f"png: {sl} ({n} frames, {JOBS} gleichzeitig, {len(nachgeholt)} nachgeholt)")
+            if a.frames:
+                raise SystemExit(f"Incomplete preview in {out}")
+        print(f"png: {sl} ({len(numbers)} frames, {JOBS} gleichzeitig, {len(nachgeholt)} nachgeholt)")
     if a.pdf:
         pdf = out / (deck.stem + ".pdf")
         if not vektor:
@@ -497,12 +550,15 @@ def main():
     if a.sheet:
         from PIL import Image, ImageDraw
         cols, w, h = 6, 320, 180
-        rows = (n + cols - 1) // cols
+        if a.frames:
+            cols = min(cols, len(numbers))
+        rows = (len(numbers) + cols - 1) // cols
         sheet = Image.new("RGB", (cols * w, rows * (h + 18)), "white")
         d = ImageDraw.Draw(sheet)
-        for f in range(1, n + 1):
-            im = Image.open(out / "slides" / f"{f:02d}.png").resize((w - 6, h - 4))
-            x, y = ((f - 1) % cols) * w, ((f - 1) // cols) * (h + 18)
+        for position, f in enumerate(numbers):
+            with Image.open(out / "slides" / f"{f:02d}.png") as source:
+                im = source.resize((w - 6, h - 4))
+            x, y = (position % cols) * w, (position // cols) * (h + 18)
             sheet.paste(im, (x + 3, y + 2))
             slide, step = frames[f - 1]
             d.text((x + 4, y + h), f"{f}" + (f" ({slide}.{step})" if step else f" ({slide})"), fill="black")
@@ -512,7 +568,6 @@ def main():
         check_steps(ch, url, deck, out)
     if a.fonts:
         check_fonts(ch, url, deck)
-    srv.shutdown()
 
 
 if __name__ == "__main__":

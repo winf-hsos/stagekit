@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- Mit `export.py --frames N` prüft der Agent alle Aufbauschritte der Folie zu Frame N, mit `--frames N-M` genau den angegebenen Bereich. Vorschauen enthalten PNGs und einen kompakten Kontaktbogen mit den ursprünglichen Framenummern und liegen getrennt vom vollständigen Export.
+
 - `tools/new_deck.py` legt einen spielbaren Satz mit Projekttheme, relativen Framework-Pfaden, Zeichnung, Notizen und Startskript an. Startskript und Export unterstützen auch Projektunterordner mit Leerzeichen und Umlauten. Vorhandene Decks erfordern keine Anpassung.
 
 - Eine Animationsgalerie verbindet Lernziele mit Bildfolgen, spielbaren Beispielen und Code. Der erste Bubble-Sort-Durchlauf zeigt einen Vergleich ohne Tausch und drei mit Tausch. In der Detailansicht der Platine steuert ein gemeinsames Zielrechteck die Kamerafahrt und Markierung.

@@ -64,6 +64,8 @@ The tool uses the nearest enclosing `style.toml` and project copy of `stagekit/`
 2. Double-click `start-presentation.cmd`. Press **N** in the deck for the notes window.
 3. Export with `python C:/code/stagekit/tools/export.py slides/selection-bias/selection-bias.html` for the PDF, frame images, contact sheet, and checks.
 
+For a local revision, add `--frames 12` to preview every build of the slide containing frame 12. Use `--frames 12-15` for exactly those frames, or `--frames 12-12` for one image. Numbering starts at 1, as in the player and PDF. The command prints the path to a compact contact sheet alongside full-size PNGs in `slides/`. Each run gets a fresh directory under `export-preview/`; with `--out DIR` it uses a sibling named `DIR-preview/`. Run the ordinary full export for delivery.
+
 ## Keyboard
 
 → ↓ space PgDn: next (steps first, then slides) · ← ↑ PgUp: back · Home/End · a number and Enter: go to that frame (1 Enter is the start) · F: fullscreen · N: notes window · P: print view · M: pointer mode · R: replay the animation of the slide · click on the right or left fifth of the window: next/back. Inside an input field or a writable box (`contenteditable`) keys and clicks belong to the field.
