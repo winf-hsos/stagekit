@@ -28,6 +28,7 @@ Schriften und Einbettungen so laden wie im Browser.
   --steps  Schrittpruefung: jede Folie mit Aufbau schrittweise durchschalten und
            die Position aller sichtbaren Elemente vergleichen. Meldet jedes
            Element, das zwischen zwei Schritten wandert (Layout springt).
+  --overflow  Check visible text against slide edges and d.box() labels against their boxes.
   --jobs N Chrome-Instanzen gleichzeitig (Standard: Prozessorkerne, hoechstens 8).
            Frames, Schritt- und Schriftpruefung sind voneinander unabhaengig und
            laufen deshalb nebeneinander; die Ausgabe bleibt in Reihenfolge.
@@ -38,6 +39,7 @@ import concurrent.futures
 import os
 import argparse
 import http.server
+import json
 import pathlib
 import re
 import shutil
@@ -47,7 +49,7 @@ import sys
 import threading
 import tempfile
 import urllib.request
-from urllib.parse import quote
+from urllib.parse import quote, unquote, urlencode, urljoin, urlsplit
 
 CHROME = [r"C:\Program Files\Google\Chrome\Application\chrome.exe",
           r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
@@ -62,7 +64,15 @@ def chrome():
     raise SystemExit("Chrome nicht gefunden; Pfad in tools/export.py eintragen")
 
 
+OVERFLOW_PATH = "/__stagekit_checks__/overflow.html"
+
+
 class Quiet(http.server.SimpleHTTPRequestHandler):
+    def translate_path(self, path):
+        if urlsplit(path).path == OVERFLOW_PATH:
+            return str(pathlib.Path(__file__).with_name("overflow-check.html"))
+        return super().translate_path(path)
+
     def log_message(self, *a):
         pass
 
@@ -169,11 +179,8 @@ def slide_count(url):
 
 def frames_of(deck):
     """Alle Frames (Folie, Schritt) in Reihenfolge; ein Aufbauschritt ist ein Frame."""
-    out = []
-    for i, n in enumerate(step_counts(deck), start=1):
-        for k in range(n + 1):
-            out.append((i, k))
-    return out
+    return [(slide, step) for slide, steps in enumerate(slide_steps(deck), start=1)
+            for step in [0, *steps]]
 
 
 def run(ch, args):
@@ -183,24 +190,20 @@ def run(ch, args):
                     "--virtual-time-budget=12000", *args], check=False, capture_output=True)
 
 
-def step_counts(deck):
-    """Hoechster data-step je Folie, aus dem Quelltext (Reihenfolge der <section class="slide").
-
-    Live-Abfragen (<section class="slide poll">) bekommen ihre Schritte erst von
-    stagekit.js: einen zum Aufdecken, bei einer Quizfrage (data-correct) einen
-    zweiten fuer die richtige Antwort. Hier werden sie deshalb mitgezaehlt."""
+def slide_steps(deck):
+    """Distinct reveal numbers in player order, including runtime-generated steps."""
     import re
     # The deck as the browser built it, where available: animations (anim.js)
     # announce their steps only at runtime. The source text is the fallback.
     html = RENDERED or deck.read_text(encoding="utf-8")
     sections = re.split(r'<section class="slide', html)[1:]
-    counts = []
+    steps = []
     for sec in sections:
-        n = max([int(m) for m in re.findall(r'data-step="(\d+)"', sec)] or [0])
+        numbers = {int(m) for m in re.findall(r'data-step="(\d+)"', sec)}
         if "poll" in sec.split('"', 1)[0].split():
-            n = max(n, 2 if "data-correct" in sec else 1)
-        counts.append(n)
-    return counts
+            numbers.update([1, 2] if "data-correct" in sec else [1])
+        steps.append(sorted(numbers))
+    return steps
 
 
 HARNESS = """<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#000">
@@ -254,7 +257,7 @@ def check_steps(ch, url, deck, out):
     harness = deck.parent / "_stepcheck.html"
     harness.write_text(HARNESS, encoding="utf-8")
     hurl = url.rsplit("/", 1)[0] + "/_stepcheck.html"
-    counts = step_counts(deck)
+    counts = [len(steps) for steps in slide_steps(deck)]
     problems = 0
     first_frame = {}
     f = 1
@@ -376,6 +379,34 @@ def check_fonts(ch, url, deck):
           + (f", {ohne} ohne ergebnis" if ohne else ""))
 
 
+def check_overflow(ch, url, numbers):
+    harness = urljoin(url, OVERFLOW_PATH)
+
+    def inspect(frame):
+        address = harness + "?" + urlencode({"deck": url, "frame": frame})
+        result = subprocess.run([ch, "--headless=new", "--disable-gpu", "--virtual-time-budget=12000",
+                                 "--dump-dom", address], capture_output=True, text=True,
+                                encoding="utf-8", errors="replace")
+        match = re.search(r"<title>OVERFLOW:([^<]+)</title>", result.stdout)
+        return json.loads(unquote(match[1])) if match else None
+
+    results = nachholen(inspect, numbers, "overflow")
+    count = unchecked = 0
+    for frame, result in zip(numbers, results):
+        if result is None:
+            unchecked += 1
+            print(f"  Frame {frame}: could not check text bounds")
+            continue
+        for item in result["findings"]:
+            text = json.dumps(item["text"], ensure_ascii=False)
+            print(f"  Frame {frame}: {text} exceeds {item['target']} ({item['edge']})")
+            count += 1
+    if any(result and result["legacy"] for result in results):
+        print("  Older draw.js: only slide edges checked. Run tools/sync.py for d.box() label checks.")
+    print(f"overflow: {len(numbers) - unchecked} frames checked, {count} findings, {unchecked} unchecked")
+    return int(bool(count or unchecked))
+
+
 def warn_stale_copy(deck):
     """Say so when the deck loads a framework copy that differs from this repository."""
     import re
@@ -421,6 +452,7 @@ def main():
     ap.add_argument("--sheet", action="store_true")
     ap.add_argument("--frames", type=frame_request, metavar="N|N-M",
                     help="preview the complete slide containing frame N, or the exact inclusive range N-M")
+    ap.add_argument("--overflow", action="store_true", help="check text against slide edges and its owning d.box()")
     ap.add_argument("--steps", action="store_true")
     ap.add_argument("--fonts", action="store_true")
     ap.add_argument("--out", default=None)
@@ -434,9 +466,9 @@ def main():
     if a.frames:
         if a.pdf or a.steps or a.fonts:
             ap.error("--frames produces preview PNGs and a contact sheet; use a full export for PDF or layout checks")
-        a.png = a.sheet = True
-    elif not (a.pdf or a.png or a.sheet or a.steps or a.fonts):
-        a.pdf = a.png = a.sheet = a.steps = a.fonts = True
+        a.png = a.sheet = a.overflow = True
+    elif not (a.pdf or a.png or a.sheet or a.steps or a.fonts or a.overflow):
+        a.pdf = a.png = a.sheet = a.steps = a.fonts = a.overflow = True
     deck = pathlib.Path(a.deck).resolve()
     out = pathlib.Path(a.out).resolve() if a.out else deck.parent / "export"
     # Server auf dem gemeinsamen Vorfahren von Deck und stagekit, damit relative Pfade tragen
@@ -464,9 +496,9 @@ def export_deck(a, deck, out, url):
     print(f"{slide_count(url)} Folien, {n} Frames (Aufbauschritte einzeln), {url}")
     warn_stale_copy(deck)
     numbers = range(1, n + 1)
+    if a.overflow and (RENDERED is None or not n):
+        raise SystemExit("Cannot read the rendered deck's frame map for the overflow check.")
     if a.frames:
-        if RENDERED is None:
-            raise SystemExit("Cannot read the rendered deck's frame map for the preview.")
         try:
             numbers = preview_frames(a.frames, frames)
         except ValueError as error:
@@ -475,7 +507,8 @@ def export_deck(a, deck, out, url):
         previews.mkdir(parents=True, exist_ok=True)
         out = pathlib.Path(tempfile.mkdtemp(prefix=f"{numbers[0]:02d}-{numbers[-1]:02d}-", dir=previews))
         print(f"preview: frames {numbers[0]}-{numbers[-1]} of {n}")
-    out.mkdir(parents=True, exist_ok=True)
+    if a.pdf or a.png or a.sheet:
+        out.mkdir(parents=True, exist_ok=True)
     # Vektor nur, wenn die Druckansicht des Decks sie traegt
     vektor = a.pdf and not a.pdf_raster
     if vektor and print_view_ok(deck) is False:
@@ -568,6 +601,8 @@ def export_deck(a, deck, out, url):
         check_steps(ch, url, deck, out)
     if a.fonts:
         check_fonts(ch, url, deck)
+    if a.overflow:
+        return check_overflow(ch, url, numbers)
 
 
 if __name__ == "__main__":

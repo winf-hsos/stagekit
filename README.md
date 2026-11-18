@@ -30,7 +30,7 @@ What it adds to a plain HTML page:
 | `template/deck.html` | starting point for a new deck |
 | `tools/theme.py` | writes `theme.css` from a `style.toml`; `[colors.light]` becomes `:root[data-theme="light"]`, switched on by `?theme=light` |
 | `tools/sync.py` | brings a project's copy of the framework up to date and sets the cache buster in its decks; `--check` only reports |
-| `tools/export.py` | PDF, PNGs, contact sheet (one image per frame, every build-up step separately), step check (`--steps`: elements that move between steps), font check (`--fonts`: text sizes outside the four steps); warns when a deck loads an outdated copy |
+| `tools/export.py` | PDF, PNGs, contact sheet (one image per frame, every build-up step separately), step check (`--steps`: elements that move between steps), font check (`--fonts`: text sizes outside the four steps), text overflow check (`--overflow`), warns when a deck loads an outdated copy |
 | `tools/start_script.py` | writes `start-presentation.cmd` next to a deck: double-click starts a local server and opens the deck, on a port derived from the deck's name |
 | `tools/figures.py` | renders the drawings named in a deck's `figures.js` as standalone SVG files in a palette of the `theme.css` (`--theme light`), code font embedded; for website figures that match the slides |
 | `tools/image.py` | generates images through the OpenAI API (gpt-image-2.5-flare, optionally sunburst) for photo slides; needs `OPENAI_API_KEY` |
@@ -64,7 +64,7 @@ The tool uses the nearest enclosing `style.toml` and project copy of `stagekit/`
 2. Double-click `start-presentation.cmd`. Press **N** in the deck for the notes window.
 3. Export with `python C:/code/stagekit/tools/export.py slides/selection-bias/selection-bias.html` for the PDF, frame images, contact sheet, and checks.
 
-For a local revision, add `--frames 12` to preview every build of the slide containing frame 12. Use `--frames 12-15` for exactly those frames, or `--frames 12-12` for one image. Numbering starts at 1, as in the player and PDF. The command prints the path to a compact contact sheet alongside full-size PNGs in `slides/`. Each run gets a fresh directory under `export-preview/`; with `--out DIR` it uses a sibling named `DIR-preview/`. Run the ordinary full export for delivery.
+For a local revision, add `--frames 12` to preview every build of the slide containing frame 12. Use `--frames 12-15` for exactly those frames, or `--frames 12-12` for one image. Numbering starts at 1, as in the player and PDF. The command prints the path to a compact contact sheet alongside full-size PNGs in `slides/`. Each run gets a fresh directory under `export-preview/`; with `--out DIR` it uses a sibling named `DIR-preview/`. Both the preview and the default full export check visible text on every selected frame against the slide edges and each `d.box()` label against its own rectangle. Findings give the frame number, text, edge and distance in slide pixels. Use `--overflow` for a check without rendering images. Findings or unreadable frames give a nonzero exit status. Projects with an older copy of `draw.js` get slide-edge checks and a reminder to sync for box coverage. Run the ordinary full export for delivery.
 
 ## Keyboard
 

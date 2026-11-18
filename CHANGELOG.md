@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- Vollständiger Export und Framevorschau melden sichtbaren Text außerhalb der Folie sowie Beschriftungen außerhalb ihres `d.box()`-Kastens, mit Framenummer, Kante und Abstand in Folienpixeln. `--overflow` führt die Prüfung allein aus. Für die Kastenprüfung brauchen Projekte mit eigener Framework-Kopie einmal `tools/sync.py`.
+
 - Mit `export.py --frames N` prüft der Agent alle Aufbauschritte der Folie zu Frame N, mit `--frames N-M` genau den angegebenen Bereich. Vorschauen enthalten PNGs und einen kompakten Kontaktbogen mit den ursprünglichen Framenummern und liegen getrennt vom vollständigen Export.
 
 - `tools/new_deck.py` legt einen spielbaren Satz mit Projekttheme, relativen Framework-Pfaden, Zeichnung, Notizen und Startskript an. Startskript und Export unterstützen auch Projektunterordner mit Leerzeichen und Umlauten. Vorhandene Decks erfordern keine Anpassung.

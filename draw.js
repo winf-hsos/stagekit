@@ -78,7 +78,8 @@
     // (layers(wires, boxes, labels)). Fuer einen wirklich transparenten Kasten
     // ausdruecklich fill: "none" setzen.
     const fill = o.fill || c.bg;
-    let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.rounded === false ? 0 : (o.rx || 8)}" fill="${fill}" stroke="${border}" stroke-width="${o.width || 2}"${o.dashed ? ' stroke-dasharray="8 6"' : ""}/>`;
+    const owner = text ? ' data-sk-box-label=""' : "";
+    let s = `<rect${owner} x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.rounded === false ? 0 : (o.rx || 8)}" fill="${fill}" stroke="${border}" stroke-width="${o.width || 2}"${o.dashed ? ' stroke-dasharray="8 6"' : ""}/>`;
     if (text) {
       // multi-line text is centred as a block: start above the middle by half the extra lines
       const size = o.size || 32, lh = o.lineHeight || 1.3, n = String(text).split("\n").length;

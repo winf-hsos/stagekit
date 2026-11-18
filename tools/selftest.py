@@ -181,7 +181,18 @@ def export(tmp, update):
     pngs = sorted((out / "slides").glob("*.png"))
     if pngs:
         preview(out)
+    overflow_bounds()
     return pngs + [midstate(out / "slides")]
+
+
+def overflow_bounds():
+    rc, log = run(TOOLS / "export.py", DECK / "overflow.html", "--overflow")
+    findings = [line.strip() for line in log.splitlines() if line.strip().startswith("Frame ")]
+    check(rc == 1 and findings == [
+        'Frame 3: "processing time" exceeds d.box() (right 18 px)',
+        'Frame 4: "Slide edge" exceeds slide (left 24 px)',
+        'Frame 4: "Cropped SVG" exceeds slide (left 12 px)',
+    ] and "0 unchecked" in log, "Exakter Rand passt, Überläufe erst im sichtbaren Frame", log.strip())
 
 
 def preview(out):
@@ -192,6 +203,8 @@ def preview(out):
         rc, log = run(TOOLS / "export.py", DECK / "selftest.html", "--out", out, "--frames", request)
         if not check(rc == 0, f"Vorschau {request} läuft", log if rc else ""):
             continue
+        check(f"overflow: {len(expected)} frames checked, 0 findings, 0 unchecked" in log,
+              "Vorschau prüft die Textgrenzen aller gewählten Frames")
         match = re.search(r"^sheet: (.+)$", log, re.M)
         if not check(bool(match), "Vorschau meldet den Kontaktbogen"):
             continue

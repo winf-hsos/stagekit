@@ -1,0 +1,101 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Checking text bounds</title>
+<iframe id="deck" style="width:1920px;height:1080px;border:0"></iframe>
+<script>
+"use strict";
+const query = new URLSearchParams(location.search);
+const frame = Number(query.get("frame"));
+const iframe = document.getElementById("deck");
+
+function overflow(bounds, limit, scaleX, scaleY) {
+  const distances = {
+    left: (limit.left - bounds.left) * scaleX,
+    right: (bounds.right - limit.right) * scaleX,
+    top: (limit.top - bounds.top) * scaleY,
+    bottom: (bounds.bottom - limit.bottom) * scaleY,
+  };
+  return Object.entries(distances)
+    .filter(([, distance]) => distance > 0.5)
+    .map(([edge, distance]) => edge + " " + Math.round(distance) + " px").join(", ");
+}
+
+// Disregard text outside a nested scroll area or an SVG camera's viewport.
+// Stop before the slide: clipping at that boundary is what the agent must fix.
+function visibleBounds(rect, element, slide, limit, win) {
+  const bounds = {left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom};
+  for (let p = element; p && p !== slide; p = p.parentElement) {
+    const style = win.getComputedStyle(p);
+    const clipX = style.overflowX !== "visible";
+    const clipY = style.overflowY !== "visible";
+    if (!clipX && !clipY) continue;
+    const r = p.getBoundingClientRect();
+    if ((clipX && (bounds.right <= r.left || bounds.left >= r.right)) ||
+        (clipY && (bounds.bottom <= r.top || bounds.top >= r.bottom))) return null;
+    // A full-bleed viewport can cut visible glyphs at the slide edge itself.
+    if (clipX && r.left > limit.left) bounds.left = Math.max(bounds.left, r.left);
+    if (clipX && r.right < limit.right) bounds.right = Math.min(bounds.right, r.right);
+    if (clipY && r.top > limit.top) bounds.top = Math.max(bounds.top, r.top);
+    if (clipY && r.bottom < limit.bottom) bounds.bottom = Math.min(bounds.bottom, r.bottom);
+  }
+  return bounds.right > bounds.left && bounds.bottom > bounds.top ? bounds : null;
+}
+
+function boxOverflow(line, box, scale) {
+  // Compare in the box's axes even when its group rotates or the viewBox zooms.
+  const matrix = box.getScreenCTM();
+  const relative = matrix.inverse().multiply(line.getScreenCTM());
+  const r = line.getBBox();
+  const corners = [r.x, r.x + r.width].flatMap(x => [r.y, r.y + r.height]
+    .map(y => new DOMPoint(x, y).matrixTransform(relative)));
+  const xs = corners.map(p => p.x), ys = corners.map(p => p.y);
+  const b = box.getBBox();
+  return overflow({left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys)},
+    {left: b.x, right: b.x + b.width, top: b.y, bottom: b.y + b.height},
+    Math.hypot(matrix.a, matrix.b) / scale, Math.hypot(matrix.c, matrix.d) / scale);
+}
+
+async function inspect() {
+  const win = iframe.contentWindow, doc = win.document;
+  const slide = doc.querySelector(".slide.current");
+  if (!slide || win.stagekit?.frame !== frame - 1 ||
+      !win.getComputedStyle(doc.documentElement).getPropertyValue("--bg").trim() ||
+      [...doc.querySelectorAll('link[rel="stylesheet"]')].some(link => !link.sheet)) return;
+  const limit = slide.getBoundingClientRect();
+  await doc.fonts.ready;
+  const scale = limit.width / slide.offsetWidth;
+  const findings = [];
+  const walker = doc.createTreeWalker(slide, NodeFilter.SHOW_TEXT);
+  const range = doc.createRange();
+  for (let node; (node = walker.nextNode());) {
+    const text = node.textContent.trim(), el = node.parentElement;
+    if (!text || el.closest("script,style,title,desc,defs,symbol,clipPath,mask,.notes")) continue;
+    // checkVisibility skips display:none and fully transparent ancestors. An
+    // inline display:contents element has no box, but its text can still paint.
+    let painted = el;
+    while (painted && win.getComputedStyle(painted).display === "contents") painted = painted.parentElement;
+    if (!painted || win.getComputedStyle(el).visibility !== "visible" ||
+        !painted.checkVisibility({opacityProperty: true})) continue;
+    range.selectNodeContents(node);
+    let visible = false;
+    for (const rect of range.getClientRects()) {
+      const bounds = visibleBounds(rect, el, slide, limit, win);
+      if (!bounds) continue;
+      visible = true;
+      const edge = overflow(bounds, limit, 1 / scale, 1 / scale);
+      if (edge) findings.push({text, target: "slide", edge});
+    }
+    const box = el.closest("text")?.previousElementSibling;
+    if (visible && box?.matches("rect[data-sk-box-label]")) {
+      const edge = boxOverflow(el, box, scale);
+      if (edge) findings.push({text, target: "d.box()", edge});
+    }
+  }
+  const legacy = Boolean(win.draw?.box && !win.draw.box(0, 0, 1, 1, "x").includes("data-sk-box-label"));
+  document.title = "OVERFLOW:" + encodeURIComponent(JSON.stringify({findings, legacy}));
+}
+iframe.onload = inspect;
+const deckURL = new URL(query.get("deck"), location.href);
+deckURL.searchParams.set("slide", frame);
+iframe.src = deckURL;
+</script>

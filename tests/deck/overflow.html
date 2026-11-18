@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Text bounds test</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="../../stagekit.css">
+<div class="deck">
+  <section class="slide">
+    <h2>Box labels</h2>
+    <svg width="900" height="500" style="position:absolute;left:200px;top:200px">
+      <g id="exact"></g>
+      <g id="free" data-step="1"></g>
+      <g id="late" transform="translate(0 130) scale(2)" data-step="4"></g>
+    </svg>
+  </section>
+  <section class="slide">
+    <h2>Slide edges</h2>
+    <div style="position:absolute;left:-24px;top:200px">Slide edge</div>
+    <div style="position:absolute;left:-200px;opacity:0">Invisible</div>
+    <svg width="1920" height="200" style="position:absolute;left:0;top:300px">
+      <text x="-12" y="100">Cropped SVG</text>
+    </svg>
+    <aside class="notes">Speaker notes</aside>
+  </section>
+</div>
+<script src="../../draw.js"></script>
+<script>
+const {box, label} = draw;
+const exact = document.querySelector("#exact"), late = document.querySelector("#late");
+exact.innerHTML = box(10, 20, 280, 80, "exact fit");
+late.innerHTML = box(10, 20, 280, 80, "processing time");
+document.querySelector("#free").innerHTML = box(0, 130, 40, 40, "") + label(100, 165, "independent label");
+// Make the edge cases exact on every platform, after the theme font loads.
+window.addEventListener("load", async () => {
+  await document.fonts.ready;
+  for (const [group, excess] of [[exact, 0], [late, 9]]) {
+    const rect = group.querySelector("rect"), bounds = group.querySelector("text").getBBox();
+    rect.setAttribute("x", bounds.x);
+    rect.setAttribute("width", bounds.width - excess);
+  }
+});
+</script>
+<script src="../../stagekit.js"></script>
+</html>
