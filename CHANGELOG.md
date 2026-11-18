@@ -13,6 +13,9 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- `d.closeup()` berechnet Kameraziel, Abdunklung, Rahmen und Beschriftung aus einem Zielrechteck. `d.anchor()` und `d.connect()` verbinden Kanten und liefern denselben Weg für Pakete in beiden Richtungen. Netzwerk- und Platinenbeispiel verwenden die neuen Helfer. Bestehende Decks können die Helfer nach `tools/sync.py` nutzen.
+- `export.py --motion N` zeigt Anfang, Mitte und Ende des Animationsabschnitts zu Frame N in einem Bildstreifen und als Einzelbilder. Bei mehreren Animationen bleibt eine bereits abgeschlossene Figur beim Abtasten eines späteren Abschnitts in ihrem Endzustand.
+
 - Vollständiger Export und Framevorschau melden sichtbaren Text außerhalb der Folie sowie Beschriftungen außerhalb ihres `d.box()`-Kastens, mit Framenummer, Kante und Abstand in Folienpixeln. `--overflow` führt die Prüfung allein aus. Für die Kastenprüfung brauchen Projekte mit eigener Framework-Kopie einmal `tools/sync.py`.
 
 - Mit `export.py --frames N` prüft der Agent alle Aufbauschritte der Folie zu Frame N, mit `--frames N-M` genau den angegebenen Bereich. Vorschauen enthalten PNGs und einen kompakten Kontaktbogen mit den ursprünglichen Framenummern und liegen getrennt vom vollständigen Export.

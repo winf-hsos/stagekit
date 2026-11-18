@@ -267,6 +267,65 @@
     return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${o.color || c.white}" stroke-width="${o.width || 2}"${o.dashed ? ' stroke-dasharray="8 6"' : ""}/>`;
   }
 
+  // Midpoints of rectangle edges in the coordinate system of the drawing.
+  function anchor({ x, y, width, height }, side) {
+    switch (side) {
+      case "left": return { x, y: y + height / 2, side };
+      case "right": return { x: x + width, y: y + height / 2, side };
+      case "top": return { x: x + width / 2, y, side };
+      case "bottom": return { x: x + width / 2, y: y + height, side };
+      default: throw new Error("anchor: expected left, right, top or bottom");
+    }
+  }
+
+  function connect(from, to, o = {}) {
+    const dx = to.x - from.x, dy = to.y - from.y;
+    const outward = { right: dx, left: -dx, bottom: dy, top: -dy };
+    if (!(outward[from.side] > 0 && outward[to.side] < 0)) {
+      throw new Error("connect: choose edges facing the straight connection");
+    }
+    return line(from.x, from.y, to.x, to.y, o)
+      .replace("<line ", `<line data-sk-from="${from.side}" data-sk-to="${to.side}" `);
+  }
+
+  // The camera and its three overlays share figure coordinates. Prefer a
+  // side label; fall back to a centred caption above or below the detail.
+  function closeup(w, h, target, caption, { zoom = 2.5 } = {}) {
+    const { x, y, width, height } = target;
+    if (!(width > 0 && height > 0 && x >= 0 && y >= 0 && x + width <= w && y + height <= h)) {
+      throw new Error("closeup: the target rectangle must be inside the figure");
+    }
+    if (![1, 1.5, 2.5].includes(zoom)) throw new Error("closeup: expected zoom 1, 1.5 or 2.5");
+    const colors = C(), size = 32, pad = 10;
+    const ctx = document.createElement("canvas").getContext("2d");
+    ctx.font = size + "px " + colors.font;
+    const lines = String(caption).split("\n");
+    const labelW = Math.ceil(Math.max(...lines.map(s => ctx.measureText(s).width))) + 2 * pad;
+    const labelH = lines.length * size * 1.3 + 2 * pad;
+    const cx = x + width / 2, cy = y + height / 2;
+    for (const k of [2.5, 1.5, 1].filter(k => k <= zoom)) {
+      const vw = w / k, vh = h / k;
+      if (width > vw || height > vh || labelW > vw || labelH > vh) continue;
+      const left = Math.max(0, Math.min(cx - vw / 2, w - vw));
+      const top = Math.max(0, Math.min(cy - vh / 2, h - vh));
+      const labelX = Math.max(left, Math.min(cx - labelW / 2, left + vw - labelW));
+      const labelY = Math.max(top, Math.min(cy - labelH / 2, top + vh - labelH));
+      const positions = [[x - labelW - pad, labelY], [x + width + pad, labelY],
+        [labelX, y - labelH - pad], [labelX, y + height + pad]];
+      const position = positions.find(([px, py]) => px >= left && py >= top &&
+        px + labelW <= left + vw && py + labelH <= top + vh);
+      if (!position) continue;
+      const [px, py] = position;
+      return {
+        view: [left, top, vw, vh],
+        shade: `<path fill="black" opacity=".7" fill-rule="evenodd" d="M0 0H${w}V${h}H0Z M${x} ${y}h${width}v${height}h${-width}Z"/>`,
+        outline: box(x, y, width, height, "", { border: colors.yellow, fill: "none" }),
+        caption: box(px, py, labelW, labelH, caption, { size, border: null, keepCase: true }),
+      };
+    }
+    throw new Error("closeup: leave space beside the target for the caption or break it into shorter lines");
+  }
+
   function arrow(x1, y1, x2, y2, o = {}) {
     const c = C();
     const col = o.color || c.white, w = o.width || 2, head = o.head || 14;
@@ -354,5 +413,5 @@
   /* color(name) liest eine benannte Zusatzfarbe des Themes, etwa "families-transfer"
    aus [colors.families] der style.toml; so bleibt ein Deck frei von Hex-Werten. */
   const color = (name) => css("--" + name);
-  window.draw = { svg, layers, label, box, verdict, mark, keys, icon, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C, color };
+  window.draw = { svg, layers, label, box, anchor, connect, closeup, verdict, mark, keys, icon, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C, color };
 })();

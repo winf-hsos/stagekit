@@ -53,6 +53,19 @@ d.lamp(x, y, on, caption, {size});  d.toggle(x, y, on, label, {size})   // vergr
 d.truthTable(["a","b"], ["out"], [{in:[0,0], out:[0]}, …], nowIndex)   // HTML-Tabelle
 ```
 
+**Verbinder zwischen Kanten.** Knoten als Rechtecke mit `{ x, y, width, height }` in derselben Zeichenfläche beschreiben. `d.anchor(rechteck, "left" | "right" | "top" | "bottom")` liefert die Kantenmitte. Die einander zugewandten Kanten mit `d.connect(von, bis, { color, width, dashed })` verbinden. Die Strecke bleibt hinter den Knoten. Für die Bewegung dieselbe Linie benennen und mit `along` abfahren. An jedem Ende berücksichtigt der Player die halbe Breite oder Höhe des bewegten Objekts, auch beim Rückweg. Zwischen die beiden Kanten muss das Objekt passen. Die Rechtecke, die Linie und die bewegte Gruppe verwenden dieselben untransformierten Zeichenkoordinaten.
+
+```js
+const link = d.connect(d.anchor(router, "right"), d.anchor(server, "left"));
+// In d.svg(...) vor den beiden Knoten zeichnen.
+const connection = d.g("link", link);
+// Sobald die Zeichnung im DOM steht:
+a.step(a.along("request", "link"));
+a.step(a.along("reply", "link", { reverse: true }));
+```
+
+**Beschriftete Nahansicht.** `d.closeup(breite, höhe, zielrechteck, beschriftung, { zoom: 2.5 })` liefert `view` für die Kamera sowie die SVG-Teile `shade`, `outline` und `caption`. Das Zielrechteck liegt in Koordinaten der Zeichnung nach Platzierung des Fotos. Die Kamera bleibt innerhalb der Zeichenfläche. Die Beschriftung sitzt neben, über oder unter dem Ziel auf eigenem Grund. Bei wenig Platz wählt der Helfer die nächstkleinere Zoomstufe (2,5 → 1,5 → 1). Ein langer Text kann mit `\n` umbrochen werden. Die [Platinen-Demo](../examples/animations/deck.js) zeigt das vollständige Einblenden.
+
 Hooks: `data-on-show="fn"` und `data-on-step="fn"` auf einer Folie rufen `window.fn(slide, step)`.
 
 Live-Abfrage (braucht `data-live-url` am `div.deck`):
@@ -109,6 +122,8 @@ a.step(a.camera([1000, 140, 672, 240]));      // Abschnitt 3: Kamerafahrt (viewB
 Gemeinsame Optionen: `dur` in ms (Standard 800), `ease`: `"inOut"` (Standard), `"in"`, `"out"`, `"linear"`. Ziele sind Namen aus `d.g(name, …)` oder CSS-Selektoren innerhalb der Zeichnung. Bilder kommen mit `d.image(x, y, w, h, "img/…jpg", { fit })` in die Zeichnung; ein freigestelltes Objekt als PNG (`image.py --transparent`) lässt sich wie jede Gruppe bewegen, drehen und skalieren.
 
 Optionen der Animation: `auto: true` lässt die Abschnitte nach dem ersten → von selbst aufeinander folgen, mit `gap` ms Pause (Standard 600); `autostart: true` startet den ersten Abschnitt beim Betreten der Folie; `first` ist der Aufbauschritt des ersten Abschnitts (Standard 1), damit andere `data-step`-Elemente der Folie mit einem Abschnitt zusammen erscheinen können; `back: "play"` lässt ← den Abschnitt rückwärts abspielen statt zum vorigen Zwischenstand zu springen, in `backSpeed`-fachem Tempo (Standard 2).
+
+**Bewegung zwischen zwei Klicks prüfen.** `python tools/export.py <deck>.html --motion N` nimmt den Abschnitt auf, dessen Endstand Frame N ist. `motion.png` zeigt Anfang, zeitliche Mitte und Ende. Daneben liegen `start.png`, `midpoint.png` und `end.png` in voller Auflösung. Die Ausgabe liegt wie die Framevorschau in einem eigenen Ordner unter `export-preview/`. Wartezeit an einem manuellen Halt zählt nicht zur Dauer. Für einen gezielten Zeitpunkt im Browser `?slide=N&anim-t=0.3` verwenden.
 
 **Bewegung im Leerlauf** läuft weiter, solange die Zeichnung an einem Zwischenstand oder Haltepunkt wartet, bis `still(t)` sie beendet:
 

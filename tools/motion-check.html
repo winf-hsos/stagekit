@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Motion sample</title>
+<style>
+  * { margin: 0; border: 0; }
+  html { background: black; overflow: hidden; }
+  iframe { display: block; width: 1920px; height: 1080px; }
+  #ready { width: 8px; height: 8px; }
+</style>
+<div id="ready"></div><iframe id="deck"></iframe>
+<script>
+const query = new URLSearchParams(location.search);
+const frame = Number(query.get("frame"));
+const url = new URL(query.get("deck"), location.href);
+url.searchParams.set("slide", frame);
+url.searchParams.set("anim-t", query.get("time"));
+const deck = document.getElementById("deck");
+deck.onload = async () => {
+  const win = deck.contentWindow, doc = win.document;
+  const slide = doc.querySelector(".slide.current");
+  if (win.stagekit?.frame !== frame - 1 || !slide?._anims?.some(a =>
+      slide._step >= a.first && slide._step < a.first + a.steps)) return;
+  if (!win.getComputedStyle(doc.documentElement).getPropertyValue("--bg").trim() ||
+      [...doc.querySelectorAll('link[rel="stylesheet"]')].some(link => !link.sheet)) return;
+  slide.getBoundingClientRect();
+  await doc.fonts.ready;
+  document.getElementById("ready").style.background = "rgb(23, 187, 97)";
+};
+deck.src = url;
+</script>

@@ -22,6 +22,7 @@ Schriften und Einbettungen so laden wie im Browser.
   --frames N|N-M  Preview PNGs and a compact contact sheet. N includes all
            builds of its slide; N-M selects exactly those inclusive frame numbers.
            Each run has its own directory beside the complete output directory.
+  --motion FRAME  Preview a segment at 0%, 50% and 100% of its duration.
   --fonts  Schriftpruefung: jede Folie wird auf Textgroessen ausserhalb der vier
            Stufen des Themes (tiny, small, normal, large) durchsucht, auch in
            SVG-Zeichnungen. Meldet Folie, Element und Groesse.
@@ -64,6 +65,7 @@ def chrome():
     raise SystemExit("Chrome nicht gefunden; Pfad in tools/export.py eintragen")
 
 
+MOTION_PATH = "/__stagekit_checks__/motion.html"
 OVERFLOW_PATH = "/__stagekit_checks__/overflow.html"
 
 
@@ -71,6 +73,8 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
         if urlsplit(path).path == OVERFLOW_PATH:
             return str(pathlib.Path(__file__).with_name("overflow-check.html"))
+        if urlsplit(path).path == MOTION_PATH:
+            return str(pathlib.Path(__file__).with_name("motion-check.html"))
         return super().translate_path(path)
 
     def log_message(self, *a):
@@ -443,6 +447,49 @@ def preview_frames(request, frames):
     return range(first, last + 1)
 
 
+def motion_preview(ch, url, out, frame, frames):
+    """Capture three positions in the segment ending at the requested player frame."""
+    from PIL import Image, ImageDraw
+
+    if not RENDERED or not 1 <= frame <= len(frames):
+        raise SystemExit(f"--motion expects a frame in the rendered deck (1-{len(frames)})")
+    slide, step = frames[frame - 1]
+    section = re.split(r'<section class="slide', RENDERED)[slide]
+    if f'<span class="anim-step" data-step="{step}">' not in section:
+        raise SystemExit(f"Frame {frame} has no animation segment. Select the frame where a movement ends.")
+    parent = out.with_name(out.name + "-preview")
+    parent.mkdir(parents=True, exist_ok=True)
+    folder = pathlib.Path(tempfile.mkdtemp(prefix=f"motion-{frame:02d}-", dir=parent))
+    samples = [(0, "start"), (0.5, "midpoint"), (1, "end")]
+
+    def capture(sample):
+        time, name = sample
+        address = urljoin(url, MOTION_PATH) + "?" + urlencode({"deck": url, "frame": frame, "time": time})
+        path = folder / (name + ".png")
+        for attempt in range(2):
+            run(ch, ["--force-device-scale-factor=1", "--window-size=1920,1088", f"--screenshot={path}", address])
+            try:
+                with Image.open(path) as source:
+                    if source.size != (1920, 1088) or source.getpixel((3, 3))[:3] != (23, 187, 97):
+                        continue
+                    slide_image = source.crop((0, 8, 1920, 1088)).convert("RGB")
+                slide_image.save(path)
+                return slide_image.resize((640, 360), Image.Resampling.LANCZOS)
+            except OSError:
+                continue
+        raise SystemExit(f"Could not capture frame {frame} at {time:.0%}. Samples in {folder}")
+
+    tiles = parallel(capture, samples)
+    strip = Image.new("RGB", (1920, 388), "white")
+    draw = ImageDraw.Draw(strip)
+    for index, ((time, name), tile) in enumerate(zip(samples, tiles)):
+        x = index * tile.width
+        strip.paste(tile, (x, 0))
+        draw.text((x + 10, 368), f"Frame {frame}   {name} ({time:.0%})", fill="black")
+    strip.save(folder / "motion.png")
+    print(f"motion: {folder / 'motion.png'}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("deck")
@@ -450,6 +497,8 @@ def main():
     ap.add_argument("--pdf-raster", action="store_true", dest="pdf_raster")
     ap.add_argument("--png", action="store_true")
     ap.add_argument("--sheet", action="store_true")
+    ap.add_argument("--motion", type=int, metavar="FRAME",
+                    help="preview the start, midpoint and end of the animation segment ending at FRAME")
     ap.add_argument("--frames", type=frame_request, metavar="N|N-M",
                     help="preview the complete slide containing frame N, or the exact inclusive range N-M")
     ap.add_argument("--overflow", action="store_true", help="check text against slide edges and its owning d.box()")
@@ -463,7 +512,10 @@ def main():
         JOBS = max(1, a.jobs)
     if a.pdf_raster:
         a.pdf = True
-    if a.frames:
+    if a.motion is not None:
+        if a.frames or a.pdf or a.png or a.sheet or a.steps or a.fonts or a.overflow:
+            ap.error("use --motion FRAME as a separate preview")
+    elif a.frames:
         if a.pdf or a.steps or a.fonts:
             ap.error("--frames produces preview PNGs and a contact sheet; use a full export for PDF or layout checks")
         a.png = a.sheet = a.overflow = True
@@ -495,6 +547,8 @@ def export_deck(a, deck, out, url):
     n = len(frames)
     print(f"{slide_count(url)} Folien, {n} Frames (Aufbauschritte einzeln), {url}")
     warn_stale_copy(deck)
+    if a.motion is not None:
+        return motion_preview(ch, url, out, a.motion, frames)
     numbers = range(1, n + 1)
     if a.overflow and (RENDERED is None or not n):
         raise SystemExit("Cannot read the rendered deck's frame map for the overflow check.")

@@ -71,7 +71,7 @@ def run(*args, cwd=None):
 def syntax():
     print("1 Syntax")
     node = shutil.which("node")
-    for js in ("stagekit.js", "draw.js"):
+    for js in ("stagekit.js", "draw.js", "anim.js"):
         if not node:
             print(f"  --     {js}: node fehlt, übersprungen")
             continue
@@ -182,6 +182,7 @@ def export(tmp, update):
     if pngs:
         preview(out)
     overflow_bounds()
+    visual_helpers(tmp)
     return pngs + [midstate(out / "slides")]
 
 
@@ -193,6 +194,73 @@ def overflow_bounds():
         'Frame 4: "Slide edge" exceeds slide (left 24 px)',
         'Frame 4: "Cropped SVG" exceeds slide (left 12 px)',
     ] and "0 unchecked" in log, "Exakter Rand passt, Überläufe erst im sichtbaren Frame", log.strip())
+
+
+def visual_helpers(tmp):
+    import export as ex
+    from PIL import Image, ImageChops
+
+    # Edit the same two inputs an author would change, then inspect actual
+    # browser geometry in the modified deck and its print view.
+    demo = REPO / "examples" / "animations"
+    folder = tmp / "project" / "visuals"
+    folder.mkdir()
+    shutil.copytree(demo / "img", folder / "img")
+    shutil.copy(DECK / "theme.css", folder / "theme.css")
+    html = (demo / "animations.html").read_text(encoding="utf-8")
+    html = html.replace("../../themes/default.css", "theme.css").replace("../../", "../stagekit/")
+    script = (demo / "deck.js").read_text(encoding="utf-8")
+    script = script.replace("x: 760, y: 220", "x: 900, y: 220").replace("width: 180, height: 56", "width: 240, height: 56")
+    script = script.replace("x: 700, y: 219, width: 231, height: 236", "x: 96, y: 250, width: 144, height: 96")
+    (folder / "deck.js").write_text(script.replace('chip, "CPU"', 'chip, "USB port"'), encoding="utf-8")
+    probe = """<script>
+    const params = new URLSearchParams(location.search);
+    if (params.has("print")) {
+      const fig = document.getElementById("fig-zoom");
+      const r = sel => fig.querySelector(sel).getBoundingClientRect();
+      const view = r("svg"), label = r('[data-a="caption"] text'), box = r('[data-a="outline"] rect');
+      const inside = b => b.width > 0 && b.left >= view.left && b.right <= view.right &&
+        b.top >= view.top && b.bottom <= view.bottom;
+      const outline = fig.querySelector('[data-a="outline"] rect');
+      document.title = "TEST:" + (inside(box) && inside(label) && label.left >= box.right &&
+        outline.getAttribute("x") === "96" && fig.querySelector("text").textContent === "USB port");
+    } else if (["13", "14"].includes(params.get("slide"))) {
+      const r = name => document.querySelector('#fig-net [data-a="' + name + '"] rect').getBoundingClientRect();
+      const link = document.querySelector('#fig-net [data-a="link1"] line');
+      const edges = link.getBoundingClientRect();
+      const distance = params.get("slide") === "13" ? r("request").right - edges.right : r("reply").left - edges.left;
+      const good = link.x2.baseVal.value === 900 && Math.abs(distance) < 0.5;
+      document.title = "TEST:" + good;
+    }
+    </script>"""
+    deck = folder / "visuals.html"
+    deck.write_text(html.replace("</body>", probe + "</body>"), encoding="utf-8")
+    srv, port = ex.serve(folder.parent)
+    try:
+        url = f"http://127.0.0.1:{port}/visuals/visuals.html"
+        for query, name in [("slide=13&anim-t=" + str(1300 / 3700), "Packet stops at moved router"),
+                            ("slide=14", "Returning packet stops at the sender edge"),
+                            ("print", "Retargeted close-up and caption fit the final print frame")]:
+            dom = ex.rendered(ex.chrome(), url + "?" + query) or ""
+            check("<title>TEST:true</title>" in dom, name)
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+    rc, log = run(TOOLS / "export.py", deck, "--motion", 7, "--out", tmp / "motion")
+    match = re.search(r"^motion: (.+)$", log, re.M)
+    if check(rc == 0 and match, "Motion preview produced", log if rc else ""):
+        strip = pathlib.Path(match[1].strip())
+        with Image.open(strip) as sheet:
+            check(sheet.size == (1920, 388), "Motion strip dimensions")
+        panels = []
+        for name in ("start", "midpoint", "end"):
+            with Image.open(strip.parent / (name + ".png")) as frame:
+                panels.append(frame.convert("RGB"))
+        check(all(ImageChops.difference(a, b).getbbox() for a, b in zip(panels, panels[1:])),
+              "Motion preview samples distinct positions")
+    rc, log = run(TOOLS / "export.py", deck, "--motion", 1)
+    check(rc != 0 and "no animation segment" in log, "Static frame rejected for motion preview")
 
 
 def preview(out):

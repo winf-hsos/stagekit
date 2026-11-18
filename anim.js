@@ -222,9 +222,10 @@
     function base(n) {
       let m = memo.get(n);
       if (!m) {
-        let c = { x: 0, y: 0 };
-        try { const b = n.getBBox(); c = { x: b.x + b.width / 2, y: b.y + b.height / 2 }; } catch (e) { /* not rendered */ }
-        m = { transform: n.getAttribute("transform") || "", c, view: n.getAttribute && n.getAttribute("viewBox") };
+        let bounds = { x: 0, y: 0, width: 0, height: 0 };
+        try { bounds = n.getBBox(); } catch (e) { /* not rendered */ }
+        const c = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+        m = { bounds, transform: n.getAttribute("transform") || "", c, view: n.getAttribute && n.getAttribute("viewBox") };
         memo.set(n, m);
       }
       return m;
@@ -282,7 +283,20 @@
           const n = find(x.t)[0];
           get(key, "x"); get(key, "y");
           if (path && n) {
-            const L = path.getTotalLength(), pt = path.getPointAtLength((x.reverse ? 1 - p : p) * L), c = base(n).c;
+            const length = path.getTotalLength(), { c, bounds } = base(n);
+            let from = 0, to = length;
+            if (path.dataset.skFrom && path.dataset.skTo) {
+              // Project half the packet's extent onto the straight route so
+              // its leading edge touches the node at either end, also in reverse.
+              const dx = Math.abs(path.x2.baseVal.value - path.x1.baseVal.value);
+              const dy = Math.abs(path.y2.baseVal.value - path.y1.baseVal.value);
+              const inset = side => side === "left" || side === "right"
+                ? bounds.width * length / (2 * dx) : bounds.height * length / (2 * dy);
+              from = inset(path.dataset.skFrom);
+              to -= inset(path.dataset.skTo);
+              if (from > to) throw new Error("along: the moving object does not fit between the connected edges");
+            }
+            const pt = path.getPointAtLength(lerp(from, to, x.reverse ? 1 - p : p));
             state[key].x = pt.x - c.x; state[key].y = pt.y - c.y;
           }
         } else if (x.prop.startsWith("color:")) {
@@ -452,7 +466,7 @@
     a.frame = (step, how) => {
       if (!ready && !setup()) return;                      // T, the segment times, come from setup
       const k = keyOf(step);
-      const frac = firstCall && params.has("anim-t") ? clamp(parseFloat(params.get("anim-t"))) : undefined;
+      const frac = firstCall && step >= a.first && step < a.first + N() && params.has("anim-t") ? clamp(parseFloat(params.get("anim-t"))) : undefined;
       firstCall = false;
       if ((how === "play" || how === true) && k === key + 1) { seek(key); key = k; run(); }   // true: stagekit.js 0.2
       else if (how === "back" && a.back === "play" && k === key - 1) {

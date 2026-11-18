@@ -46,6 +46,7 @@
       <pre><code>sort.step(
   sort.par(sort.color("v2", "yellow", { dur: 300 }), sort.color("v5", "yellow", { dur: 300 })),
   sort.swap("prompt0", "prompt1", { dur: 0 }));</code></pre>
+      <p>Für die Sichtprüfung des Tauschs erzeugt <code>python tools/export.py examples/animations/animations.html --motion 7</code> einen Streifen mit Anfang, Mitte und Ende der Bewegung.</p>
     </section>
     <section id="verfolgen">
       <div class="heading">
@@ -58,9 +59,9 @@
         <figure><img src="frames/net-router.webp" alt="Die Anfrage steht am Eingang des Routers"><figcaption>Am Router hält die Vorführung an.</figcaption></figure>
         <figure><img src="frames/net-server.webp" alt="Die Anfrage ist auf der Serverseite des zweiten Leitungsabschnitts angekommen"><figcaption>Ein weiterer Tastendruck führt sie zum Server.</figcaption></figure>
       </div>
-      <pre><code>net.step(net.show("request", { dur: 300 }), net.along("request", "route1", { dur: 1000 }),
-         net.hold(),
-         net.along("request", "route2", { dur: 1000 }), net.hide("request", { dur: 200 }), net.pulse("server"));</code></pre>
+      <pre><code>const link = d.connect(d.anchor(router, "right"), d.anchor(server, "left"));
+// Beim Zeichnen: d.g("link2", link)
+net.step(net.along("request", "link2", { dur: 1000 }));</code></pre>
       <p>Der Halt liegt innerhalb eines Animationsabschnitts. Soll die Routerposition auch im PDF eine eigene Seite erhalten, die beiden Wegstücke auf zwei <code>step()</code>-Aufrufe verteilen.</p>
     </section>
     <section id="lokalisieren">
@@ -74,9 +75,9 @@
         <figure><img src="frames/chip-detail.webp" alt="Vergrößerter Ausschnitt mit dem Prozessor in der Mitte"><figcaption>Die Kamera fährt zum gewählten Bauteil.</figcaption></figure>
         <figure><img src="frames/chip-label.webp" alt="Der Prozessor ist eingerahmt und mit CPU beschriftet"><figcaption>Rahmen und Beschriftung bestätigen die Position.</figcaption></figure>
       </div>
-      <pre><code>zoom.step(zoom.camera(detailView, { dur: 2500 }));
-zoom.step(zoom.par(zoom.show("spot", { dur: 1000 }), zoom.draw("cpu-box", { dur: 1000 })));
-zoom.step(zoom.show("cpu-label", { dur: 400 }));</code></pre>
+      <pre><code>const detail = d.closeup(1680, 804, chip, "CPU");
+// detail.shade, detail.outline und detail.caption als benannte Gruppen zeichnen.
+zoom.step(zoom.camera(detail.view, { dur: 2500 }));</code></pre>
     </section>
   </main>
   <footer><a href="deck.js">Vollständiger Beispielcode</a></footer>

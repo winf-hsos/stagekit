@@ -43,50 +43,45 @@ sort.step(swap("v5", "v4"), sort.count("swaps", 2, { prefix: "swap count ", dur:
 sort.step(swap("v5", "v3"), sort.count("swaps", 3, { prefix: "swap count ", dur: 200 }),
   sort.color("v5", "green", { dur: 300 }), sort.swap("prompt3", "prompt4", { dur: 0 }));
 
-/* --- semi-automatic: a request and its reply --------------------------------
- * Icons 160 wide, centred at x 140, 840, 1540. A packet is 180 wide, so its
- * centre rides on routes that stop 94 short of each icon (90 + 4 for the stroke). */
+/* --- semi-automatic: a request and its reply -------------------------------- */
+const laptop = { x: 60, y: 220, width: 160, height: 160 };
+const router = { x: 760, y: 220, width: 160, height: 160 };
+const server = { x: 1460, y: 220, width: 160, height: 160 };
+const sender = d.anchor(laptop, "right"), receiver = d.anchor(server, "left");
+const packet = { width: 180, height: 56 };
+function station(name, rect, icon, caption) {
+  return d.g(name, d.icon(rect.x, rect.y, rect.width, icon, { color: d.color("white") })) +
+    d.label(rect.x + rect.width / 2, rect.y + rect.height + 60, caption,
+      { anchor: "middle", color: d.color("gray") });
+}
 el("fig-net").innerHTML = d.svg(1680, 600,
-  d.g("link1", d.line(240, 300, 740, 300)),
-  d.g("link2", d.line(940, 300, 1440, 300)),
-  d.g("route1", d.line(334, 300, 646, 300, { color: "none" })),
-  d.g("route2", d.line(1034, 300, 1346, 300, { color: "none" })),
-  d.g("laptop", d.icon(60, 220, 160, ICON_LAPTOP, { color: d.color("white") })),
-  d.g("router", d.icon(760, 220, 160, ICON_ROUTER, { color: d.color("white") })),
-  d.g("server", d.icon(1460, 220, 160, ICON_HDD_RACK, { color: d.color("white") })),
-  d.label(140, 440, "your laptop", { anchor: "middle", color: d.color("gray") }),
-  d.label(840, 440, "router", { anchor: "middle", color: d.color("gray") }),
-  d.label(1540, 440, "server", { anchor: "middle", color: d.color("gray") }),
-  d.g("request", d.box(244, 272, 180, 56, "request", { border: d.color("yellow") })),
-  d.g("reply", d.box(1256, 272, 180, 56, "reply", { border: d.color("green") })),
-  d.g("time", d.label(840, 540, "0 ms", { anchor: "middle" })));
+  d.g("link1", d.connect(sender, d.anchor(router, "left"))),
+  d.g("link2", d.connect(d.anchor(router, "right"), receiver)),
+  station("laptop", laptop, ICON_LAPTOP, "your laptop"),
+  station("router", router, ICON_ROUTER, "router"),
+  station("server", server, ICON_HDD_RACK, "server"),
+  d.g("request", d.box(sender.x, sender.y - packet.height / 2, packet.width, packet.height,
+    "request", { border: d.color("yellow") })),
+  d.g("reply", d.box(receiver.x - packet.width, receiver.y - packet.height / 2, packet.width, packet.height,
+    "reply", { border: d.color("green") })),
+  d.g("time", d.label(840, 540, "0 ms", { anchor: "middle", color: d.color("gray") })));
 const net = d.anim("fig-net");
 net.step(net.draw("link1"), net.draw("link2", { dur: 600 }));
-net.step(net.show("request", { dur: 300 }), net.along("request", "route1", { dur: 1000 }),
+net.step(net.show("request", { dur: 300 }), net.along("request", "link1", { dur: 1000 }),
          net.hold(),
-         net.along("request", "route2", { dur: 1000 }), net.hide("request", { dur: 200 }), net.pulse("server"));
+         net.along("request", "link2", { dur: 1000 }), net.hide("request", { dur: 200 }), net.pulse("server"));
 net.step(net.show("reply", { dur: 300 }),
-         net.par(net.seq(net.along("reply", "route2", { dur: 1000, reverse: true }), net.along("reply", "route1", { dur: 1000, reverse: true })),
+         net.par(net.seq(net.along("reply", "link2", { dur: 1000, reverse: true }), net.along("reply", "link1", { dur: 1000, reverse: true })),
                  net.count("time", 42, { suffix: " ms", dur: 2000, ease: "linear" })));
 
-/* --- automatic: from the board to the chip ----------------------------------
- * The photo is 16:9, 1680 x 945, cut to the figure's 1680 x 804 (70 off at the
- * top). The heat spreader sits at x 700..931, y 219..455 of the drawing. The
- * camera zooms by 2.5 onto the CPU (672 x 321.6 around 817, 336), so labels
- * written in size 32 appear in 80. */
+/* --- automatic: from the board to the chip ---------------------------------- */
 const chip = { x: 700, y: 219, width: 231, height: 236 };
-const centerX = chip.x + chip.width / 2;
-const centerY = chip.y + chip.height / 2;
-const viewWidth = 1680 / 2.5, viewHeight = 804 / 2.5;
-const detailView = [centerX - viewWidth / 2, centerY - viewHeight / 2, viewWidth, viewHeight];
+const detail = d.closeup(1680, 804, chip, "CPU");
 el("fig-zoom").innerHTML = d.svg(1680, 804,
   d.image(0, -70, 1680, 945, "img/motherboard.jpg"),
-  // a spotlight: everything but the heat spreader darkened, so labels on the photo stay legible
-  d.g("spot", `<path d="M0 0H1680V804H0Z M${chip.x} ${chip.y}h${chip.width}v${chip.height}h-${chip.width}Z" fill="#000" fill-opacity="0.7" fill-rule="evenodd"/>`),
-  d.g("cpu-box", d.box(chip.x, chip.y, chip.width, chip.height, "", { border: d.color("yellow"), fill: "none" })),
-  d.g("cpu-label", d.label(chip.x - 14, centerY, "CPU", { anchor: "end", centerY, keepCase: true, color: d.color("yellow") })));
+  d.g("spot", detail.shade), d.g("outline", detail.outline), d.g("caption", detail.caption));
 // back: "play" -- zooming out again is the reverse of zooming in and tells nothing wrong
 const zoom = d.anim("fig-zoom", { auto: true, gap: 500, back: "play" });
-zoom.step(zoom.camera(detailView, { dur: 2500 }));
-zoom.step(zoom.par(zoom.show("spot", { dur: 1000 }), zoom.draw("cpu-box", { dur: 1000 })));
-zoom.step(zoom.show("cpu-label", { dur: 400 }));
+zoom.step(zoom.camera(detail.view, { dur: 2500 }));
+zoom.step(zoom.par(zoom.show("spot", { dur: 1000 }), zoom.draw("outline", { dur: 1000 })));
+zoom.step(zoom.show("caption", { dur: 400 }));
