@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- `tools/new_deck.py` legt einen spielbaren Satz mit Projekttheme, relativen Framework-Pfaden, Zeichnung, Notizen und Startskript an. Startskript und Export unterstützen auch Projektunterordner mit Leerzeichen und Umlauten. Vorhandene Decks erfordern keine Anpassung.
+
 - Eine Animationsgalerie verbindet Lernziele mit Bildfolgen, spielbaren Beispielen und Code. Der erste Bubble-Sort-Durchlauf zeigt einen Vergleich ohne Tausch und drei mit Tausch. In der Detailansicht der Platine steuert ein gemeinsames Zielrechteck die Kamerafahrt und Markierung.
 
 - Der Skill wählt die Dramaturgie neuer Decks nach dem Publikumsziel. Sechs kurze Strategien beschreiben Einstieg, Beleg, Aufdeckung und Schluss. Ein lauffähiges Beispiel zeigt Befund und Einschränkung am selben Diagramm. Bei punktuellen Änderungen beginnt die Arbeit am betroffenen Frame. Bestehende Decks müssen nichts anpassen.

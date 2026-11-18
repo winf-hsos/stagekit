@@ -50,13 +50,19 @@ Symbols that `tools/icon.py` inserts come from [Bootstrap Icons](https://icons.g
 
 ## Creating a deck
 
-1. Create `theme.css`: `python tools/theme.py style.toml <deck folder>/theme.css` (or copy `themes/default.css` and adapt it).
-2. Bring the framework into the project: `python tools/sync.py <project folder>` creates or updates `<project folder>/stagekit/`.
-3. Copy `template/deck.html` into the deck folder, adjust the two paths to `stagekit/`, and set `data-title`, `data-subtitle` and `data-parts`.
-4. Write slides: `<section class="slide">` with `<h2>` (small heading), `.content` with `.header`, `.statement`, `.lines`, `.code`, `.sidenote`, `.remark`, plus `.footnote`; drawings in `.figure`, photos as `<img class="photo">` with `.photo-text`, embeds in `.embed`; notes in `<aside class="notes">`.
-5. Look at it: open the file in a browser. Embeds, live polls and the export need a local server; `tools/export.py` brings its own.
-6. Start script: `python tools/start_script.py <deck.html>` writes `start-presentation.cmd` into the deck folder; a double-click starts the talk.
-7. Export: `python tools/export.py <deck.html>`. The PDF is vector; for decks with embedded demonstrators use `--pdf-raster` if an `<iframe>` stays empty.
+From the course project, give the tool the directory for the new deck:
+
+```powershell
+python C:/code/stagekit/tools/new_deck.py slides/selection-bias
+```
+
+This creates `selection-bias.html`, `deck.js`, `theme.css`, speaker notes in the HTML and `skript.md`, and a Windows launcher. Use `--title "Selection bias"` to supply the display title and derive the HTML filename from it. Existing output files are protected.
+
+The tool uses the nearest enclosing `style.toml` and project copy of `stagekit/`. If the runtime is missing, it installs one beside the style file. Without an inherited style it starts a deck-local `style.toml` with English defaults. Use `tools/sync.py` when you want to update a shared runtime.
+
+1. Replace the template's sample content and notes. Set the subtitle and parts in the HTML, and edit drawings in `deck.js`.
+2. Double-click `start-presentation.cmd`. Press **N** in the deck for the notes window.
+3. Export with `python C:/code/stagekit/tools/export.py slides/selection-bias/selection-bias.html` for the PDF, frame images, contact sheet, and checks.
 
 ## Keyboard
 

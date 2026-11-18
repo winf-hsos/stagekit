@@ -24,15 +24,15 @@ import pathlib
 import re
 import sys
 import zlib
+from urllib.parse import quote
 
 VORLAGE = r"""@echo off
-rem start-presentation.cmd: startet das Deck "{deck}" ueber einen lokalen Server.
+rem start-presentation.cmd: startet das Deck ueber einen lokalen Server.
 rem Erzeugt von stagekit/tools/start_script.py; nicht von Hand aendern, neu erzeugen.
 rem Der Server laeuft in dem Ordner, der Deck und stagekit enthaelt.
 rem Fenster offen lassen, solange vorgetragen wird; Schliessen beendet den Server.
 cd /d "%~dp0{hoch}"
-start "" http://127.0.0.1:{port}/{pfad}
-python -m http.server {port} --bind 127.0.0.1
+python -c "import http.server, webbrowser; server = http.server.ThreadingHTTPServer(('127.0.0.1', {port}), http.server.SimpleHTTPRequestHandler); webbrowser.open('http://127.0.0.1:{port}/{pfad}'); server.serve_forever()"
 """
 
 
@@ -45,16 +45,9 @@ def tiefe(html_text):
     return max(t.count("../") for t in treffer)
 
 
-def main(argv):
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("deck", type=pathlib.Path)
-    ap.add_argument("--port", type=int)
-    args = ap.parse_args(argv)
-
-    deck = args.deck.resolve()
-    if not deck.is_file():
-        raise SystemExit(f"{deck} gibt es nicht.")
-    n = tiefe(deck.read_text(encoding="utf-8"))
+def launcher(deck, html_text, port=None):
+    """Render the batch file for the deck's final path."""
+    n = tiefe(html_text)
     wurzel = deck.parent
     for _ in range(n):
         wurzel = wurzel.parent
@@ -62,11 +55,22 @@ def main(argv):
     # Aeltere Decks heissen index.html; dann traegt der Ordner den Namen, sonst
     # bekaemen alle denselben Port und dasselbe Etikett.
     name = deck.parent.name if deck.stem == "index" else deck.stem
-    port = args.port or 8800 + zlib.crc32(name.encode("utf-8")) % 100
+    port = port or 8800 + zlib.crc32(name.encode("utf-8")) % 100
+    # A batch file needs %% to pass a literal percent sign in an encoded URL.
+    text = VORLAGE.format(hoch="..\\" * n, port=port, pfad=quote(pfad).replace("%", "%%"))
+    return text.replace("\n", "\r\n").encode("ascii"), port, wurzel
 
-    text = VORLAGE.format(deck=name, hoch="..\\" * n, port=port, pfad=pfad)
+
+def main(argv):
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("deck", type=pathlib.Path)
+    ap.add_argument("--port", type=int)
+    args = ap.parse_args(argv)
+    deck = args.deck.resolve()
+    if not deck.is_file():
+        raise SystemExit(f"{deck} gibt es nicht.")
+    neu, port, wurzel = launcher(deck, deck.read_text(encoding="utf-8"), args.port)
     ziel = deck.parent / "start-presentation.cmd"
-    neu = text.replace("\n", "\r\n").encode("ascii")
     if not (ziel.exists() and ziel.read_bytes() == neu):
         ziel.write_bytes(neu)
     alt = deck.parent / "Vortrag starten.cmd"

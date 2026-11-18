@@ -43,6 +43,8 @@ Nach den Basisinfos wird das Deck **gleich gebaut**, ohne Zwischenschritt über 
 
 ### 3. Bau des Decks
 
+Für einen neuen Satz im Kursprojekt mit `python <stagekit>/tools/new_deck.py slides/<kurzname>` beginnen. `--title "…"` setzt den sichtbaren Titel und leitet daraus den HTML-Dateinamen ab. Das Werkzeug übernimmt die nächste übergeordnete `style.toml`, verwendet die vorhandene Framework-Kopie und legt HTML, `deck.js`, Theme, `skript.md` und Startskript an. Danach die Beispielinhalte und Notizen durch den eigentlichen Satz ersetzen. Bestehende Decks direkt bearbeiten.
+
 - **Zuerst `docs/design-rules.md` lesen**, dann bauen; Gerüst und Zeichenfunktionen stehen in `docs/api.md`.
 - Deckordner mit `<deck>.html` (aus `template/deck.html`), `deck.js` für die Zeichnungen, `theme.css` (aus der `style.toml`: `python <stagekit>/tools/theme.py style.toml <ordner>/theme.css`), Fotos in `img/`.
 - **Die HTML-Datei heißt nach dem Deck, nicht `index.html`.** `<deck>` ist der Titel der Titelfolie als Kurzname: in der Sprache der Folien, klein geschrieben, Wörter mit Bindestrich getrennt, nur ASCII (ä → ae, ö → oe, ü → ue, ß → ss), Satzzeichen weg, höchstens etwa 50 Zeichen — bei langen Titeln das Thema, nicht der ganze Satz. Beispiel: „A Brief History of AI" → `a-brief-history-of-ai.html`. Das PDF übernimmt den Namen von selbst (`export.py` benennt es nach der HTML-Datei: `export/a-brief-history-of-ai.pdf`). Grund: Ein PDF namens `index.pdf` sagt im Download-Ordner, im Anhang einer Mail oder im Lernraum nicht, was es ist (Regel vom 24.09.2026). Bestehende Decks mit `index.html` behalten ihren Namen, bis sie jemand bewusst umbenennt; dann Verweise (Einbettungen, Sync-Skripte, Links) mitziehen.

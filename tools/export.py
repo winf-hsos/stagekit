@@ -42,6 +42,7 @@ import subprocess
 import sys
 import threading
 import urllib.request
+from urllib.parse import quote
 
 CHROME = [r"C:\Program Files\Google\Chrome\Application\chrome.exe",
           r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
@@ -416,7 +417,7 @@ def main():
             break
     srv, port = serve(root)
     rel = deck.relative_to(root).as_posix()
-    url = f"http://127.0.0.1:{port}/{rel}"
+    url = f"http://127.0.0.1:{port}/{quote(rel)}"
     ch = chrome()
     global RENDERED
     RENDERED = rendered(ch, url)

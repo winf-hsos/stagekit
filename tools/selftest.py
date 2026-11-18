@@ -125,6 +125,38 @@ def tools(tmp):
           "start_script.py schreibt das Startskript", log.strip() if rc else "")
     rc, log = run(TOOLS / "release.py", "--notes")
     check(rc == 0, "release.py --notes liest CHANGELOG.md", log.strip() if rc else "")
+    new_decks(project)
+
+
+def new_decks(project):
+    course = project / "Wahlfach für alle"
+    course.mkdir()
+    (course / "style.toml").write_text('[stagekit]\nlanguage = "de"\nmargin = 144\n', encoding="utf-8")
+    destination = course / "slides" / "einstieg"
+    title = "Größe & Auswahl"
+    args = (TOOLS / "new_deck.py", destination, "--title", title)
+    rc, log = run(*args)
+    if not check(rc == 0, "new_deck.py legt den Satz an", log.strip() if rc else ""):
+        return
+    deck = destination / "groesse-auswahl.html"
+    html = deck.read_text(encoding="utf-8")
+    check('<html lang="de">' in html and "--margin: 144px" in (destination / "theme.css").read_text(),
+          "Deck verwendet die Kursgestaltung")
+    check(f'../../../stagekit/stagekit.js?v={cache_tag(project / "stagekit")}' in html
+          and not (course / "stagekit").exists(), "Deck verwendet die vorhandene gemeinsame Kopie")
+    check("Wahlfach%%20f%%C3%%BCr%%20alle/slides/einstieg/groesse-auswahl.html" in
+          (destination / "start-presentation.cmd").read_text(encoding="ascii"),
+          "Launcher kodiert den relativen Pfad für Windows")
+    drawing = destination / "deck.js"
+    drawing.write_text("// custom drawing\n", encoding="utf-8")
+    rc, _ = run(*args)
+    check(rc != 0 and drawing.read_text(encoding="utf-8") == "// custom drawing\n",
+          "Ein zweiter Aufruf erhält die Zeichnung")
+    standalone = project.parent / "standalone"
+    rc, log = run(TOOLS / "new_deck.py", standalone)
+    check(rc == 0 and (standalone / "style.toml").is_file()
+          and version_of(standalone / "stagekit") == repo_version(), "Eigenständiges Deck startet mit lokalen Vorgaben",
+          log.strip() if rc else "")
 
 
 def export(tmp, update):
