@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.8.0 (2026-11-18)
+
 - `d.closeup()` berechnet Kameraziel, Abdunklung, Rahmen und Beschriftung aus einem Zielrechteck. `d.anchor()` und `d.connect()` verbinden Kanten und liefern denselben Weg für Pakete in beiden Richtungen. Netzwerk- und Platinenbeispiel verwenden die neuen Helfer. Bestehende Decks können die Helfer nach `tools/sync.py` nutzen.
 - `export.py --motion N` zeigt Anfang, Mitte und Ende des Animationsabschnitts zu Frame N in einem Bildstreifen und als Einzelbilder. Bei mehreren Animationen bleibt eine bereits abgeschlossene Figur beim Abtasten eines späteren Abschnitts in ihrem Endzustand.
 

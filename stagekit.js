@@ -30,7 +30,7 @@
   "use strict";
 
   // set by tools/release.py; tools/sync.py and tools/export.py read it from here
-  const VERSION = "0.7.2";
+  const VERSION = "0.8.0";
 
   const $ =(sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
