@@ -7,10 +7,11 @@ description: Foliensätze als HTML mit stagekit entwerfen und bauen (SVG-Zeichnu
 
 Dieses Skill beschreibt den verbindlichen Arbeitsablauf für Foliensätze mit `stagekit` (Dateien `stagekit.css`, `stagekit.js`, `draw.js`, `tools/`). `<stagekit>` steht im Folgenden für den Ordner, in dem das Repository liegt. Ein Deck ist eine HTML-Datei plus Notizen plus Zeichnungen in einem kleinen Skript; die Designwerte kommen aus der `theme.css` des Decks, erzeugt aus der `style.toml` des Projekts. Fehlt beides, lege die `style.toml` als ersten Schritt an (Vorlage in `docs/api.md`) und erzeuge daraus die `theme.css`.
 
-Diese Datei enthält den Ablauf und die Regeln in Kurzform. Ausführlich steht es in drei Nachschlagedateien neben ihr:
+Diese Datei enthält den Ablauf und verweist auf die passenden Nachschlagedateien:
 
 | Datei | wann lesen |
 |---|---|
+| [Dramaturgie nach Anlass](docs/deck-strategies.md) | für einen neuen Satz oder eine neue Gliederung: passenden Eintrag für das Publikumsziel wählen |
 | `docs/design-rules.md` | **vor dem Bau eines Decks ganz**: jede Gestaltungsregel mit Begründung und Grenzwerten |
 | `docs/api.md` | beim Schreiben von HTML und `deck.js`: Gerüst, Zeichenfunktionen, Live-Abfragen, Animationen, Vorlage der `style.toml` |
 | `docs/website.md` | nur wenn Decks auf eine Website kommen: Player, Sync-Skript, Abbildungen in heller Palette |
@@ -19,9 +20,9 @@ Diese Datei enthält den Ablauf und die Regeln in Kurzform. Ausführlich steht e
 
 ### 1. Basisinfos erfragen (immer zuerst)
 
-Was der Nutzer schon mitgeliefert hat, wird nicht erneut gefragt; der Rest in **einem** kompakten Dialog:
+Briefing, vorhandenes Deck und Projektvorgaben (etwa Sprache und Design in der `style.toml`) liefern die Basisinfos. Offene Fragen, deren Antwort den Satz verändern würde, in **einem** kompakten Dialog bündeln. Bei einer Änderung an einzelnen Frames direkt dort einsteigen.
 
-1. **Thema und Kernbotschaft:** der eine Satz, den das Publikum behalten soll.
+1. **Thema und Publikumsziel:** Was soll das Publikum anschließend entscheiden, erklären oder selbst tun können? Daraus den Decktyp ableiten. „Ergebnisse präsentieren“ kann einen Befund oder eine Entscheidung meinen. Nur bei folgenreicher Unklarheit nachfragen, etwa: „Sollen die Kolleginnen und Kollegen das Ergebnis einordnen oder einen weiteren Versuch bewilligen?“
 2. **Publikum und Vorwissen.**
 3. **Anlass und Dauer** (Faustregel: deutlich unter zwei Minuten je Inhaltsfolie). Dabei klären, ob der Satz einmalig gehalten wird oder wiederkehrt — davon hängt ab, ob ein Datum auf die Titelfolie gehört.
 4. **Sprache der Folien** (die Folien in der Sprache des Publikums; Skript und Sprechernotizen dürfen in einer anderen Sprache stehen). Die Antwort wird **einmal** in der `style.toml` des Projekts festgehalten (`[stagekit] language = "en"`), und danach ist **alles auf den Folien** in dieser Sprache: Überschriften, Beschriftungen, Zeichnungen, und auch die Beispiele, Beispielsätze und Beispieldaten. Ein deutscher Beispielsatz auf einer englischen Folie („die sonne scheint") ist ein Fehler, kein Lokalkolorit (Regel vom 14.09.2026). Bei Deutsch gilt die Kleinschreibung nicht: `theme.py` setzt `--lowercase` dann auf `none`, Substantive bleiben groß.
@@ -30,6 +31,8 @@ Was der Nutzer schon mitgeliefert hat, wird nicht erneut gefragt; der Rest in **
 7. **Interaktive Elemente:** gibt es Demonstratoren oder Live-Daten, die auf eine Folie gehören? Das ist die Stärke von stagekit; frag danach.
 
 ### 2. Direkt bauen: das Deck ist die Diskussionsgrundlage
+
+Der gewählte Decktyp bestimmt, wann die Antwort sichtbar wird, welche Abbildung sie trägt und womit der Satz endet. Eine Agenda, ein Teiltitel oder ein Diagrammtitel kann die Lösung einer Lernfrage vorwegnehmen; die Reihenfolge deshalb aus Publikumssicht lesen. Einen Abschnitt mit anderem Ziel darf man anders aufbauen, etwa eine kurze Demo innerhalb eines Pitches. Die Wahl fließt direkt in das HTML-Deck ein.
 
 Nach den Basisinfos wird das Deck **gleich gebaut**, ohne Zwischenschritt über einen Markdown-Entwurf (Regel vom 15.11.2026, Nicolas). Der gebaute Satz ist das Feedback-Material: Kontaktbogen und PDF aus `export.py` zeigen die Folien so, wie das Publikum sie sehen wird, und darüber lässt sich besser reden als über eine Beschreibung. Dazu gehört alles, was der Agent selbst entscheidet: Gliederung in Teile, Zeichnungen, erzeugte Bilder, Aufbau in Schritten und Animationen, wo die Regeln in `docs/design-rules.md` sie verlangen.
 

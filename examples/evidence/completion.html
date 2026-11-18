@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>completion by diagram use</title>
+  <link rel="stylesheet" href="../../themes/default.css">
+  <link rel="stylesheet" href="../../stagekit.css">
+  <style>
+    .slide .interior { top: 140px; bottom: 140px; gap: 48px; }
+    .chart { width: 100%; }
+    .chart-row { display: grid; grid-template-columns: 290px minmax(0, 1fr) 340px; align-items: center; column-gap: 40px; margin: 28px 0; }
+    .chart-label { font-size: var(--normal); }
+    .track { height: 42px; background: var(--gray-dark); }
+    .bar { display: block; height: 100%; background: var(--white); }
+    .measure { font-size: var(--normal); font-variant-numeric: tabular-nums; }
+    .den { font-size: var(--small); color: var(--gray-light); }
+    .figure-note { font-size: var(--small); color: var(--gray-light); }
+  </style>
+</head>
+<body>
+  <!-- One frame from the results-briefing pilot, using constructed classroom data. -->
+  <div class="deck" data-title="completion by diagram use">
+    <section class="slide">
+      <h2>completion by diagram use</h2>
+      <div class="content interior">
+        <div class="statement">the gap was 20 percentage points</div>
+        <div class="chart" role="group" aria-label="share completing the task on a scale from zero to one hundred percent">
+          <div class="figure-note">students who identified both components</div>
+          <div class="chart-row">
+            <div class="chart-label">opened</div>
+            <div class="track" aria-hidden="true"><span class="bar" style="width: 70%"></span></div>
+            <div class="measure">70% <span class="den">(28 of 40)</span></div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label">kept closed</div>
+            <div class="track" aria-hidden="true"><span class="bar" style="width: 50%"></span></div>
+            <div class="measure">50% <span class="den">(20 of 40)</span></div>
+          </div>
+        </div>
+        <div class="figure-note">prior practice differed between groups, so the gap alone cannot establish an effect.</div>
+      </div>
+      <div class="footnote">constructed classroom data</div>
+      <aside class="notes">Opening the diagram was voluntary. Students with more practice used it more often. These counts describe the sample and leave the causal effect open.</aside>
+    </section>
+  </div>
+  <script src="../../stagekit.js"></script>
+</body>
+</html>

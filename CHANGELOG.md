@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- Der Skill wählt die Dramaturgie neuer Decks nach dem Publikumsziel. Sechs kurze Strategien beschreiben Einstieg, Beleg, Aufdeckung und Schluss. Ein lauffähiges Beispiel zeigt Befund und Einschränkung am selben Diagramm. Bei punktuellen Änderungen beginnt die Arbeit am betroffenen Frame. Bestehende Decks müssen nichts anpassen.
+
 ## 0.7.2 (2026-11-16)
 
 - **`d.ipo()` richtet Eingabe und Ausgabe mittig zum Pfeil aus:** Bisher
