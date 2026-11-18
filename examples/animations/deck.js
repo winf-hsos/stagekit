@@ -11,10 +11,18 @@ const ICON_HDD_RACK = '<path d="M4.5 5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1M3 4.5a.5.5 
 /* --- step by step: one pass of bubble sort ---------------------------------
  * Five boxes 160 wide with 60 between them: 5 x 160 + 4 x 60 = 1040, so the row
  * starts at (1680 - 1040) / 2 = 320, and a swap moves a box by 220. */
-const values = [5, 2, 4, 1, 3];
+const values = [2, 5, 1, 4, 3];
+const prompts = [
+  "will 2 and 5 change places?",
+  "2 and 5 stay in order. what will 5 and 1 do?",
+  "will 5 and 4 change places?",
+  "will 5 and 3 change places?",
+  "5 is now in its final position"
+];
 el("fig-sort").innerHTML = d.svg(1680, 600,
   ...values.map((v, i) => d.g("v" + v, d.box(320 + i * 220, 200, 160, 160, String(v), { size: 48, mono: true }))),
-  d.g("swaps", d.label(840, 520, "0 swaps", { anchor: "middle", color: d.color("gray") })));
+  ...prompts.map((text, i) => d.g("prompt" + i, d.label(840, 42, text, { anchor: "middle" }))),
+  d.g("swaps", d.label(840, 550, "swap count 0", { anchor: "middle", color: d.color("gray") })));
 const sort = d.anim("fig-sort");
 // a swap: the left box goes over the top, the right one underneath
 const swap = (l, r) => sort.seq(
@@ -23,10 +31,17 @@ const swap = (l, r) => sort.seq(
     sort.seq(sort.move(l, 0, -130, { dur: 300 }), sort.move(l, 220, 0, { dur: 500 }), sort.move(l, 0, 130, { dur: 300 })),
     sort.seq(sort.move(r, 0, 130, { dur: 300 }), sort.move(r, -220, 0, { dur: 500 }), sort.move(r, 0, -130, { dur: 300 }))),
   sort.par(sort.color(l, "white", { dur: 300 }), sort.color(r, "white", { dur: 300 })));
-sort.step(swap("v5", "v2"), sort.count("swaps", 1, { suffix: " swaps", dur: 300 }));
-sort.step(swap("v5", "v4"), sort.count("swaps", 2, { suffix: " swaps", dur: 300 }));
-sort.step(swap("v5", "v1"), sort.count("swaps", 3, { suffix: " swaps", dur: 300 }));
-sort.step(swap("v5", "v3"), sort.count("swaps", 4, { suffix: " swaps", dur: 300 }), sort.color("v5", "green"));
+// The first comparison leaves both values in place. Keep its outcome visible
+// at the resting state, where the audience predicts the next comparison.
+sort.step(
+  sort.par(sort.color("v2", "yellow", { dur: 300 }), sort.color("v5", "yellow", { dur: 300 })),
+  sort.swap("prompt0", "prompt1", { dur: 0 }));
+sort.step(sort.color("v2", "white", { dur: 200 }), swap("v5", "v1"),
+  sort.count("swaps", 1, { prefix: "swap count ", dur: 200 }), sort.swap("prompt1", "prompt2", { dur: 0 }));
+sort.step(swap("v5", "v4"), sort.count("swaps", 2, { prefix: "swap count ", dur: 200 }),
+  sort.swap("prompt2", "prompt3", { dur: 0 }));
+sort.step(swap("v5", "v3"), sort.count("swaps", 3, { prefix: "swap count ", dur: 200 }),
+  sort.color("v5", "green", { dur: 300 }), sort.swap("prompt3", "prompt4", { dur: 0 }));
 
 /* --- semi-automatic: a request and its reply --------------------------------
  * Icons 160 wide, centred at x 140, 840, 1540. A packet is 180 wide, so its
@@ -59,16 +74,19 @@ net.step(net.show("reply", { dur: 300 }),
  * top). The heat spreader sits at x 700..931, y 219..455 of the drawing. The
  * camera zooms by 2.5 onto the CPU (672 x 321.6 around 817, 336), so labels
  * written in size 32 appear in 80. */
+const chip = { x: 700, y: 219, width: 231, height: 236 };
+const centerX = chip.x + chip.width / 2;
+const centerY = chip.y + chip.height / 2;
+const viewWidth = 1680 / 2.5, viewHeight = 804 / 2.5;
+const detailView = [centerX - viewWidth / 2, centerY - viewHeight / 2, viewWidth, viewHeight];
 el("fig-zoom").innerHTML = d.svg(1680, 804,
   d.image(0, -70, 1680, 945, "img/motherboard.jpg"),
   // a spotlight: everything but the heat spreader darkened, so labels on the photo stay legible
-  d.g("spot", `<path d="M0 0H1680V804H0Z M700 219H931V455H700Z" fill="#000" fill-opacity="0.7" fill-rule="evenodd"/>`),
-  d.g("cpu-box", d.box(700, 219, 231, 236, "", { border: d.color("yellow"), fill: "none" })),
-  d.g("cpu-label", d.label(686, 337, "CPU", { anchor: "end", centerY: 337, keepCase: true, color: d.color("yellow") })),
-  d.g("transistors", d.label(816, 478, "0 billion transistors", { anchor: "middle", centerY: 478 })));
+  d.g("spot", `<path d="M0 0H1680V804H0Z M${chip.x} ${chip.y}h${chip.width}v${chip.height}h-${chip.width}Z" fill="#000" fill-opacity="0.7" fill-rule="evenodd"/>`),
+  d.g("cpu-box", d.box(chip.x, chip.y, chip.width, chip.height, "", { border: d.color("yellow"), fill: "none" })),
+  d.g("cpu-label", d.label(chip.x - 14, centerY, "CPU", { anchor: "end", centerY, keepCase: true, color: d.color("yellow") })));
 // back: "play" -- zooming out again is the reverse of zooming in and tells nothing wrong
 const zoom = d.anim("fig-zoom", { auto: true, gap: 500, back: "play" });
-zoom.step(zoom.camera([481, 175.2, 672, 321.6], { dur: 2500 }));
+zoom.step(zoom.camera(detailView, { dur: 2500 }));
 zoom.step(zoom.par(zoom.show("spot", { dur: 1000 }), zoom.draw("cpu-box", { dur: 1000 })));
-zoom.step(zoom.show("cpu-label", { dur: 400 }), zoom.show("transistors", { dur: 400 }),
-          zoom.count("transistors", 20, { suffix: " billion transistors", dur: 1500 }));
+zoom.step(zoom.show("cpu-label", { dur: 400 }));

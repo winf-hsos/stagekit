@@ -127,7 +127,7 @@ a.step(a.still("packet"), a.along("packet", "route"), a.idle("link", "flow"));
 
 Bedienung: → spielt den nächsten Abschnitt; läuft einer, springt er an sein Ende oder an den nächsten Haltepunkt; wartet er an einem Haltepunkt, läuft er weiter. ← zeigt den vorigen Zwischenstand, mit `back: "play"` spult es den Abschnitt dorthin zurück (auch aus einem laufenden Abschnitt heraus), und ein zweites ← springt sofort. **R** spielt die Animation der Folie von vorn. Das Notizfenster zeigt den Stand („animation 2/3 waiting“). `?anim-t=0.3` zeigt beim Laden den Abschnitt des Frames zu 30 % (für Tests). Eine Zeichnung mit Animation wird einmal beim Laden gezeichnet und nicht über `data-on-step` neu geschrieben.
 
-Ein vollständiges Beispiel mit allen drei Betriebsarten liegt in `examples/animations/`.
+Die [Galerie nach Lernziel](../examples/animations/guide.html) zeigt drei Bildfolgen mit Code und verlinkt direkt in die spielbaren Beispiele.
 
 ## Vorlage style.toml
 

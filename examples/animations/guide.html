@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Animationen nach Lernziel · Stagekit</title>
+  <style>
+    :root { color-scheme: light; font-family: "Segoe UI", Arial, sans-serif; color: #182129; background: #fafaf7; }
+    * { box-sizing: border-box; }
+    body { max-width: 1160px; margin: auto; padding: clamp(20px, 4vw, 60px); }
+    h1, h2, p, figure, pre { margin: 0; }
+    h1 { font-size: clamp(34px, 5vw, 56px); font-weight: 650; line-height: 1.08; letter-spacing: -.035em; }
+    h2 { font-size: clamp(22px, 3vw, 32px); line-height: 1.2; font-weight: 600; }
+    p, figcaption { line-height: 1.5; }
+    p { max-width: 85ch; margin: 10px 0 16px; }
+    a { color: #005b81; text-underline-offset: .18em; }
+    a:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
+    section { border-top: 1px solid #b9c2c6; padding: 24px 0; }
+    header { padding-bottom: 8px; }
+    .heading { display: flex; gap: 10px 24px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; }
+    .strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    figure img { display: block; width: 100%; height: auto; background: #000; }
+    figcaption { margin-top: 6px; font-size: 15px; }
+    pre { margin-top: 14px; padding: 12px 16px; background: #eaf0ef; overflow-x: auto; line-height: 1.5; font-size: 14px; }
+    footer { padding-top: 12px; border-top: 1px solid #b9c2c6; }
+    @media (max-width: 640px) { .strip { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Animationen nach Lernziel</h1>
+      <p>Die Bildfolgen zeigen Ausschnitte aus dem spielbaren Deck. Mit der rechten Pfeiltaste weiterschalten, mit <kbd>R</kbd> die aktuelle Animation wiederholen.</p>
+    </header>
+    <section id="vorhersagen">
+      <div class="heading">
+        <h2>Den nächsten Vergleich vorhersagen</h2>
+        <a href="animations.html?slide=5">Sortierung abspielen →</a>
+      </div>
+      <p>Wähle eine Eingabe, an der beide Fälle vorkommen. Frage vor jedem Klick, ob das Paar seine Plätze tauscht. Auch der Vergleich ohne Tausch bekommt einen erkennbaren Endzustand.</p>
+      <div class="strip">
+        <figure><img src="frames/sort-question.webp" alt="Zahlenreihe 2, 5, 1, 4, 3"><figcaption>Was passiert mit 2 und 5?</figcaption></figure>
+        <figure><img src="frames/sort-keep.webp" alt="2 und 5 sind markiert und stehen noch am selben Ort"><figcaption>Beide bleiben stehen. Jetzt über 5 und 1 entscheiden.</figcaption></figure>
+        <figure><img src="frames/sort-swap.webp" alt="Nach dem Tausch steht die Reihe 2, 1, 5, 4, 3"><figcaption>1 rückt vor die 5. Der Zähler steigt auf eins.</figcaption></figure>
+      </div>
+      <pre><code>sort.step(
+  sort.par(sort.color("v2", "yellow", { dur: 300 }), sort.color("v5", "yellow", { dur: 300 })),
+  sort.swap("prompt0", "prompt1", { dur: 0 }));</code></pre>
+    </section>
+    <section id="verfolgen">
+      <div class="heading">
+        <h2>Eine Anfrage durchs Netz verfolgen</h2>
+        <a href="animations.html?slide=11">Netzwerk abspielen →</a>
+      </div>
+      <p>Laptop, Router und Server bleiben an ihrem Platz. Am Router wartet die Anfrage auf den nächsten Tastendruck. Hier kann das Publikum erklären, wohin der Router sie weiterleitet.</p>
+      <div class="strip">
+        <figure><img src="frames/net-client.webp" alt="Die gelb umrandete Anfrage verlässt den Laptop"><figcaption>Der Laptop sendet die Anfrage.</figcaption></figure>
+        <figure><img src="frames/net-router.webp" alt="Die Anfrage steht am Eingang des Routers"><figcaption>Am Router hält die Vorführung an.</figcaption></figure>
+        <figure><img src="frames/net-server.webp" alt="Die Anfrage ist auf der Serverseite des zweiten Leitungsabschnitts angekommen"><figcaption>Ein weiterer Tastendruck führt sie zum Server.</figcaption></figure>
+      </div>
+      <pre><code>net.step(net.show("request", { dur: 300 }), net.along("request", "route1", { dur: 1000 }),
+         net.hold(),
+         net.along("request", "route2", { dur: 1000 }), net.hide("request", { dur: 200 }), net.pulse("server"));</code></pre>
+      <p>Der Halt liegt innerhalb eines Animationsabschnitts. Soll die Routerposition auch im PDF eine eigene Seite erhalten, die beiden Wegstücke auf zwei <code>step()</code>-Aufrufe verteilen.</p>
+    </section>
+    <section id="lokalisieren">
+      <div class="heading">
+        <h2>Ein Detail im Gesamtbild finden</h2>
+        <a href="animations.html?slide=16">Kamerafahrt abspielen →</a>
+      </div>
+      <p>Zuerst den Prozessor auf der ganzen Platine suchen lassen. Ein Tastendruck startet die Annäherung. Ausschnitt, Rahmen und Aussparung im abgedunkelten Foto werden aus demselben Rechteck berechnet.</p>
+      <div class="strip">
+        <figure><img src="frames/chip-board.webp" alt="Die gesamte Hauptplatine vor der Kamerafahrt"><figcaption>Wo sitzt der Prozessor?</figcaption></figure>
+        <figure><img src="frames/chip-detail.webp" alt="Vergrößerter Ausschnitt mit dem Prozessor in der Mitte"><figcaption>Die Kamera fährt zum gewählten Bauteil.</figcaption></figure>
+        <figure><img src="frames/chip-label.webp" alt="Der Prozessor ist eingerahmt und mit CPU beschriftet"><figcaption>Rahmen und Beschriftung bestätigen die Position.</figcaption></figure>
+      </div>
+      <pre><code>zoom.step(zoom.camera(detailView, { dur: 2500 }));
+zoom.step(zoom.par(zoom.show("spot", { dur: 1000 }), zoom.draw("cpu-box", { dur: 1000 })));
+zoom.step(zoom.show("cpu-label", { dur: 400 }));</code></pre>
+    </section>
+  </main>
+  <footer><a href="deck.js">Vollständiger Beispielcode</a></footer>
+</body>
+</html>

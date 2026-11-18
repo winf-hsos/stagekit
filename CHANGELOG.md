@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- Eine Animationsgalerie verbindet Lernziele mit Bildfolgen, spielbaren Beispielen und Code. Der erste Bubble-Sort-Durchlauf zeigt einen Vergleich ohne Tausch und drei mit Tausch. In der Detailansicht der Platine steuert ein gemeinsames Zielrechteck die Kamerafahrt und Markierung.
+
 - Der Skill wählt die Dramaturgie neuer Decks nach dem Publikumsziel. Sechs kurze Strategien beschreiben Einstieg, Beleg, Aufdeckung und Schluss. Ein lauffähiges Beispiel zeigt Befund und Einschränkung am selben Diagramm. Bei punktuellen Änderungen beginnt die Arbeit am betroffenen Frame. Bestehende Decks müssen nichts anpassen.
 
 ## 0.7.2 (2026-11-16)

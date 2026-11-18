@@ -12,6 +12,7 @@ Diese Datei enthält den Ablauf und verweist auf die passenden Nachschlagedateie
 | Datei | wann lesen |
 |---|---|
 | [Dramaturgie nach Anlass](docs/deck-strategies.md) | für einen neuen Satz oder eine neue Gliederung: passenden Eintrag für das Publikumsziel wählen |
+| [Animationen nach Lernziel](examples/animations/guide.html) | bei einer animierten Zeichnung: Vorhersage, Weg oder Detailansicht anhand von Bildfolge, spielbarem Beispiel und Code auswählen |
 | `docs/design-rules.md` | **vor dem Bau eines Decks ganz**: jede Gestaltungsregel mit Begründung und Grenzwerten |
 | `docs/api.md` | beim Schreiben von HTML und `deck.js`: Gerüst, Zeichenfunktionen, Live-Abfragen, Animationen, Vorlage der `style.toml` |
 | `docs/website.md` | nur wenn Decks auf eine Website kommen: Player, Sync-Skript, Abbildungen in heller Palette |
