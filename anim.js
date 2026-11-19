@@ -31,6 +31,8 @@
  *   pulse(t, o)                    grow and shrink, o.times (default 2)
  *   swap(out, in, o)               cross-fade two targets
  *   camera([x, y, w, h], o)        zoom and pan: animates the viewBox of the drawing
+ *   value(name, to, o)             a plain number (starts at 0) handed to the painter of name;
+ *   painter(name, fn)              fn(value) redraws a part itself, as d.chart() does
  *   set(t, props)                  start state: opacity, x, y, scale, rotate, draw, idle
  *   idle(t, kind, o)               from here on t keeps moving while the drawing rests:
  *                                  "pulse" (o.to 1.06, o.period 1600), "blink" (o.min 0.35,
@@ -141,6 +143,11 @@
     a.color = (t, c, o = {}) => tw(t, "color:" + (o.part || "stroke"), c, o);
     a.count = (t, to, o = {}) => tw(t, "num", to, o, { from: o.from, decimals: o.decimals || 0, prefix: o.prefix || "", suffix: o.suffix || "" });
     a.camera = (box, o) => tw(null, "view", box, o);
+    // a number that only a painter reads: the painter redraws its part from it,
+    // so a drawing can move in ways the other building blocks do not cover
+    const painters = {};
+    a.value = (name, to, o) => tw(name, "value", to, o);
+    a.painter = (name, fn) => { painters[name] = fn; return a; };
     a.pulse = (t, o = {}) => {
       const d = (o.dur || 600) / 2, items = [];
       for (let i = 0; i < (o.times || 2); i++) items.push(tw(t, "scale", o.to || 1.08, { dur: d, ease: "out" }), tw(t, "scale", 1, { dur: d, ease: "in" }));
@@ -232,6 +239,7 @@
     }
     const geometry = (n) => [n, ...n.querySelectorAll("*")].filter((e) => typeof e.getTotalLength === "function" && e.tagName !== "text" && e.tagName !== "tspan");
     function startValue(sel, prop) {
+      if (prop === "value") return 0;
       const ns = find(sel);
       if (prop === "opacity" || prop === "scale" || prop === "draw" || prop === "along") return 1;
       if (prop === "x" || prop === "y" || prop === "rotate") return 0;
@@ -377,6 +385,7 @@
 
     function flush(state) {
       Object.entries(state).forEach(([key, s]) => {
+        if (painters[key]) { if ("value" in s) painters[key](s.value); return; }
         const ns = key === "@view" ? (svgRoot ? [svgRoot] : []) : find(key);
         ns.forEach((n) => {
           if (key === "@view") { if (s.view) n.setAttribute("viewBox", s.view.map((v) => +v.toFixed(2)).join(" ")); return; }

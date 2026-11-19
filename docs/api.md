@@ -119,6 +119,42 @@ Live-Abfrage (braucht `data-live-url` am `div.deck`):
 </section>
 ```
 
+## Diagramme (d.chart)
+
+`d.chart(spec)` zeichnet Balken aus Daten in den Farben und Größen des Themes und wechselt zwischen **Zuständen**, einer je Aufbauschritt. Ein Zustand nennt nur, was sich ändert; alles andere übernimmt er vom vorigen. Die Übergänge laufen über `anim.js` (laden wie bei Animationen), deshalb gelten Export, PDF-Seiten, ← und Sprünge wie dort. Wann: `docs/design-rules.md`, „Diagramme führen zu einer Aussage“. Beispiel: `examples/charts/`.
+
+```js
+const c = d.chart({
+  type: "bar",                       // "bar" (Säulen) oder "hbar" (Zeilen: lange Beschriftungen, Rangfolgen)
+  width: 1680, height: 760,          // Fläche in Zeichnungseinheiten, dazu optional x, y
+  labels: ["21/22", "22/23", "23/24", "24/25", "25/26", "26/27"],
+  series: [{ name: "business informatics", values: [31, 28, 24, 21, 7, 10] },
+           { name: "all programmes", values: [30, 30, 29, 27, 24, 22] }],   // eine Reihe: values: [...]
+  unit: " %",                        // an Wertbeschriftungen; dazu min, max, decimals, pad, accent, morph
+  states: [
+    { show: [] },                                                        // Zustand 0: leere Achse
+    { show: ["business informatics"] },                                  // Schritt 1: Balken wachsen
+    { highlight: ["26/27"], note: { at: "26/27", text: "first rise" } }, // Schritt 2: die Aussage
+    { show: ["business informatics", "all programmes"], note: null },    // Schritt 3: Vergleich
+    { zoom: [0, 12] },                                                   // Schritt 4: Ausschnitt
+  ],
+});
+el("fig-enrol").innerHTML = d.svg(1680, 760, c.svg());   // c.svg(k) zeichnet Zustand k
+c.steps("fig-enrol");                                    // je Zustand ein Abschnitt; Optionen wie d.anim, dazu dur
+```
+
+| Zustand | Wirkung |
+|---|---|
+| `show: [namen]` | sichtbare Reihen; eine neue wächst aus der Grundlinie, die anderen rücken zusammen |
+| `highlight: [labels]` | diese Balken in der Teilfarbe, die übrigen treten zurück; ihre Werte stehen dabei |
+| `focus: "name"` | eine ganze Reihe in der Teilfarbe |
+| `values: "all" \| "highlight" \| "none"` | Wertbeschriftungen; ohne Angabe nur bei `highlight` und `focus` |
+| `note: { at, text }` | ein kurzer Satz über (Säulen) bzw. hinter (Zeilen) einem Balken; `null` nimmt ihn weg |
+| `zoom: [min, max]` | Ausschnitt der Werteachse; Gitterlinien gleiten mit, höhere Balken enden oben an der Fläche |
+| `sort: "desc" \| "asc" \| null` | ordnet nach der ersten sichtbaren Reihe; die Balken wandern an ihren Platz |
+
+Mehrere Reihen bekommen ihre Namen als farbige Wörter über der Fläche statt einer Legende mit Kästchen. `morph: "enrol"` gibt jedem Balken `data-morph="enrol-<label>"` für Magic Move auf die nächste Folie. Ohne `anim.js` zeichnet `c.svg(k)` jeden Zustand statisch, etwa für eine Abbildung auf einer Webseite.
+
 ## Animationen (anim.js)
 
 Eine Animation gehört zu einer Zeichnung und besteht aus Abschnitten. Jeder Abschnitt endet in einem Zwischenstand, der ein Aufbauschritt der Folie ist (Frame, PDF-Seite, Bild im Kontaktbogen). Im Vortrag spielt → den Weg zum nächsten Zwischenstand ab; ← und jeder Sprung zeigen den Zwischenstand sofort. Wann animiert wird, steht in `docs/design-rules.md` („Animationen zeigen Abläufe“).
@@ -155,6 +191,7 @@ a.step(a.camera([1000, 140, 672, 240]));      // Abschnitt 3: Kamerafahrt (viewB
 | `count(t, bis, { from, decimals, prefix, suffix })` | zählt die Zahl in einem Text hoch |
 | `pulse(t, { times })` / `swap(alt, neu)` | kurz größer und zurück / überblenden |
 | `camera([x, y, w, h])` | Zoom und Schwenk über die viewBox der Zeichnung |
+| `value(name, bis)` / `painter(name, fn)` | eine Zahl (Start 0), aus der `fn(wert)` einen Teil selbst neu zeichnet; so arbeitet `d.chart()` |
 | `set(t, { opacity, x, y, scale, rotate, draw, idle })` | Startzustand ausdrücklich setzen; `idle: "pulse"` (oder `{ kind, … }`) bewegt t schon im Zwischenstand 0 |
 | `idle(t, art, o)` / `still(t, art)` | ab hier Bewegung im Leerlauf / beenden (ohne `art` alle von t), siehe unten |
 | `wait(ms)` / `hold()` | Pause / anhalten bis → (halbautomatisch) |

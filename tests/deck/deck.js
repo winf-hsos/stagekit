@@ -45,3 +45,14 @@ a.step(a.draw("link"), a.show("packet"), a.idle("packet", "pulse"));
 a.step(a.still("packet"), a.along("packet", "route", { dur: 1200 }), a.hold(),
        a.par(a.color("server", "green"), a.count("bytes", 1500, { from: 0, suffix: " bytes" })), a.idle("link", "flow"));
 a.step(a.camera([1000, 140, 672, 200]));
+
+// Chart: two series, then a highlight with a note, then a zoom that cuts the
+// tall bars at the top of the plot; d.chart moves between the states.
+const chart = d.chart({
+  type: "bar", width: 1680, height: 700, unit: " %",
+  labels: ["a", "b", "c", "d"],
+  series: [{ name: "first", values: [30, 22, 8, 12] }, { name: "second", values: [26, 25, 21, 18] }],
+  states: [{}, { highlight: ["d"], note: { at: "d", text: "a note" } }, { zoom: [0, 15], note: null }],
+});
+document.getElementById("fig-chart").innerHTML = d.svg(1680, 700, chart.svg());
+chart.steps("fig-chart");

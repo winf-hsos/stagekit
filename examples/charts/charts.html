@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>charts with stagekit</title>
+  <!-- Demo of d.chart(): bars from data that change between build-up steps.
+       It loads the framework straight from the repository; a real deck loads
+       its project copy (tools/sync.py). The data are invented. -->
+  <link rel="stylesheet" href="../../themes/default.css">
+  <link rel="stylesheet" href="../../stagekit.css">
+</head>
+<body>
+<div class="deck" data-title="charts with stagekit" data-subtitle="bars that lead to one statement, step by step"
+     data-parts='["columns", "rows"]'>
+
+  <section class="slide title"></section>
+  <section class="slide agenda"></section>
+
+  <section class="slide part" data-part="columns" data-subtitle="grow, stand out, compare, zoom"></section>
+
+  <section class="slide">
+    <h2>first-year students per winter term</h2>
+    <div class="figure" id="fig-enrol"></div>
+    <aside class="notes">Step 1 lets the bars grow, step 2 picks out the last term and says why it matters, step 3 adds all programmes for comparison, step 4 zooms in on the range where the difference is. Data invented.</aside>
+  </section>
+
+  <section class="slide part" data-part="rows" data-subtitle="long labels, a ranking that sorts itself"></section>
+
+  <section class="slide">
+    <h2>how far a file shrinks with zip</h2>
+    <div class="figure" id="fig-ratio"></div>
+    <aside class="notes">The rows start in alphabetical order; step 1 sorts them by size, step 2 picks out the formats that are already compressed. Data invented.</aside>
+  </section>
+
+</div>
+<script src="../../draw.js"></script>
+<script src="../../anim.js"></script>
+<script src="deck.js"></script>
+<script src="../../stagekit.js"></script>
+</body>
+</html>

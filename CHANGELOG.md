@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Diagramme mit `d.chart()`**: Säulen und Zeilen aus Daten in den Farben und Größen des Themes, mit einem Zustand je Aufbauschritt. Zwischen den Zuständen wachsen Balken, treten hervor, bekommen eine Anmerkung, eine Reihe kommt dazu, die Achse zoomt mit gleitenden Gitterlinien, oder die Zeilen sortieren sich. Die Übergänge laufen über `anim.js`, das dafür den neuen Baustein `a.value()` mit `a.painter()` bekommt; Export, PDF und Sprünge zeigen die Zustände wie bei jeder Animation. Regel „Diagramme führen zu einer Aussage“ in `docs/design-rules.md`, Beispiel in `examples/charts/`. Bestehende Decks ändern sich nicht; `d.chart()` braucht einmal `tools/sync.py`.
+
 ## 0.11.0 (2026-11-19)
 
 - **Signature-Layouts**: vier Folienklassen mit fester Form, `number` (eine Zahl in der neuen Anzeigegröße 200 px, die beim Weiterblättern hochzählt), `quote` (Zitat mit gesetztem Anführungszeichen), `fullbleed` (Foto über die ganze Folie mit Satz auf dunklem Band) und `timeline` (Ereignisse mit Datum, das zuletzt gezeigte gelb). Die Schriftprüfung lässt die Anzeigegröße nur für Zahl und Anführungszeichen zu, `review.py` kennt die Layouts und warnt bei einer Zahl oder einem Zitat ohne Quelle sowie bei demselben Signature-Layout zweimal hintereinander. Der Agent setzt sie selbst ein, wo eine Folie genau diese Form hat (Regel in `docs/design-rules.md`). Beispiel in `examples/layouts/layouts.html`. Bestehende Decks ändern sich nicht; die Layouts brauchen einmal `tools/sync.py`.

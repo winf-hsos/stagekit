@@ -25,6 +25,7 @@
  *   toggle(x, y, on, text, opts)      a switch symbol (static on slides); opts: size (default 18)
  *   truthTable(inputs, outputs, rows, now)   an HTML table (not SVG)
  *   table(x, y, headers, rows, opts)  an SVG table for figures; opts: cw, rh, size, hl
+ *   chart(spec)                       bars from data, with states per build-up step (see "charts")
  *
  * ?theme=<name> in the page address selects a palette block of theme.css
  * (:root[data-theme="<name>"]); tools/figures.py renders figures that way.
@@ -410,8 +411,223 @@
   }
   table.width = (n, cw = 90) => n * cw;
 
+  /* --- charts -----------------------------------------------------------------------
+   * chart(spec) draws bars from data in the deck's colours and sizes, and moves
+   * between states: one state per build-up step, each saying what is shown,
+   * what stands out and which part of the axis is in view. A state only names
+   * what changes; everything else carries over from the state before.
+   *
+   *   const c = d.chart({ type: "bar", width: 1680, height: 620,
+   *     labels: ["21/22", "22/23", "23/24"], unit: " %",
+   *     series: [{ name: "ours", values: [31, 28, 10] }, { name: "all", values: [30, 30, 22] }],
+   *     states: [{ show: ["ours"] }, { highlight: ["23/24"] }, { show: ["ours", "all"] }, { zoom: [0, 15] }] });
+   *   el("fig").innerHTML = d.svg(1680, 620, c.svg());   // state 0
+   *   c.steps("fig");                                    // with anim.js: state k is build-up step k
+   *
+   * spec: type "bar" (columns) or "hbar" (rows, for long labels and rankings),
+   * x, y, width, height (the area in drawing units), labels, series (or values
+   * for a single series), min (default 0), max (default: a round number above
+   * the largest value), unit (appended to value labels), decimals, pad
+   * ({ left, right, top, bottom } to override the margins), accent (a colour
+   * name; default: the colour of the part), morph (a prefix: every bar gets
+   * data-morph="<prefix>-<label>" for magic move to the next slide).
+   *
+   * state: show (series names), highlight (labels whose bars take the accent),
+   * focus (a series in the accent), values ("all", "highlight", "none"),
+   * zoom ([min, max] of the value axis), sort ("desc", "asc" or null),
+   * note ({ at: label, text } above that bar, or null).
+   * Colours follow the rule "one colour for the message, the rest grey". */
+  let charts = 0;
+  const numberFormat = (decimals) => new Intl.NumberFormat(document.documentElement.lang || "en", { maximumFractionDigits: decimals, minimumFractionDigits: 0 });
+  function niceTicks(lo, hi, n = 4) {
+    const raw = (hi - lo) / n, p = Math.pow(10, Math.floor(Math.log10(raw || 1)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * p).find((s) => s >= raw) || 10 * p;
+    const out = [];
+    for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + step * 1e-6; v += step) out.push(+v.toFixed(10));
+    return { ticks: out, step };
+  }
+  const paintCtx = () => paintCtx.c || (paintCtx.c = document.createElement("canvas").getContext("2d"));
+  function rgbOf(col) {
+    const ctx = paintCtx();
+    ctx.fillStyle = "#000"; ctx.fillStyle = col || "#000";
+    const h = ctx.fillStyle;
+    return h[0] === "#" ? [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) : h.match(/[\d.]+/g).slice(0, 3).map(Number);
+  }
+  const mixRgb = (a, b, p) => { const x = rgbOf(a), y = rgbOf(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * p)).join(",")})`; };
+  const textWidth = (s, size) => String(s).length * size * 0.55;
+
+  function chart(spec) {
+    const id = spec.id || "chart" + (++charts);
+    const horizontal = spec.type === "hbar";
+    const X = spec.x || 0, Y = spec.y || 0, W = spec.width || 1680, H = spec.height || 600;
+    const labels = spec.labels || [];
+    const series = spec.series || [{ name: "", values: spec.values || [] }];
+    const all = series.flatMap((s) => s.values);
+    const lo0 = spec.min === undefined ? Math.min(0, ...all) : spec.min;
+    // the axis ends on the first round tick at or above the largest value
+    const top0 = Math.max(...all), step0 = niceTicks(lo0, top0).step;
+    const hi0 = spec.max === undefined ? Math.ceil(top0 / step0 - 1e-9) * step0 : spec.max;
+    const decimals = spec.decimals === undefined ? (all.some((v) => !Number.isInteger(v)) ? 1 : 0) : spec.decimals;
+    const fmt = (v) => numberFormat(decimals).format(v);
+    const S = 32, LH = S * 1.3;
+    // states carry over: a state names only what changes
+    const states = [];
+    (spec.states && spec.states.length ? spec.states : [{}]).forEach((st, k) => {
+      states.push(Object.assign({ show: series.map((s) => s.name), highlight: [], focus: null, values: null, zoom: null, sort: null, note: null }, k ? states[k - 1] : {}, st));
+    });
+    const tickLabelWidth = Math.max(...niceTicks(lo0, hi0).ticks.map((t) => textWidth(fmt(t), S)));
+    const pad = Object.assign(horizontal
+      ? { left: Math.max(...labels.map((l) => textWidth(l, S))) + 32, right: 240, top: 70, bottom: 80 }
+      : { left: tickLabelWidth + 40, right: 20, top: 110, bottom: 80 }, spec.pad || {});
+    const P = { x0: X + pad.left, x1: X + W - pad.right, y0: Y + pad.top, y1: Y + H - pad.bottom };
+
+    // one state as items in value space; inner() maps them with the axis of the moment
+    function layout(k, c) {
+      const st = states[k], items = new Map();
+      const visible = series.filter((s) => st.show.includes(s.name));
+      const lead = visible[0] || series[0];
+      const order = labels.map((l, i) => i);
+      if (st.sort) order.sort((a, b) => (st.sort === "asc" ? 1 : -1) * (lead.values[a] - lead.values[b]));
+      const along = horizontal ? P.y1 - P.y0 : P.x1 - P.x0, slot = along / labels.length;
+      const group = slot * (visible.length > 1 ? 0.78 : 0.6), gap = visible.length > 1 ? 8 : 0;
+      const thick = visible.length ? (group - gap * (visible.length - 1)) / visible.length : group;
+      const greys = [c.light, c.gray, c.dark];
+      const accentSoft = mixRgb(c.accent, c.bg, 0.45);
+      const showValues = st.values || (st.highlight.length || st.focus ? "highlight" : "none");
+      order.forEach((li, pos) => {
+        const name = labels[li], centre = (horizontal ? P.y0 : P.x0) + slot * (pos + 0.5);
+        const marked = st.highlight.includes(name);
+        items.set("cat|" + name, { kind: "cat", c: centre, text: name, color: marked ? c.white : c.gray, op: 1 });
+        series.forEach((s, si) => {
+          const vi = visible.indexOf(s), on = vi >= 0;
+          const offset = on ? -group / 2 + thick / 2 + vi * (thick + gap) : 0;
+          // a single series steps back to grey around the highlight; several keep the
+          // greys of the legend, so the names still match their bars
+          let color = greys[Math.min(si, 2)];
+          if (st.highlight.length) color = marked ? (vi === 0 ? c.accent : accentSoft) : visible.length > 1 ? color : c.gray;
+          if (st.focus) color = s.name === st.focus ? c.accent : greys[Math.min(si + 1, 2)];
+          const v = s.values[li];
+          items.set(`bar|${si}|${name}`, { kind: "bar", v: on ? v : 0, c: centre + offset, w: on ? thick : 0, color, op: on ? 1 : 0, key: name });
+          const labelled = on && (showValues === "all" || (showValues === "highlight" && (marked || s.name === st.focus)));
+          items.set(`val|${si}|${name}`, { kind: "val", v: on ? v : 0, c: centre + offset, text: fmt(v) + (spec.unit || ""),
+            color: color === c.accent ? c.accent : c.light, op: labelled ? 1 : 0 });
+        });
+        if (st.note && st.note.at === name) {
+          const v = lead.values[li];
+          const offset = visible.length ? -group / 2 + thick / 2 : 0;
+          items.set("note|" + st.note.text, { kind: "note", v, c: centre + offset, text: st.note.text, op: 1 });
+        }
+      });
+      if (visible.length > 1) {
+        let x = 0;
+        series.forEach((s, si) => {
+          const on = visible.includes(s);
+          const color = st.focus ? (s.name === st.focus ? c.accent : c.gray) : [c.light, c.gray][Math.min(si, 1)];
+          items.set("leg|" + s.name, { kind: "leg", x, text: s.name, color, op: on ? 1 : 0 });
+          if (on) x += textWidth(s.name, S) + 48;
+        });
+      }
+      return { items, domain: st.zoom || [lo0, hi0] };
+    }
+
+    const lerp = (a, b, p) => a + (b - a) * p;
+    // a label that a grid line must not cross: a rim in the background colour behind its glyphs
+    const halo = (t, bg) => t.replace("<text ", `<text stroke="${bg}" stroke-width="10" stroke-linejoin="round" paint-order="stroke" `);
+    function inner(value, el) {
+      const c = C();
+      const scope = el ? getComputedStyle(el) : null;
+      c.accent = (spec.accent ? css("--" + spec.accent) : "") || (scope && scope.getPropertyValue("--part-color").trim()) || css("--part-color") || c.blue;
+      const k0 = Math.max(0, Math.min(states.length - 1, Math.floor(value))), k1 = Math.min(states.length - 1, k0 + 1);
+      const p = Math.max(0, Math.min(1, value - k0));
+      const A = layout(k0, c), B = k1 === k0 ? A : layout(k1, c);
+      const lo = lerp(A.domain[0], B.domain[0], p), hi = lerp(A.domain[1], B.domain[1], p);
+      const scale = horizontal ? (v) => P.x0 + (v - lo) / (hi - lo) * (P.x1 - P.x0) : (v) => P.y1 - (v - lo) / (hi - lo) * (P.y1 - P.y0);
+      const base = scale(Math.max(lo, Math.min(hi, 0)));
+      const r = (v) => +v.toFixed(2);
+      let grid = "", ticks = "", bars = "", text = "";
+      // ticks: those of both states slide with the axis, the others fade
+      const tA = niceTicks(A.domain[0], A.domain[1]).ticks, tB = niceTicks(B.domain[0], B.domain[1]).ticks;
+      Array.from(new Set([...tA, ...tB])).sort((a, b) => a - b).forEach((t) => {
+        const op = (tA.includes(t) ? 1 - p : 0) + (tB.includes(t) ? p : 0);
+        const at = scale(t);
+        if (op <= 0.01 || at < (horizontal ? P.x0 : P.y0) - 1 || at > (horizontal ? P.x1 : P.y1) + 1) return;
+        const o = op < 0.999 ? ` opacity="${r(op)}"` : "";
+        if (horizontal) {
+          grid += `<line x1="${r(at)}" y1="${P.y0}" x2="${r(at)}" y2="${P.y1}" stroke="${c.dark}" stroke-width="1"${o}/>`;
+          ticks += `<g${o}>${label(r(at), P.y1 + 48, fmt(t), { size: S, color: c.gray, anchor: "middle" })}</g>`;
+        } else {
+          grid += `<line x1="${P.x0}" y1="${r(at)}" x2="${P.x1}" y2="${r(at)}" stroke="${c.dark}" stroke-width="1"${o}/>`;
+          ticks += `<g${o}>${label(P.x0 - 20, 0, fmt(t), { size: S, color: c.gray, anchor: "end", centerY: r(at) })}</g>`;
+        }
+      });
+      const keys = Array.from(new Set([...A.items.keys(), ...B.items.keys()]));
+      keys.forEach((key) => {
+        const a = A.items.get(key), b = B.items.get(key);
+        const m = a && b ? {
+          kind: a.kind, v: lerp(a.v || 0, b.v || 0, p), c: lerp(a.c || 0, b.c || 0, p), w: lerp(a.w || 0, b.w || 0, p),
+          x: lerp(a.x || 0, b.x || 0, p), op: lerp(a.op, b.op, p), color: a.color && b.color ? mixRgb(a.color, b.color, p) : (b.color || a.color),
+          text: p < 0.5 ? a.text : b.text, key: b.key } : Object.assign({}, a || b, { op: (a || b).op * (a ? 1 - p : p) });
+        // an item that changes place (sorting) gets thinner on the way and its text steps
+        // back, so two rows crossing each other do not pile up their labels
+        if (a && b && Math.abs((a.c || 0) - (b.c || 0)) > 1) {
+          const dip = Math.sin(Math.PI * p);
+          if (m.kind === "bar") m.w *= 1 - 0.45 * dip;
+          else m.op *= 1 - 0.8 * dip;
+        }
+        if (m.op <= 0.01) return;
+        const o = m.op < 0.999 ? ` opacity="${r(m.op)}"` : "";
+        const top = scale(m.v), clipped = horizontal ? top > P.x1 + 1 : top < P.y0 - 1;
+        if (m.kind === "bar" && m.w > 0.5) {
+          // cut to the plot area by computation, not with a clipPath: the print
+          // view strips ids from its cloned pages, and the clip would go with them
+          const end = horizontal ? Math.max(P.x0, Math.min(P.x1, top)) : Math.max(P.y0, Math.min(P.y1, top));
+          const rect = horizontal
+            ? `<rect x="${r(Math.min(base, end))}" y="${r(m.c - m.w / 2)}" width="${r(Math.abs(end - base))}" height="${r(m.w)}" fill="${m.color}"${o}/>`
+            : `<rect x="${r(m.c - m.w / 2)}" y="${r(Math.min(base, end))}" width="${r(m.w)}" height="${r(Math.abs(base - end))}" fill="${m.color}"${o}/>`;
+          bars += spec.morph ? `<g data-morph="${spec.morph}-${m.key}">${rect}</g>` : rect;
+        } else if (m.kind === "val" && !clipped) {
+          text += `<g${o}>` + (horizontal
+            ? halo(label(r(top + 16), 0, m.text, { size: S, color: m.color, centerY: r(m.c) }), c.bg)
+            : halo(label(r(m.c), r(top - 16), m.text, { size: S, color: m.color, anchor: "middle" }), c.bg)) + "</g>";
+        } else if (m.kind === "note") {
+          const y = horizontal ? m.c : Math.max(P.y0, top) - 16 - LH;
+          text += `<g${o}>` + (horizontal
+            ? halo(label(r(Math.min(top, P.x1) + 16 + textWidth(fmt(m.v) + (spec.unit || ""), S) + 32), 0, m.text, { size: S, color: c.white, centerY: r(y) }), c.bg)
+            : halo(label(r(m.c), r(y), m.text, { size: S, color: c.white, anchor: "middle" }), c.bg)) + "</g>";
+        } else if (m.kind === "cat") {
+          text += `<g${o}>` + (horizontal
+            ? label(P.x0 - 20, 0, m.text, { size: S, color: m.color, anchor: "end", centerY: r(m.c) })
+            : label(r(m.c), P.y1 + 48, m.text, { size: S, color: m.color, anchor: "middle" })) + "</g>";
+        } else if (m.kind === "leg") {
+          text += `<g${o}>${label(r(P.x0 + m.x), Y + S, m.text, { size: S, color: m.color })}</g>`;
+        }
+      });
+      const axis = horizontal
+        ? `<line x1="${r(base)}" y1="${P.y0}" x2="${r(base)}" y2="${P.y1}" stroke="${c.gray}" stroke-width="2"/>`
+        : `<line x1="${P.x0}" y1="${r(base)}" x2="${P.x1}" y2="${r(base)}" stroke="${c.gray}" stroke-width="2"/>`;
+      return `${grid}${bars}${axis}${ticks}${text}`;
+    }
+
+    return {
+      id, states: states.length,
+      // the chart in state k (an SVG group for d.svg)
+      svg: (k = 0) => `<g data-chart="${id}">${inner(k, null)}</g>`,
+      // with anim.js: one animation segment per state after the first
+      steps(figure, o = {}) {
+        if (!window.draw.anim) throw new Error("stagekit: d.chart().steps needs anim.js (load it after draw.js)");
+        const a = window.draw.anim(figure, o);
+        a.painter(id, (v) => {
+          const g = document.querySelector(`#${figure} [data-chart="${id}"]`);
+          if (g) g.innerHTML = inner(v, g);
+        });
+        for (let k = 1; k < states.length; k++) a.step(a.value(id, k, { dur: o.dur || 900 }));
+        return a;
+      },
+    };
+  }
+
   /* color(name) liest eine benannte Zusatzfarbe des Themes, etwa "families-transfer"
    aus [colors.families] der style.toml; so bleibt ein Deck frei von Hex-Werten. */
   const color = (name) => css("--" + name);
-  window.draw = { svg, layers, label, box, anchor, connect, closeup, verdict, mark, keys, icon, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, colors: C, color };
+  window.draw = { svg, layers, label, box, anchor, connect, closeup, verdict, mark, keys, icon, highlight, ipo, formula, line, arrow, wire, dot, gate, lamp, toggle, truthTable, table, chart, colors: C, color };
 })();
