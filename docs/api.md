@@ -105,7 +105,15 @@ Rahmen und Text reisen getrennt: Der Text gleitet von der Mitte des alten zur Mi
     <li data-date="1952" data-step="1">huffman</li>
   </ol>
 </section>
+<section class="slide compare"><h2>…</h2>      <!-- ohne h2 füllt die Ansicht die ganze Folie -->
+  <div class="compare-view" data-stops="50 22 78" data-sweep>   <!-- Stellung je Aufbauschritt, in % von links -->
+    <img src="img/original.jpg" data-label="original, 2.1 mb">   <!-- links: vorher -->
+    <img src="img/quality-4.jpg" data-label="quality 4, 0.25 mb"> <!-- rechts: nachher -->
+  </div>
+</section>
 ```
+
+`compare` legt zwei Bilder derselben Ansicht übereinander; links der Linie steht das erste, rechts das zweite. Statt Bildern gehen auch zwei Zeichnungen (`<div><svg>…</svg></div>`), die stagekit gleich groß übereinanderlegt. `data-stops` gibt je Aufbauschritt die Stellung der Linie an, beginnend mit Schritt 0; ein Schritt nach vorn gleitet dorthin, ein Sprung, die Druckansicht und der Export zeigen jede Stellung als eigene Seite. Im Vortrag lässt sich die Linie jederzeit mit der Maus ziehen, ohne dass die Folie weiterblättert. `data-sweep` lässt sie beim Erreichen der Folie einmal von selbst über das ganze Bild laufen und zur Stellung zurückkehren, mit R noch einmal (`data-sweep="6"`: sechs statt vier Sekunden). Eine Beschriftung, deren Seite zu schmal wird, blendet sich aus.
 
 Die Zahl zählt nur, wenn die Folie mit einem Schritt nach vorn erreicht wird; ein Sprung, ein frisches Laden, die Druckansicht und der Export zeigen den Endwert, ebenso bei reduzierter Bewegung. Trennzeichen und Einheit bleiben beim Zählen stehen (`1,250 kb`).
 

@@ -11,7 +11,7 @@
 </head>
 <body>
 <div class="deck" data-title="signature layouts" data-subtitle="fixed forms that stand out, one slide each"
-     data-parts='["one figure", "one voice", "one picture", "one sequence"]'>
+     data-parts='["one figure", "one voice", "one picture", "one sequence", "one change"]'>
 
   <section class="slide title"></section>
   <section class="slide agenda"></section>
@@ -75,6 +75,27 @@
       <li data-date="2013">zstd</li>
     </ol>
     <aside class="notes">Without steps no event is marked; from five events on the text drops to the small size.</aside>
+  </section>
+
+  <section class="slide part" data-part="one change" data-subtitle="class compare: before and after with a line between them"></section>
+
+  <section class="slide compare">
+    <h2>jpeg at quality 4: where the bytes went</h2>
+    <div class="compare-view" data-stops="50 22 78">
+      <img src="../animations/img/motherboard.jpg" data-label="original, 2.1 mb">
+      <img src="img/motherboard-q4.jpg" data-label="quality 4, 0.25 mb">
+    </div>
+    <div class="footnote">image: ai-generated (gpt-image-2.5-flare), compressed with pillow</div>
+    <aside class="notes">Step 1 moves the line left, so most of the slide shows the compressed photo; step 2 moves it right for the original. In the talk the line can be dragged with the mouse at any time.</aside>
+  </section>
+
+  <section class="slide compare">
+    <div class="compare-view" data-stops="50" data-sweep>
+      <img src="../animations/img/motherboard.jpg" data-label="16 million colours">
+      <img src="img/motherboard-16.png" data-label="16 colours">
+    </div>
+    <div class="footnote right">image: ai-generated (gpt-image-2.5-flare), palette reduced with pillow</div>
+    <aside class="notes">Without a heading the view takes the whole slide. data-sweep lets the line run across the picture by itself when the slide is reached; R runs it again.</aside>
   </section>
 
 </div>

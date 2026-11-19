@@ -157,6 +157,35 @@ body.print .slide .code.figcode { display: none; }
 .slide.timeline ol.events > li.now .dot { background: var(--yellow); }
 .slide.timeline ol.events > li.now .date { color: var(--yellow); }
 
+/* before and after: the second picture is cut at the line (--at, set by
+ * stagekit.js), the first shows through on the left. Without a heading the
+ * view takes the whole slide, like fullbleed. */
+.slide.compare .compare-view { position: absolute; left: var(--margin); right: var(--margin); top: calc(var(--margin) * 1.4);
+  bottom: calc(var(--margin) * 0.9); overflow: hidden; border-radius: 12px; cursor: ew-resize; touch-action: none; user-select: none; --at: 50%; }
+.slide.compare:not(:has(h2)) .compare-view { left: 0; right: 0; top: 0; bottom: 0; border-radius: 0; }
+.slide.has-punch.compare .compare-view { bottom: calc(var(--margin) * 2.1); }
+.slide.compare .compare-view > .compare-before, .slide.compare .compare-view > .compare-after {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%; margin: 0; pointer-events: none; }
+.slide.compare .compare-view > img { object-fit: cover; }
+.slide.compare .compare-view svg:not(.compare-line) { width: 100%; height: 100%; }
+.slide.compare .compare-view > .compare-after { clip-path: inset(0 0 0 var(--at)); }
+.slide.compare .compare-line { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.slide.compare .compare-line line { stroke: var(--white); stroke-width: 4; }
+.slide.compare .compare-line circle { fill: var(--part-color, var(--blue)); stroke: var(--white); stroke-width: 4; }
+.slide.compare .compare-line path { fill: none; stroke: var(--white); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.slide.compare .compare-label { position: absolute; top: 24px; padding: 0.15em 0.55em; border-radius: 10px; font-size: var(--small);
+  color: var(--white); background: color-mix(in srgb, var(--bg) 78%, transparent); transition: opacity 0.25s; pointer-events: none; }
+.slide.compare .compare-label.before { left: 24px; }
+.slide.compare .compare-label.after { right: 24px; }
+.slide.compare .compare-label.hidden { opacity: 0; }
+.slide.compare:not(:has(h2)) .compare-label { top: calc(var(--margin) * 0.5); }
+.slide.compare:not(:has(h2)) .compare-label.before { left: var(--margin); }
+.slide.compare:not(:has(h2)) .compare-label.after { right: var(--margin); }
+.slide.compare h2, .slide.compare .footnote, .slide.compare .location { z-index: 1; }
+.slide.compare:not(:has(h2))::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%); pointer-events: none; }
+.slide.compare:not(:has(h2)) .footnote { color: var(--gray-light); }
+
 /* --- the location bar: which part are we in -------------------------------- */
 .location {
   position: absolute; left: var(--margin); right: var(--margin); bottom: calc(var(--margin) * 0.3);

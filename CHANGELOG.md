@@ -13,6 +13,7 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Signature-Layout `compare`**: zwei Bilder oder Zeichnungen derselben Ansicht übereinander, getrennt von einer Linie mit Griff. Die Linie steht je Aufbauschritt an einer festen Stelle (`data-stops`) und gleitet beim Weiterblättern dorthin, lässt sich im Vortrag mit der Maus ziehen und läuft mit `data-sweep` beim Erreichen der Folie (und mit R) einmal von selbst über das ganze Bild. Druckansicht, PDF und Export zeigen jede Stellung als Seite, `review.py` kennt das Layout und warnt, wenn eine Seite keine Beschriftung hat. Beispiel im Teil „one change“ von `examples/layouts/layouts.html`. Bestehende Decks ändern sich nicht; `compare` braucht einmal `tools/sync.py`.
 - **Diagramme mit `d.chart()`**: Säulen und Zeilen aus Daten in den Farben und Größen des Themes, mit einem Zustand je Aufbauschritt. Zwischen den Zuständen wachsen Balken, treten hervor, bekommen eine Anmerkung, eine Reihe kommt dazu, die Achse zoomt mit gleitenden Gitterlinien, oder die Zeilen sortieren sich. Die Übergänge laufen über `anim.js`, das dafür den neuen Baustein `a.value()` mit `a.painter()` bekommt; Export, PDF und Sprünge zeigen die Zustände wie bei jeder Animation. Regel „Diagramme führen zu einer Aussage“ in `docs/design-rules.md`, Beispiel in `examples/charts/`. Bestehende Decks ändern sich nicht; `d.chart()` braucht einmal `tools/sync.py`.
 
 ## 0.11.0 (2026-11-19)

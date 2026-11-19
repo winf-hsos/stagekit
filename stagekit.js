@@ -64,7 +64,7 @@
   });
 
   /* --- signature layouts ----------------------------------------------------------
-   * Four slide classes with a fixed form, so a deck gets variety from tested
+   * Five slide classes with a fixed form, so a deck gets variety from tested
    * pieces instead of a new drawing each time (when: docs/design-rules.md):
    *
    *   number     <div class="number-value">73 %</div><div class="number-text">…</div>
@@ -74,9 +74,12 @@
    *   fullbleed  <img class="photo" src="…"><div class="photo-text">question?</div>
    *   timeline   <ol class="events"><li data-date="1952">huffman</li>…</ol>,
    *              the latest event shown is marked as the current one
+   *   compare    <div class="compare-view" data-stops="50 15 85"><img><img></div>,
+   *              before and after with a line between them (see below)
    *
    * stagekit only wraps the pieces of number and quote into a .content block
-   * and adds the quotation mark; everything else is stagekit.css. */
+   * and adds the quotation mark; compare is built further down; everything
+   * else is stagekit.css. */
   const wrap = (s, sel) => {
     if ($(".content", s)) return;
     const box = document.createElement("div");
@@ -136,6 +139,113 @@
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
+  }
+
+  /* compare: two pictures of the same view, one over the other, and a line
+   * between them that shows the first (left) on one side and the second
+   * (right) on the other:
+   *
+   *   <section class="slide compare">
+   *     <div class="compare-view" data-stops="50 12 88" data-sweep>
+   *       <img src="before.jpg" data-label="original">
+   *       <img src="after.jpg" data-label="jpeg, quality 10">
+   *     </div>
+   *   </section>
+   *
+   * data-stops sets the line in percent from the left, one value per build-up
+   * step (step 0 first); one step forward glides to the next stop, a jump goes
+   * there at once, and the print view and the export show each stop as a page.
+   * In the talk the line can be dragged with the mouse at any time. data-sweep
+   * lets the line run across the whole picture by itself when the slide is
+   * reached, and again on R (data-sweep="6": six seconds instead of four).
+   * The pieces may also be figures (a div with an SVG) instead of images.
+   * The line is drawn in an SVG over the view, so the export's step check
+   * does not count it as a jumping element. */
+  const SVGNS = "http://www.w3.org/2000/svg";
+  $$(".slide.compare .compare-view", deck).forEach((v) => {
+    if (v._compare) return;
+    const parts = $$(":scope > :not(.compare-line):not(.compare-label)", v);
+    if (parts.length < 2) return;
+    parts[0].classList.add("compare-before");
+    parts[1].classList.add("compare-after");
+    const stops = (v.dataset.stops || "50").trim().split(/[\s,]+/).map(Number).filter(isFinite);
+    const labels = [0, 1].map((k) => {
+      const t = parts[k].dataset.label;
+      if (!t) return null;
+      const l = document.createElement("span");
+      l.className = "compare-label " + (k ? "after" : "before");
+      l.textContent = t;
+      v.appendChild(l);
+      return l;
+    });
+    const svg = document.createElementNS(SVGNS, "svg");
+    svg.setAttribute("class", "compare-line");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = '<line y1="0" y2="100%"/><svg y="50%" overflow="visible"><circle r="34"/>' +
+                    '<path d="M -8 -12 L -18 0 L -8 12 M 8 -12 L 18 0 L 8 12"/></svg>';
+    v.appendChild(svg);
+    v.dataset.noAdvance = "1";
+    v._compare = { stops: stops.length ? stops : [50], at: null, raf: 0, labels,
+                   line: svg.querySelector("line"), knob: svg.querySelector("svg") };
+    const s = v.closest(".slide");
+    for (let k = 1; k < v._compare.stops.length; k++) s.insertAdjacentHTML("beforeend", `<span class="compare-step" data-step="${k}"></span>`);
+    // drag: the line follows the pointer anywhere over the view
+    const toPercent = (ev) => { const r = v.getBoundingClientRect(); return Math.max(0, Math.min(100, (ev.clientX - r.left) / r.width * 100)); };
+    v.addEventListener("pointerdown", (ev) => {
+      if (ev.button !== 0) return;
+      cancelAnimationFrame(v._compare.raf);
+      v.setPointerCapture(ev.pointerId);
+      v.classList.add("dragging");
+      compareAt(v, toPercent(ev));
+      ev.preventDefault();
+    });
+    v.addEventListener("pointermove", (ev) => { if (v.classList.contains("dragging")) compareAt(v, toPercent(ev)); });
+    const up = () => v.classList.remove("dragging");
+    v.addEventListener("pointerup", up);
+    v.addEventListener("pointercancel", up);
+  });
+  function compareAt(v, at) {
+    const c = v._compare;
+    c.at = at;
+    v.style.setProperty("--at", at.toFixed(2) + "%");
+    c.line.setAttribute("x1", at.toFixed(2) + "%");
+    c.line.setAttribute("x2", at.toFixed(2) + "%");
+    c.knob.setAttribute("x", at.toFixed(2) + "%");
+    // a label fades when its side gets too narrow to hold it
+    if (c.labels[0]) c.labels[0].classList.toggle("hidden", at < 18);
+    if (c.labels[1]) c.labels[1].classList.toggle("hidden", at > 82);
+  }
+  // move the line along a path of stops; each leg takes time by its length
+  function compareGlide(v, path, dur) {
+    const c = v._compare;
+    cancelAnimationFrame(c.raf);
+    const from = c.at === null ? path[0] : c.at, pts = [from, ...path];
+    const lens = pts.slice(1).map((p, k) => Math.abs(p - pts[k])), total = lens.reduce((a, b) => a + b, 0);
+    if (!total) { compareAt(v, path[path.length - 1]); return; }
+    const t0 = performance.now(), ease = (p) => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+    const tick = (now) => {
+      let d = Math.min(1, (now - t0) / dur) * total, k = 0;
+      while (k < lens.length - 1 && d > lens[k]) { d -= lens[k]; k++; }
+      const p = lens[k] ? Math.min(1, d / lens[k]) : 1;
+      compareAt(v, pts[k] + (pts[k + 1] - pts[k]) * ease(p));
+      if (now - t0 < dur && v.closest(".slide").classList.contains("current")) c.raf = requestAnimationFrame(tick);
+      else compareAt(v, pts[pts.length - 1]);
+    };
+    c.raf = requestAnimationFrame(tick);
+  }
+  const compareStop = (v, step) => { const st = v._compare.stops; return st[Math.min(step, st.length - 1)]; };
+  // how: "glide" (one step forward), "sweep" (across and back to the stop), else at once
+  function compareStep(s, how) {
+    $$(".compare-view", s).forEach((v) => {
+      if (!v._compare) return;
+      const to = compareStop(v, s._step);
+      if (how === "sweep" && v.dataset.sweep !== undefined) {
+        const secs = Number(v.dataset.sweep) || 4;
+        compareAt(v, to);
+        compareGlide(v, [100, 0, to], secs * 1000);
+      } else if (how === "glide") compareGlide(v, [to], 700);
+      else { cancelAnimationFrame(v._compare.raf); compareAt(v, to); }
+    });
   }
 
   /* --- live polls ---------------------------------------------------------------
@@ -508,7 +618,7 @@
     function rest(root, keep, heading) {
       const out = [];
       Array.from(root.children).forEach((c) => {
-        if (c.matches(".location, .notes, .morph-ghost, .anim-step") || keep.includes(c)) return;
+        if (c.matches(".location, .notes, .morph-ghost, .anim-step, .compare-step") || keep.includes(c)) return;
         if (c.tagName === "H2" && c.textContent.trim() === heading) return;
         if (keep.some((k) => c.contains(k))) out.push(...rest(c, keep, heading)); else out.push(c);
       });
@@ -600,9 +710,10 @@
   counter.className = "counter";
   document.body.appendChild(counter);
 
-  function applySteps(s) {
+  function applySteps(s, how) {
     $$("[data-step]", s).forEach((e) => e.classList.toggle("shown", Number(e.dataset.step) <= s._step));
     markNow(s);
+    compareStep(s, how);
   }
 
   function showFrame(f) {
@@ -618,7 +729,9 @@
     const s = slides[index];
     s._step = fr.step;
     if (!sameSlide) slides.forEach((x, k) => x.classList.toggle("current", k === index));
-    applySteps(s);
+    // a compare line glides one step forward and sweeps on arrival; else it is there at once
+    const forward = ready && !reducedMotion && frame === before + 1;
+    applySteps(s, forward ? (sameSlide ? "glide" : "sweep") : null);
     counter.textContent = `${frame + 1} / ${frames.length}`;
     history.replaceState(null, "", "#" + (frame + 1));
     if (!sameSlide && s.dataset.onShow && typeof window[s.dataset.onShow] === "function") window[s.dataset.onShow](s, s._step);
@@ -653,9 +766,11 @@
     if (s._anims && s._anims.some((a) => a.prev && a.prev())) { broadcast(); return; }
     if (frame > 0) showFrame(frame - 1);
   }
-  // R: the animations of this slide from the start (keyframe 0, then play on)
+  // R: the animations of this slide from the start (keyframe 0, then play on),
+  // and a compare line with data-sweep runs across once more
   function replay() {
     const s = slides[index];
+    if (s.classList.contains("compare")) compareStep(s, "sweep");
     if (!s._anims) return;
     showFrame(frameOf(index, 0));
     next();
