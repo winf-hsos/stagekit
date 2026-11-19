@@ -15,7 +15,7 @@ Checks, in this order:
    tools/release.py --notes reads the changelog;
 4. tools/export.py exports tests/deck/selftest.html, which holds every kind of
    slide and building block: no frame may fail, no step may move the layout,
-   no text may leave the four sizes;
+   no text may leave the four sizes; tools/review.py reads every slide of it;
 5. every frame, and one frame half-way through an animation segment, is
    compared with tests/reference/<platform>/. Fonts
    render slightly differently on each system, so there is one set of
@@ -183,7 +183,20 @@ def export(tmp, update):
         preview(out)
     overflow_bounds()
     visual_helpers(tmp)
+    review(tmp)
     return pngs + [midstate(out / "slides")]
+
+
+def review(tmp):
+    out = tmp / "review"
+    rc, log = run(TOOLS / "review.py", DECK / "selftest.html", "--audience", "test audience",
+                  "--minutes", "10", "--no-sheet", "--out", out)
+    slides = (DECK / "selftest.html").read_text(encoding="utf-8").count('class="slide')
+    m = re.search(r"(\d+) Folien", log)
+    files = all((out / f).is_file() for f in ("story.md", "metrics.md", "audience.md"))
+    ok = rc == 0 and files and m is not None and int(m.group(1)) == slides
+    detail = "" if ok else log.strip()[-1000:] if rc or not files else f"{m.group(1) if m else '?'} statt {slides} Folien"
+    check(ok, "review.py liest jede Folie und schreibt seine drei Dateien", detail)
 
 
 def overflow_bounds():

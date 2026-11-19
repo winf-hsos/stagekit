@@ -1,0 +1,95 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Reading the deck</title>
+<iframe id="deck" style="width:1920px;height:1080px;border:0"></iframe>
+<script>
+"use strict";
+/* Loads a deck the way the audience sees it and reports, slide by slide, what
+ * tools/review.py needs: heading, the sentence that carries the slide, layout,
+ * the text on the slide (all build steps), the speaker notes and the terms a
+ * listener meets there. The result goes into the title as REVIEW:<json>. */
+const query = new URLSearchParams(location.search);
+const iframe = document.getElementById("deck");
+const sep = query.get("deck").includes("?") ? "&" : "?";
+iframe.src = query.get("deck") + sep + "slide=1&morph=0";
+
+const clean = (s) => (s || "").replace(/\s+/g, " ").trim();
+const words = (s) => clean(s) ? clean(s).split(" ").length : 0;
+// text of an element with its line breaks as spaces ("gone.<br>only" must not become "gone.only")
+function textOf(e) {
+  const copy = e.cloneNode(true);
+  copy.querySelectorAll("br").forEach((b) => b.replaceWith(" "));
+  return clean(copy.textContent);
+}
+
+// what the audience can read on a slide: everything except notes, controls and hidden code
+function visibleText(slide) {
+  const copy = slide.cloneNode(true);
+  copy.querySelectorAll(".notes, .location, .counter, .code.figcode, .copy, .show, .anim-step, script, style, .morph-ghost")
+    .forEach((n) => n.remove());
+  copy.querySelectorAll("br").forEach((b) => b.replaceWith(" "));
+  // SVG labels are separate <text> elements: keep them apart
+  copy.querySelectorAll("text, tspan, div, li, p, h1, h2, h3, td, th").forEach((n) => n.append(" "));
+  return clean(copy.textContent);
+}
+
+function layout(slide) {
+  const c = slide.classList;
+  for (const kind of ["title", "agenda", "part", "poll"]) if (c.contains(kind)) return kind;
+  if (slide.querySelector("img.photo, .photo-text")) return "photo";
+  if (slide.querySelector(".code:not(.figcode)")) return "code";
+  if (slide.querySelector(".embed iframe")) return "embed";
+  if (slide.querySelector(".figure svg, .figure img, .figure canvas")) return "figure";
+  if (slide.querySelector(".cols3, .cols4, .two")) return "columns";
+  if (slide.querySelector(".statement")) return "statement";
+  if (slide.querySelector(".lines")) return "lines";
+  return "other";
+}
+
+// the sentence that carries the slide, in this order of precedence
+function lead(slide) {
+  // a list or a drawing has no such sentence; review.py then takes the heading
+  for (const sel of [".title-text", ".part-text", ".poll-q", ".statement", ".photo-text", ".punch"]) {
+    const e = slide.querySelector(sel);
+    if (e && textOf(e)) return textOf(e);
+  }
+  return "";
+}
+
+// terms as they stand in the source: abbreviations, code and words kept upright
+function terms(slide) {
+  const found = new Set();
+  slide.querySelectorAll(".keep-case, code, kbd, .hl, .mono").forEach((e) => {
+    if (e.closest(".notes, .figcode")) return;
+    const t = clean(e.textContent);
+    if (t && t.length <= 30 && !/^[\d\s.,:;+\-*/=()]+$/.test(t)) found.add(t);
+  });
+  (visibleText(slide).match(/\b[A-Z][A-Z0-9]{1,6}s?\b/g) || []).forEach((t) => found.add(t));
+  return Array.from(found);
+}
+
+function report() {
+  const win = iframe.contentWindow, doc = iframe.contentDocument;
+  const slides = (win.stagekit && win.stagekit.slides) || Array.from(doc.querySelectorAll(".slide"));
+  const out = slides.map((s, i) => {
+    const steps = s._steps || Array.from(new Set(Array.from(s.querySelectorAll("[data-step]")).map((e) => e.dataset.step)));
+    const notes = s.querySelector(".notes");
+    const h2 = s.querySelector("h2");
+    const text = visibleText(s);
+    return { slide: i + 1, frames: 1 + steps.length, part: s.dataset.part || "", layout: layout(s),
+      heading: h2 ? textOf(h2) : "", lead: lead(s), text, words: words(text),
+      notes: notes ? textOf(notes) : "", noteWords: notes ? words(textOf(notes)) : 0,
+      morph: s.querySelectorAll("[data-morph]").length, terms: terms(s) };
+  });
+  document.title = "REVIEW:" + encodeURIComponent(JSON.stringify({
+    title: doc.querySelector(".deck") ? doc.querySelector(".deck").dataset.title || doc.title : doc.title,
+    version: win.stagekit ? win.stagekit.version || "" : "", slides: out }));
+}
+
+iframe.addEventListener("load", () => {
+  const doc = iframe.contentDocument;
+  const ready = doc.fonts ? doc.fonts.ready : Promise.resolve();
+  // stagekit builds title, agenda and part slides on load; drawings run in deck.js
+  ready.then(() => setTimeout(report, 300));
+});
+</script>

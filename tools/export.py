@@ -67,6 +67,7 @@ def chrome():
 
 MOTION_PATH = "/__stagekit_checks__/motion.html"
 OVERFLOW_PATH = "/__stagekit_checks__/overflow.html"
+REVIEW_PATH = "/__stagekit_checks__/review.html"
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -75,6 +76,8 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
             return str(pathlib.Path(__file__).with_name("overflow-check.html"))
         if urlsplit(path).path == MOTION_PATH:
             return str(pathlib.Path(__file__).with_name("motion-check.html"))
+        if urlsplit(path).path == REVIEW_PATH:
+            return str(pathlib.Path(__file__).with_name("review-check.html"))
         return super().translate_path(path)
 
     def log_message(self, *a):
@@ -523,20 +526,24 @@ def main():
         a.pdf = a.png = a.sheet = a.steps = a.fonts = a.overflow = True
     deck = pathlib.Path(a.deck).resolve()
     out = pathlib.Path(a.out).resolve() if a.out else deck.parent / "export"
-    # Server auf dem gemeinsamen Vorfahren von Deck und stagekit, damit relative Pfade tragen
+    srv, url = deck_server(deck)
+    try:
+        return export_deck(a, deck, out, url)
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def deck_server(deck):
+    """A server on the common ancestor of deck and stagekit, so relative paths
+    resolve; returns the server and the deck's address."""
     root = pathlib.Path(deck.anchor)
     for parent in deck.parents:
         if (parent / "stagekit.css").exists() or any((p / "stagekit.css").exists() for p in parent.iterdir() if p.is_dir()):
             root = parent
             break
     srv, port = serve(root)
-    rel = deck.relative_to(root).as_posix()
-    url = f"http://127.0.0.1:{port}/{quote(rel)}"
-    try:
-        return export_deck(a, deck, out, url)
-    finally:
-        srv.shutdown()
-        srv.server_close()
+    return srv, f"http://127.0.0.1:{port}/{quote(deck.relative_to(root).as_posix())}"
 
 
 def export_deck(a, deck, out, url):
