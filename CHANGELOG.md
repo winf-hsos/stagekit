@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.11.0 (2026-11-19)
+
 - **Signature-Layouts**: vier Folienklassen mit fester Form, `number` (eine Zahl in der neuen Anzeigegröße 200 px, die beim Weiterblättern hochzählt), `quote` (Zitat mit gesetztem Anführungszeichen), `fullbleed` (Foto über die ganze Folie mit Satz auf dunklem Band) und `timeline` (Ereignisse mit Datum, das zuletzt gezeigte gelb). Die Schriftprüfung lässt die Anzeigegröße nur für Zahl und Anführungszeichen zu, `review.py` kennt die Layouts und warnt bei einer Zahl oder einem Zitat ohne Quelle sowie bei demselben Signature-Layout zweimal hintereinander. Der Agent setzt sie selbst ein, wo eine Folie genau diese Form hat (Regel in `docs/design-rules.md`). Beispiel in `examples/layouts/layouts.html`. Bestehende Decks ändern sich nicht; die Layouts brauchen einmal `tools/sync.py`.
 
 ## 0.10.0 (2026-11-19)
