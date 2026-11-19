@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Signature-Layouts**: vier Folienklassen mit fester Form, `number` (eine Zahl in der neuen Anzeigegröße 200 px, die beim Weiterblättern hochzählt), `quote` (Zitat mit gesetztem Anführungszeichen), `fullbleed` (Foto über die ganze Folie mit Satz auf dunklem Band) und `timeline` (Ereignisse mit Datum, das zuletzt gezeigte gelb). Die Schriftprüfung lässt die Anzeigegröße nur für Zahl und Anführungszeichen zu, `review.py` kennt die Layouts und warnt bei einer Zahl oder einem Zitat ohne Quelle sowie bei demselben Signature-Layout zweimal hintereinander. Der Agent setzt sie selbst ein, wo eine Folie genau diese Form hat (Regel in `docs/design-rules.md`). Beispiel in `examples/layouts/layouts.html`. Bestehende Decks ändern sich nicht; die Layouts brauchen einmal `tools/sync.py`.
+
 ## 0.10.0 (2026-11-19)
 
 - **Publikumsprobe** mit `tools/review.py <deck>.html --audience "…" --minutes N`: Das Werkzeug liest das Deck so, wie das Publikum es sieht, und schreibt die Geschichte in Kernsätzen (`story.md`), Kennzahlen mit Warnungen zu Textmenge, Notizen, Layoutfolgen, neuen Begriffen und Sprechzeit (`metrics.md`) sowie einen Auftrag für ein Probepublikum mit Kontaktbogen (`audience.md`, `sheet.png`). Mit `--ask` beantwortet ein Modell über die OpenAI-API diesen Auftrag selbst (`audience-report.md`), für Agenten, die keinen Hilfsagenten starten können. Der Skill macht die Probe zum Schritt vor dem Vorlegen. Bestehende Decks müssen nichts tun.

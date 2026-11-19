@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>signature layouts</title>
+  <!-- Demo of the signature layouts: one slide each, with the markup as short
+       as it gets. It loads the framework straight from the repository; a real
+       deck loads its project copy (tools/sync.py). -->
+  <link rel="stylesheet" href="../../themes/default.css">
+  <link rel="stylesheet" href="../../stagekit.css">
+</head>
+<body>
+<div class="deck" data-title="signature layouts" data-subtitle="fixed forms that stand out, one slide each"
+     data-parts='["one figure", "one voice", "one picture", "one sequence"]'>
+
+  <section class="slide title"></section>
+  <section class="slide agenda"></section>
+
+  <section class="slide part" data-part="one figure" data-subtitle="class number: a figure at display size, counting up"></section>
+
+  <section class="slide number">
+    <div class="number-value">73 %</div>
+    <div class="number-text">of the bytes on the web arrive compressed</div>
+    <div class="footnote">source: invented for this demo</div>
+    <aside class="notes">The figure counts up when the slide is reached with the arrow key; a jump, the PDF and the export show the final value. The figure carries the slide, so it needs a source.</aside>
+  </section>
+
+  <section class="slide number">
+    <h2>one photo, before and after</h2>
+    <div class="number-value">1,250 kb</div>
+    <div class="number-text">saved on a single holiday photo, and nobody sees the difference</div>
+    <div class="footnote">source: invented for this demo</div>
+    <aside class="notes">Separators and units stay where they are while the figure counts.</aside>
+  </section>
+
+  <section class="slide part" data-part="one voice" data-subtitle="class quote: a sentence someone else said"></section>
+
+  <section class="slide quote">
+    <blockquote>the purpose of computing is insight, not numbers.</blockquote>
+    <div class="quote-by">richard hamming, 1962</div>
+    <aside class="notes">A quote always names who said it and when. No generated portrait of a real person.</aside>
+  </section>
+
+  <section class="slide part" data-part="one picture" data-subtitle="class fullbleed: a photo over the whole slide"></section>
+
+  <section class="slide fullbleed">
+    <img class="photo" src="../animations/img/motherboard.jpg">
+    <div class="photo-text">where in this picture is the memory?</div>
+    <div class="footnote right">image: ai-generated (gpt-image-2.5-flare)</div>
+    <aside class="notes">The photo fills the slide; a dark band at the bottom carries the question. Good for an opening, a change of topic or the end.</aside>
+  </section>
+
+  <section class="slide part" data-part="one sequence" data-subtitle="class timeline: one event per step, the latest in yellow"></section>
+
+  <section class="slide timeline">
+    <h2>a short history of compression</h2>
+    <ol class="events">
+      <li data-date="1838">morse code<span class="sub">short codes for frequent letters</span></li>
+      <li data-date="1952" data-step="1">huffman<span class="sub">the optimal prefix code</span></li>
+      <li data-date="1977" data-step="2">lz77<span class="sub">say where it was before</span></li>
+      <li data-date="1992" data-step="3">jpeg<span class="sub">drop what the eye misses</span></li>
+    </ol>
+    <aside class="notes">Every event is a build step; the one shown last is the current one and turns yellow.</aside>
+  </section>
+
+  <section class="slide timeline">
+    <h2>more than four events: smaller text</h2>
+    <ol class="events">
+      <li data-date="1838">morse</li>
+      <li data-date="1948">shannon</li>
+      <li data-date="1952">huffman</li>
+      <li data-date="1977">lz77</li>
+      <li data-date="1989">zip</li>
+      <li data-date="1992">jpeg</li>
+      <li data-date="2013">zstd</li>
+    </ol>
+    <aside class="notes">Without steps no event is marked; from five events on the text drops to the small size.</aside>
+  </section>
+
+</div>
+<script src="../../draw.js"></script>
+<script src="../../stagekit.js"></script>
+</body>
+</html>

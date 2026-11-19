@@ -329,7 +329,9 @@ f.onload = () => setTimeout(() => {
       else { const vb = svg.viewBox.baseVal; const r = svg.getBoundingClientRect(); if (vb && vb.width) size = size * (r.width / scale) / vb.width; }
     }
     size = Math.round(size);
-    if (!allowed.some((a) => Math.abs(a - size) <= 2)) { const key = (e.tagName + (e.id ? "#" + e.id : "") + " " + size + "px"); bad[key] = (bad[key] || 0) + 1; }
+    // the display size, only for the figure of a number slide and the quotation mark
+    const display = e.closest(".number-value, .quote-mark") ? [Math.round(allowed[3] * 2.5)] : [];
+    if (![...allowed, ...display].some((a) => Math.abs(a - size) <= 2)) { const key = (e.tagName + (e.id ? "#" + e.id : "") + " " + size + "px"); bad[key] = (bad[key] || 0) + 1; }
   });
   document.title = "FONTS:" + JSON.stringify({ allowed, bad });
 }, 900);
@@ -349,7 +351,8 @@ FONT_HARNESS = FONT_HARNESS.replace("<script>\n", "<script>\n" + STYLES_LOADED, 
 
 
 def check_fonts(ch, url, deck):
-    """Nur die vier Groessen des Themes sind erlaubt (auf der 1920er Leinwand).
+    """Nur die vier Groessen des Themes sind erlaubt (auf der 1920er Leinwand),
+    dazu die Anzeigegroesse fuer die Zahl einer number-Folie und das Anfuehrungszeichen.
     SVG-Text wird ueber die viewBox in Folienpixel umgerechnet."""
     import json
     import re
@@ -382,7 +385,7 @@ def check_fonts(ch, url, deck):
     finally:
         harness.unlink(missing_ok=True)
     ohne = len(first) - len(seen)
-    print(f"fonts: {len(seen)} folien geprueft, {problems} mit fremden groessen (erlaubt: 20, 32, 48, 80 px)"
+    print(f"fonts: {len(seen)} folien geprueft, {problems} mit fremden groessen (erlaubt: 20, 32, 48, 80 px, 200 px nur fuer Zahl und Anfuehrungszeichen)"
           + (f", {ohne} ohne ergebnis" if ohne else ""))
 
 

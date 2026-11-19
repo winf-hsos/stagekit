@@ -83,6 +83,32 @@ el("fig-parts").innerHTML = d.svg(1680, 600, …, morphGroup("cpu", d.box(660, 1
 
 Rahmen und Text reisen getrennt: Der Text gleitet von der Mitte des alten zur Mitte des neuen Textes und wächst oder schrumpft dabei. Ein Rahmen, den nur eine Seite hat, blendet aus oder ein. Ändert sich der Wortlaut, geht der alte Text, bevor der neue kommt. Gruppen in zwei Zeichnungen, die in einer Reihe die Plätze tauschen, weichen aus: Was nach rechts wandert, läuft oben herum, was nach links wandert, unten herum. Zum Prüfen zeigt `?slide=N&morph-t=0.4` den Übergang auf Frame N bei 40 % angehalten, mit `&morph-back` den Rückweg von der folgenden Folie. Grenze: Gruppen zwischen zwei Zeichnungen ändern nur Lage und Größe, ihre Farben nicht.
 
+**Signature-Layouts** (wann: `docs/design-rules.md`, „Signature-Layouts setzen Akzente“; Beispiel: `examples/layouts/layouts.html`). Die Klasse an der Folie bestimmt die Form, stagekit setzt den Rest:
+
+```html
+<section class="slide number">                 <!-- eine Zahl in Anzeigegröße, zählt beim Weiterblättern hoch -->
+  <div class="number-value">73 %</div>         <!-- data-count="off": nicht zählen (Jahreszahl, Code) -->
+  <div class="number-text">of the bytes on the web arrive compressed</div>
+  <div class="footnote">source: …</div>
+</section>
+<section class="slide quote">                  <!-- das Anführungszeichen setzt stagekit -->
+  <blockquote>the purpose of computing is insight, not numbers.</blockquote>
+  <div class="quote-by">richard hamming, 1962</div>
+</section>
+<section class="slide fullbleed">              <!-- Foto über die ganze Folie, Satz auf dem dunklen Band unten -->
+  <img class="photo" src="img/…jpg"><div class="photo-text">question?</div>
+  <div class="footnote right">image: ai-generated (gpt-image-2.5-flare)</div>
+</section>
+<section class="slide timeline"><h2>…</h2>     <!-- höchstens sieben Ereignisse; das zuletzt gezeigte ist gelb -->
+  <ol class="events">
+    <li data-date="1838">morse code<span class="sub">short codes for frequent letters</span></li>
+    <li data-date="1952" data-step="1">huffman</li>
+  </ol>
+</section>
+```
+
+Die Zahl zählt nur, wenn die Folie mit einem Schritt nach vorn erreicht wird; ein Sprung, ein frisches Laden, die Druckansicht und der Export zeigen den Endwert, ebenso bei reduzierter Bewegung. Trennzeichen und Einheit bleiben beim Zählen stehen (`1,250 kb`).
+
 Live-Abfrage (braucht `data-live-url` am `div.deck`):
 
 ```html

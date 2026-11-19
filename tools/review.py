@@ -55,7 +55,9 @@ SAME_LAYOUT_RUN = 4                            # this many content slides of one
 NEW_TERMS_WARN = 4                             # new terms on a single slide
 WORDS_PER_MINUTE = 120                         # speaking pace for the notes
 LAYOUT_NAMES = {"figure": "Zeichnung", "lines": "Zeilen", "columns": "Spalten", "code": "Code", "photo": "Foto",
-                "embed": "Demo", "statement": "Aussage", "poll": "Abfrage", "other": "sonstiges"}
+                "embed": "Demo", "statement": "Aussage", "poll": "Abfrage", "other": "sonstiges",
+                "number": "große Zahl", "quote": "Zitat", "timeline": "Zeitleiste", "fullbleed": "Vollbildfoto"}
+SIGNATURE = {"number", "quote", "timeline", "fullbleed"}   # signature layouts: an accent, never twice in a row
 
 
 def read_deck(deck):
@@ -106,6 +108,9 @@ def warnings(data, minutes):
             out.append(f"{tag}: {s['words']} Wörter auf der Folie, eher zu viel")
         if not s["noteWords"]:
             out.append(f"{tag}: keine Notizen; was hier gesagt wird, steht nirgends")
+        if s["layout"] in ("number", "quote") and not s.get("source", True):
+            what = "Zahl" if s["layout"] == "number" else "Zitat"
+            out.append(f"{tag}: {what} ohne Quelle (Fußnote bzw. .quote-by)")
     # the same layout again and again
     run = []
     for s in content + [None]:
@@ -116,6 +121,11 @@ def warnings(data, minutes):
             out.append(f"Folien {run[0]['slide']}–{run[-1]['slide']}: {len(run)}-mal hintereinander "
                        f"Layout „{run[0]['layout']}“")
         run = [s] if s else []
+    # a signature layout twice in a row wears off
+    for a, b in zip(content, content[1:]):
+        if a["layout"] in SIGNATURE and a["layout"] == b["layout"] and b["slide"] == a["slide"] + 1:
+            out.append(f"Folien {a['slide']} und {b['slide']}: zweimal hintereinander „{LAYOUT_NAMES[a['layout']]}“; "
+                       "ein Signature-Layout wirkt nur als Ausnahme")
     # the same carrying sentence twice
     seen = {}
     for s in content:

@@ -25,7 +25,7 @@ function textOf(e) {
 // what the audience can read on a slide: everything except notes, controls and hidden code
 function visibleText(slide) {
   const copy = slide.cloneNode(true);
-  copy.querySelectorAll(".notes, .location, .counter, .code.figcode, .copy, .show, .anim-step, script, style, .morph-ghost")
+  copy.querySelectorAll(".notes, .location, .counter, .code.figcode, .copy, .show, .anim-step, .quote-mark, script, style, .morph-ghost")
     .forEach((n) => n.remove());
   copy.querySelectorAll("br").forEach((b) => b.replaceWith(" "));
   // SVG labels are separate <text> elements: keep them apart
@@ -35,7 +35,7 @@ function visibleText(slide) {
 
 function layout(slide) {
   const c = slide.classList;
-  for (const kind of ["title", "agenda", "part", "poll"]) if (c.contains(kind)) return kind;
+  for (const kind of ["title", "agenda", "part", "poll", "number", "quote", "timeline", "fullbleed"]) if (c.contains(kind)) return kind;
   if (slide.querySelector("img.photo, .photo-text")) return "photo";
   if (slide.querySelector(".code:not(.figcode)")) return "code";
   if (slide.querySelector(".embed iframe")) return "embed";
@@ -48,8 +48,11 @@ function layout(slide) {
 
 // the sentence that carries the slide, in this order of precedence
 function lead(slide) {
+  // a number slide is carried by the figure and its sentence together
+  const figure = slide.querySelector(".number-value");
+  if (figure) return clean(textOf(figure) + " " + (slide.querySelector(".number-text") ? textOf(slide.querySelector(".number-text")) : ""));
   // a list or a drawing has no such sentence; review.py then takes the heading
-  for (const sel of [".title-text", ".part-text", ".poll-q", ".statement", ".photo-text", ".punch"]) {
+  for (const sel of [".title-text", ".part-text", ".poll-q", "blockquote", ".statement", ".photo-text", ".punch"]) {
     const e = slide.querySelector(sel);
     if (e && textOf(e)) return textOf(e);
   }
@@ -79,7 +82,8 @@ function report() {
     return { slide: i + 1, frames: 1 + steps.length, part: s.dataset.part || "", layout: layout(s),
       heading: h2 ? textOf(h2) : "", lead: lead(s), text, words: words(text),
       notes: notes ? textOf(notes) : "", noteWords: notes ? words(textOf(notes)) : 0,
-      morph: s.querySelectorAll("[data-morph]").length, terms: terms(s) };
+      morph: s.querySelectorAll("[data-morph]").length, terms: terms(s),
+      source: !!s.querySelector(".footnote, .quote-by") };
   });
   document.title = "REVIEW:" + encodeURIComponent(JSON.stringify({
     title: doc.querySelector(".deck") ? doc.querySelector(".deck").dataset.title || doc.title : doc.title,

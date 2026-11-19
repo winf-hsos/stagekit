@@ -35,6 +35,8 @@
   const $ =(sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
   const params = new URLSearchParams(location.search);
+  const reducedMotion = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  let ready = false;     // true once the first frame is up: nothing counts or glides on load
 
   const deck = $(".deck");
   if (!deck) return;
@@ -60,6 +62,81 @@
     const n = parts.indexOf(name) + 1;
     s.insertAdjacentHTML("afterbegin", `<div class="content"><div class="part-n">${n ? "part " + n : ""}</div><div class="part-text">${name}</div>${s.dataset.subtitle ? `<div class="part-sub">${s.dataset.subtitle}</div>` : ""}</div>`);
   });
+
+  /* --- signature layouts ----------------------------------------------------------
+   * Four slide classes with a fixed form, so a deck gets variety from tested
+   * pieces instead of a new drawing each time (when: docs/design-rules.md):
+   *
+   *   number     <div class="number-value">73 %</div><div class="number-text">…</div>
+   *              one figure at display size, counting up when the slide is reached
+ *              (data-count="off" on the figure for a year, a code, a phone number)
+   *   quote      <blockquote>…</blockquote><div class="quote-by">who, year</div>
+   *   fullbleed  <img class="photo" src="…"><div class="photo-text">question?</div>
+   *   timeline   <ol class="events"><li data-date="1952">huffman</li>…</ol>,
+   *              the latest event shown is marked as the current one
+   *
+   * stagekit only wraps the pieces of number and quote into a .content block
+   * and adds the quotation mark; everything else is stagekit.css. */
+  const wrap = (s, sel) => {
+    if ($(".content", s)) return;
+    const box = document.createElement("div");
+    box.className = "content";
+    $$(sel, s).forEach((e) => box.appendChild(e));
+    s.insertBefore(box, $(".footnote, .notes", s));
+  };
+  $$(".slide.number", deck).forEach((s) => wrap(s, ":scope > .number-value, :scope > .number-text"));
+  $$(".slide.quote", deck).forEach((s) => {
+    wrap(s, ":scope > blockquote, :scope > .quote-by");
+    const c = $(".content", s);
+    if (c && !$(".quote-mark", c)) c.insertAdjacentHTML("afterbegin", '<div class="quote-mark" aria-hidden="true">“</div>');
+  });
+  $$(".slide.timeline ol.events", deck).forEach((ol) => {
+    const items = $$(":scope > li", ol);
+    ol.style.setProperty("--n", String(items.length));
+    ol.classList.toggle("dense", items.length > 4);
+    items.forEach((li) => {
+      if ($(".date", li)) return;
+      li.insertAdjacentHTML("afterbegin", `<span class="date">${li.dataset.date || ""}</span><span class="dot"></span>`);
+    });
+  });
+  // the current event of a timeline: the last one shown, if the list is built up in steps
+  function markNow(s) {
+    $$("ol.events", s).forEach((ol) => {
+      const items = $$(":scope > li", ol);
+      if (!items.some((li) => li.dataset.step)) return;
+      const shown = items.filter((li) => !li.dataset.step || li.classList.contains("shown"));
+      items.forEach((li) => li.classList.toggle("now", li === shown[shown.length - 1]));
+      ol.style.setProperty("--last", String(items.indexOf(shown[shown.length - 1])));
+    });
+  }
+  // a number counts up from zero when the slide is reached by one step forward;
+  // a jump, a fresh load, the print view and the export show the final figure
+  function countUp(s) {
+    const e = $(".number-value", s);
+    if (!e || e._counting || e.dataset.count === "off") return;     // a year or a code must not count
+    const full = e.textContent;
+    const m = full.match(/^(\D*?)(\d[\d.,\s]*\d|\d)(.*)$/s);
+    if (!m) return;
+    const digits = m[2].replace(/[\s.,]/g, "");
+    const target = Number(digits);
+    if (!isFinite(target) || target === 0) return;
+    // keep the separators of the original: the count fills the same pattern
+    const shape = (v) => {
+      let out = String(v).padStart(digits.length, "0").split(""), r = "";
+      for (const ch of m[2].split("").reverse()) r = (/\d/.test(ch) ? out.pop() || "" : ch) + r;
+      return r.replace(/^[0.,\s]+(?=\d)/, "") || "0";
+    };
+    const t0 = performance.now(), dur = 900;
+    e._counting = true;
+    e.textContent = m[1] + shape(0) + m[3];     // at once, so the final figure never flashes first
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / dur), eased = 1 - Math.pow(1 - p, 3);
+      if (!s.classList.contains("current") || p >= 1) { e.textContent = full; e._counting = false; return; }
+      e.textContent = m[1] + shape(Math.round(target * eased)) + m[3];
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
 
   /* --- live polls ---------------------------------------------------------------
    * A slide <section class="slide poll" data-poll="id"> asks the audience a
@@ -525,6 +602,7 @@
 
   function applySteps(s) {
     $$("[data-step]", s).forEach((e) => e.classList.toggle("shown", Number(e.dataset.step) <= s._step));
+    markNow(s);
   }
 
   function showFrame(f) {
@@ -558,6 +636,7 @@
       }
     }
     if (morphFrom) morph.play(morphFrom, s);
+    if (ready && !sameSlide && frame === before + 1 && s.classList.contains("number") && !reducedMotion) countUp(s);
     broadcast();
   }
   const frameOf = (slideIndex, step) => Math.max(0, frames.findIndex((fr) => fr.slide === slideIndex && fr.step === (step === undefined ? 0 : step)));
@@ -952,6 +1031,7 @@
               : location.hash ? Number(location.hash.slice(1)) - 1 : 0;
   showFrame(Number.isFinite(start) && start >= 0 ? start : 0);
   morph.start();
+  ready = true;
   // ?slide=N&morph-t=0.4 shows the move onto frame N, stopped at 40 %; with
   // &morph-back the move from the slide after it (for checking and previews)
   if (params.has("morph-t")) {
