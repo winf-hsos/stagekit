@@ -68,6 +68,21 @@ a.step(a.along("reply", "link", { reverse: true }));
 
 Hooks: `data-on-show="fn"` und `data-on-step="fn"` auf einer Folie rufen `window.fn(slide, step)`.
 
+**Magic Move zwischen Folien (nur auf Nicolas' Wunsch).** Tragen zwei benachbarte Folien je ein Element mit derselben Kennung `data-morph="…"`, gleitet es bei → und ← von seinem Platz, seiner Größe und seinen Farben auf der alten Folie zu denen auf der neuen. Der Rest der alten Folie blendet aus, der Rest der neuen kurz danach ein; eine Überschrift, die auf beiden Folien gleich lautet, bleibt stehen. Das funktioniert mit HTML-Elementen und mit Gruppen in Zeichnungen (`<g data-morph="…">`), auch gemischt: Aus einem Kasten im Überblick wird die Aussage der nächsten Folie. Ein Sprung, ein frischer Aufruf, der Export und das PDF zeigen jede Folie, wie sie ist. `?morph=0` und die Systemeinstellung „Bewegung reduzieren“ schalten es ab. Beispiel: Teil „between slides“ im [Demo-Deck](../examples/animations/animations.html).
+
+```html
+<section class="slide"><h2>the parts of a computer</h2><div class="figure" id="fig-parts"></div></section>
+<section class="slide"><h2>the parts of a computer</h2>
+  <div class="content"><div class="statement" data-morph="cpu">the processor</div>…</div></section>
+```
+
+```js
+const morphGroup = (key, ...parts) => `<g data-morph="${key}">${parts.join("")}</g>`;
+el("fig-parts").innerHTML = d.svg(1680, 600, …, morphGroup("cpu", d.box(660, 120, 360, 140, "processor")), …);
+```
+
+Rahmen und Text reisen getrennt: Der Text gleitet von der Mitte des alten zur Mitte des neuen Textes und wächst oder schrumpft dabei. Ein Rahmen, den nur eine Seite hat, blendet aus oder ein. Ändert sich der Wortlaut, geht der alte Text, bevor der neue kommt. Gruppen in zwei Zeichnungen, die in einer Reihe die Plätze tauschen, weichen aus: Was nach rechts wandert, läuft oben herum, was nach links wandert, unten herum. Zum Prüfen zeigt `?slide=N&morph-t=0.4` den Übergang auf Frame N bei 40 % angehalten, mit `&morph-back` den Rückweg von der folgenden Folie. Grenze: Gruppen zwischen zwei Zeichnungen ändern nur Lage und Größe, ihre Farben nicht.
+
 Live-Abfrage (braucht `data-live-url` am `div.deck`):
 
 ```html

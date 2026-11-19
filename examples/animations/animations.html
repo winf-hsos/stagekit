@@ -11,7 +11,7 @@
 </head>
 <body>
 <div class="deck" data-title="animations with stagekit" data-subtitle="three examples to try with the keyboard"
-     data-parts='["step by step", "semi-automatic", "automatic"]'>
+     data-parts='["step by step", "semi-automatic", "automatic", "between slides"]'>
 
   <section class="slide title"></section>
   <section class="slide agenda"></section>
@@ -52,6 +52,48 @@
     <div class="figure" id="fig-zoom"></div>
     <div class="footnote">image: ai-generated (gpt-image-2.5-flare)</div>
     <aside class="notes">Ask the audience to find the component on the whole board. One key press moves closer, outlines it and reveals its name. Replay the approach to connect the detail to its original position.</aside>
+  </section>
+
+  <section class="slide part" data-part="between slides" data-subtitle="an element with the same data-morph glides to its place on the next slide"></section>
+
+  <section class="slide">
+    <h2>the parts of a computer</h2>
+    <div class="figure" id="fig-parts"></div>
+    <aside class="notes">The overview. Point at the processor before going on: on the next slide it becomes the subject, and the box travels there so nobody loses track of where the detail belongs.</aside>
+  </section>
+
+  <section class="slide">
+    <h2>the parts of a computer</h2>
+    <div class="content">
+      <div class="statement" data-morph="cpu">the processor</div>
+      <div class="lines">
+        <div>fetches the next instruction from memory</div>
+        <div>decodes it and carries it out</div>
+        <div>repeats this billions of times per second</div>
+      </div>
+    </div>
+    <aside class="notes">The box from the overview is now the statement. Going back with ← sends it home again, which is a good moment to ask which part it talks to most.</aside>
+  </section>
+
+  <section class="slide">
+    <h2 data-morph="cpu">the processor</h2>
+    <div class="content">
+      <div class="statement">fetch, decode, execute</div>
+      <div class="sidenote">one turn of this cycle per instruction</div>
+    </div>
+    <aside class="notes">The statement shrinks into the small heading, so the topic stays named while the cycle takes the stage.</aside>
+  </section>
+
+  <section class="slide">
+    <h2>sorting moves values, it adds none</h2>
+    <div class="figure" id="fig-unsorted"></div>
+    <aside class="notes">Ask what the row will look like once sorted, and which value travels furthest.</aside>
+  </section>
+
+  <section class="slide">
+    <h2>sorting moves values, it adds none</h2>
+    <div class="figure" id="fig-sorted"></div>
+    <aside class="notes">Every box glides to its new place. The same five boxes, nothing added and nothing lost.</aside>
   </section>
 
 </div>

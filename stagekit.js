@@ -297,6 +297,225 @@
   const frames = [];
   slides.forEach((s, i) => { [0, ...s._steps].forEach((st) => frames.push({ slide: i, step: st })); });
 
+  /* --- magic move: an element glides from one slide to the next -----------------
+   * Two neighbouring slides that both hold an element with the same
+   * data-morph="key" are linked. On → or ← the element travels from its place,
+   * size and colours on the old slide to those on the new one; the rest of the
+   * old slide fades out, the rest of the new one fades in a moment later. HTML
+   * elements and groups in a drawing (<g data-morph="key">) both work, also
+   * mixed: a box in a drawing can become the statement of the next slide.
+   *
+   * Only the live talk moves. A jump, a fresh load, the export and the PDF show
+   * every slide as it is, so each slide stays a page of its own. ?morph=0 and
+   * the system setting "reduce motion" switch it off. A slide without
+   * data-morph behaves exactly as before. */
+  const morph = (() => {
+    const DUR = 700, FADE = 350, EASE = "cubic-bezier(.65, 0, .35, 1)";
+    const ease = (p) => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+    const off = params.get("morph") === "0" || params.has("print") || params.has("notes") ||
+      !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const ID = { sx: 1, sy: 1, tx: 0, ty: 0 };
+    let run = null, ready = false;
+
+    const visible = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== "hidden"; };
+    function keyed(s) {
+      const m = new Map();
+      $$("[data-morph]", s).forEach((e) => { if (!m.has(e.dataset.morph) && visible(e)) m.set(e.dataset.morph, e); });
+      return m;
+    }
+    const paint = (v) => (!v || v === "none" || v.startsWith("url")) ? "rgba(0, 0, 0, 0)" : v;
+
+    // where an element sits and how it looks, in slide pixels (1920 x 1080)
+    function look(slide, e) {
+      const sr = slide.getBoundingClientRect(), k = sr.width / W, r = e.getBoundingClientRect();
+      const l = { x: (r.left - sr.left) / k, y: (r.top - sr.top) / k, w: r.width / k, h: r.height / k, svg: e instanceof SVGElement };
+      if (!l.svg) {
+        const cs = getComputedStyle(e);
+        return Object.assign(l, { font: parseFloat(cs.fontSize), color: cs.color, bg: cs.backgroundColor,
+          border: cs.borderTopColor, bw: parseFloat(cs.borderTopWidth) || 0, radius: parseFloat(cs.borderTopLeftRadius) || 0 });
+      }
+      // a group in a drawing: the colours of its first shape and its first text
+      const ctm = e.getScreenCTM(), s = ctm ? Math.hypot(ctm.a, ctm.b) / k : 1;
+      const shape = $("rect, circle, ellipse, polygon, path", e), text = $("text", e);
+      const sc = shape && getComputedStyle(shape), tc = text && getComputedStyle(text);
+      return Object.assign(l, { font: tc ? parseFloat(tc.fontSize) * s : 32, color: tc ? paint(tc.fill) : "rgba(0, 0, 0, 0)",
+        bg: sc ? paint(sc.fill) : "rgba(0, 0, 0, 0)", border: sc ? paint(sc.stroke) : "rgba(0, 0, 0, 0)",
+        bw: sc ? (parseFloat(sc.strokeWidth) || 0) * s : 0, radius: shape && shape.getAttribute("rx") ? parseFloat(shape.getAttribute("rx")) * s : 0 });
+    }
+    const clear = (c) => !c || c === "transparent" || /rgba\(.*,\s*0\)$/.test(c);
+
+    // The stand-ins: an element is split into its frame (fill, border) and its
+    // text. The frame travels from box to box, the text from the middle of the
+    // old text to the middle of the new one, growing or shrinking on the way;
+    // so the words never sit in a corner of a box, and a box can fade away
+    // around a text that stays.
+    function add(on, cls, style) {
+      const g = document.createElement("div");
+      g.className = "morph-ghost " + cls;
+      Object.assign(g.style, { position: "absolute", margin: "0", padding: "0", boxSizing: "border-box", pointerEvents: "none" }, style);
+      on.appendChild(g);
+      run.undo.push(() => g.remove());
+      return g;
+    }
+    const frameKey = (l) => ({ left: l.x + "px", top: l.y + "px", width: l.w + "px", height: l.h + "px",
+      backgroundColor: l.bg, borderColor: l.border, borderWidth: l.bw + "px", borderRadius: l.radius + "px" });
+    const framed = (l) => !clear(l.bg) || (l.bw > 0 && !clear(l.border));
+    function frameGhost(on, lo, ln) {
+      const a = framed(lo), b = framed(ln);
+      if (!a && !b) return;
+      // a frame that exists on one side only keeps its look and fades instead
+      // of thinning out: a hairline that lingers around a text reads as a mistake
+      const src = a ? lo : ln, dst = b ? ln : lo;
+      const g = add(on, "morph-frame", { borderStyle: "solid", zIndex: "20" });
+      run.anims.push(g.animate([frameKey(Object.assign({}, src, { x: lo.x, y: lo.y, w: lo.w, h: lo.h })),
+                                frameKey(Object.assign({}, dst, { x: ln.x, y: ln.y, w: ln.w, h: ln.h }))], { duration: DUR, easing: EASE, fill: "both" }));
+      if (a !== b) run.anims.push(g.animate(a ? [{ opacity: 1 }, { opacity: 0, offset: 0.55 }, { opacity: 0 }]
+                                              : [{ opacity: 0 }, { opacity: 0, offset: 0.45 }, { opacity: 1 }], { duration: DUR, easing: "linear", fill: "both" }));
+    }
+    // the text of an element and where it stands, in slide pixels
+    function text(slide, e, l) {
+      const sr = slide.getBoundingClientRect(), k = sr.width / W;
+      const t = l.svg ? $("text", e) : e;
+      if (!t) return null;
+      let r;
+      if (l.svg) r = t.getBoundingClientRect();
+      else { const range = document.createRange(); range.selectNodeContents(t); r = range.getBoundingClientRect(); }
+      if (!r.width) return null;
+      const cs = getComputedStyle(t);
+      const lines = l.svg ? Math.max(1, $$("tspan", t).length) : Math.round(r.height / (l.font * 1.15)) || 1;
+      return { e: t, svg: l.svg, cx: (r.left - sr.left + r.width / 2) / k, cy: (r.top - sr.top + r.height / 2) / k, w: r.width / k,
+        font: l.font, color: l.color, lines, cs, words: t.textContent.replace(/\s+/g, " ").trim() };
+    }
+    const textKey = (t, w) => ({ left: t.cx + "px", top: t.cy + "px", fontSize: t.font + "px", color: t.color, ...(w ? { width: t.w + "px" } : {}) });
+    function textGhost(on, own, a, b, fade) {
+      const multi = own.lines > 1 && !own.svg;
+      const g = add(on, "morph-text", { transform: "translate(-50%, -50%)", zIndex: "21", lineHeight: "1.15",
+        fontFamily: own.cs.fontFamily, fontWeight: own.cs.fontWeight, fontStyle: own.cs.fontStyle,
+        letterSpacing: own.cs.letterSpacing, textTransform: own.cs.textTransform,
+        whiteSpace: multi ? "normal" : "pre", textAlign: own.svg ? "center" : own.cs.textAlign });
+      if (own.svg) g.textContent = $$("tspan", own.e).length ? $$("tspan", own.e).map((s) => s.textContent).join("\n") : own.e.textContent;
+      else { g.innerHTML = own.e.innerHTML; $$("[id]", g).forEach((n) => n.removeAttribute("id")); }
+      run.anims.push(g.animate([textKey(a, multi), textKey(b, multi)], { duration: DUR, easing: EASE, fill: "both" }));
+      if (fade) run.anims.push(g.animate(fade, { duration: DUR, easing: "linear", fill: "both" }));
+    }
+
+    // the transform, in the parent's coordinates, that lays a group's own box onto another box
+    function mapping(slide, e, self, target) {
+      const sr = slide.getBoundingClientRect(), k = sr.width / W;
+      const inv = e.parentNode.getScreenCTM().inverse();
+      const user = (x, y) => new DOMPoint(sr.left + x * k, sr.top + y * k).matrixTransform(inv);
+      const u0 = user(self.x, self.y), u1 = user(self.x + self.w, self.y + self.h);
+      const v0 = user(target.x, target.y), v1 = user(target.x + target.w, target.y + target.h);
+      const sx = (v1.x - v0.x) / ((u1.x - u0.x) || 1), sy = (v1.y - v0.y) / ((u1.y - u0.y) || 1);
+      return { sx, sy, tx: v0.x - sx * u0.x, ty: v0.y - sy * u0.y };
+    }
+    // a group moves through its transform attribute (as in anim.js), in front of what it had
+    // arc: a sideways lift in the parent's units at the middle of the way, so
+    // that groups changing places pass each other instead of through each other
+    function tween(e, a, b, fade, arc) {
+      const base = e.getAttribute("transform") || "", op = e.style.opacity;
+      run.undo.push(() => { if (base) e.setAttribute("transform", base); else e.removeAttribute("transform"); e.style.opacity = op; });
+      const at = (p) => {
+        // up first, then across, then down: the neighbour is passed early in the way
+        const q = ease(p), L = (u, v) => +(u + (v - u) * q).toFixed(4), lift = arc ? arc * Math.min(1, 3 * Math.sin(Math.PI * q)) : 0;
+        e.setAttribute("transform", `matrix(${L(a.sx, b.sx)} 0 0 ${L(a.sy, b.sy)} ${L(a.tx, b.tx)} ${+(L(a.ty, b.ty) + lift).toFixed(4)}) ${base}`.trim());
+        if (fade) { const f = Math.min(1, p / 0.6); e.style.opacity = String(fade === "in" ? f : 1 - f); }
+      };
+      at(0);
+      run.tweens.push(at);
+    }
+    function hide(e) { const v = e.style.visibility; e.style.visibility = "hidden"; run.undo.push(() => { e.style.visibility = v; }); }
+
+    // what fades in on the new slide: everything except the linked elements,
+    // the location bar and a heading that reads the same on both slides
+    function rest(root, keep, heading) {
+      const out = [];
+      Array.from(root.children).forEach((c) => {
+        if (c.matches(".location, .notes, .morph-ghost, .anim-step") || keep.includes(c)) return;
+        if (c.tagName === "H2" && c.textContent.trim() === heading) return;
+        if (keep.some((k) => c.contains(k))) out.push(...rest(c, keep, heading)); else out.push(c);
+      });
+      return out;
+    }
+
+    function finish() {
+      if (!run) return;
+      const r = run; run = null;
+      clearTimeout(r.timer); cancelAnimationFrame(r.raf);
+      r.anims.forEach((a) => a.cancel());
+      r.undo.reverse().forEach((f) => f());
+    }
+
+    function play(from, to) {
+      finish();
+      if (off || !ready || !from || from === to) return;
+      // the old slide stays visible underneath while it fades out
+      Object.assign(from.style, { display: "block", zIndex: "1", pointerEvents: "none" });
+      const A = keyed(from), B = keyed(to);
+      const pairs = [...B.keys()].filter((k) => A.has(k)).map((k) => [A.get(k), B.get(k)]);
+      if (!pairs.length) { Object.assign(from.style, { display: "", zIndex: "", pointerEvents: "" }); return; }
+      run = { anims: [], tweens: [], undo: [], timer: 0, raf: 0 };
+      const toBg = to.style.background;
+      Object.assign(to.style, { zIndex: "2", background: "transparent" });
+      run.undo.push(() => { Object.assign(from.style, { display: "", zIndex: "", pointerEvents: "" }); Object.assign(to.style, { zIndex: "", background: toBg }); });
+      // the old words leave before the new ones come, so the two never stand
+      // half visible on top of each other
+      const fadeOut = [{ opacity: 1 }, { opacity: 0, offset: 0.35 }, { opacity: 0 }];
+      const fadeIn = [{ opacity: 0 }, { opacity: 0, offset: 0.3 }, { opacity: 1, offset: 0.65 }, { opacity: 1 }];
+
+      pairs.forEach(([o, n]) => {
+        const lo = look(from, o), ln = look(to, n);
+        // two groups of drawings: the group itself moves, as in anim.js
+        // two groups of drawings: the group itself moves, as in anim.js. One
+        // that overtakes others on a row goes over the top when it moves right
+        // and underneath when it moves left, as in the sorting example
+        if (lo.svg && ln.svg) {
+          const dx = ln.x - lo.x, dy = ln.y - lo.y;
+          let arc = 0;
+          if (Math.abs(dx) > ln.w * 1.2 && Math.abs(dy) < ln.h / 2) {
+            const ctm = n.parentNode.getScreenCTM(), k = to.getBoundingClientRect().width / W;
+            arc = (dx > 0 ? -1 : 1) * ln.h * 1.2 * (ctm ? k / ctm.d : 1);
+          }
+          hide(o); tween(n, mapping(to, n, ln, lo), ID, null, arc);
+          return;
+        }
+        // otherwise stand-ins for frame and text take over both elements
+        const to_ = text(to, n, ln), from_ = text(from, o, lo);
+        frameGhost(to, lo, ln);
+        if (from_ && to_ && from_.words === to_.words && !from_.svg && !to_.svg) textGhost(to, to_, from_, to_, null);
+        else {
+          if (from_) textGhost(to, from_, from_, to_ || from_, fadeOut);
+          if (to_) textGhost(to, to_, from_ || to_, to_, fadeIn);
+        }
+        hide(o); hide(n);
+      });
+
+      run.anims.push(from.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE, easing: "ease-out", fill: "both" }));
+      const heading = (($("h2", from) || {}).textContent || "").trim();
+      rest(to, pairs.map((p) => p[1]), heading).forEach((e) => {
+        run.anims.push(e.animate([{ opacity: 0 }, { opacity: 0, offset: 0.55 }, { opacity: 1 }], { duration: DUR + 250, easing: "ease-out", fill: "both" }));
+      });
+
+      const t0 = performance.now(), r = run;
+      const tick = (now) => {
+        const p = Math.min(1, (now - t0) / DUR);
+        r.tweens.forEach((f) => f(p));
+        if (p < 1 && run === r) r.raf = requestAnimationFrame(tick);
+      };
+      r.raf = requestAnimationFrame(tick);
+      r.timer = setTimeout(() => { if (run === r) finish(); }, DUR + 250);
+    }
+    // a still of a running move at progress p (0..1), for checking it frame by frame
+    function seek(p) {
+      if (!run) return false;
+      clearTimeout(run.timer); cancelAnimationFrame(run.raf);
+      run.anims.forEach((a) => { a.pause(); a.currentTime = p * DUR; });
+      run.tweens.forEach((f) => f(p));
+      return true;
+    }
+    return { play, finish, seek, start() { ready = true; } };
+  })();
+
   // --- navigation --------------------------------------------------------------
   let index = 0;      // slide index
   let frame = 0;      // frame index
@@ -313,6 +532,9 @@
     frame = Math.max(0, Math.min(frames.length - 1, f));
     const fr = frames[frame];
     const sameSlide = fr.slide === index && slides[index].classList.contains("current");
+    morph.finish();
+    // magic move only for one step to the neighbouring slide, never on a jump
+    const morphFrom = !sameSlide && Math.abs(fr.slide - index) === 1 && Math.abs(frame - before) === 1 ? slides[index] : null;
     if (!sameSlide && slides[index]._anims) slides[index]._anims.forEach((a) => a.stop());
     index = fr.slide;
     const s = slides[index];
@@ -335,6 +557,7 @@
         setTimeout(() => { if (frame === here) next(); }, 400);
       }
     }
+    if (morphFrom) morph.play(morphFrom, s);
     broadcast();
   }
   const frameOf = (slideIndex, step) => Math.max(0, frames.findIndex((fr) => fr.slide === slideIndex && fr.step === (step === undefined ? 0 : step)));
@@ -728,7 +951,16 @@
   const start = params.has("slide") ? Number(params.get("slide")) - 1
               : location.hash ? Number(location.hash.slice(1)) - 1 : 0;
   showFrame(Number.isFinite(start) && start >= 0 ? start : 0);
+  morph.start();
+  // ?slide=N&morph-t=0.4 shows the move onto frame N, stopped at 40 %; with
+  // &morph-back the move from the slide after it (for checking and previews)
+  if (params.has("morph-t")) {
+    const t = Math.min(1, Math.max(0, Number(params.get("morph-t")) || 0));
+    const other = slides[index + (params.has("morph-back") ? 1 : -1)];
+    (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { morph.play(other, slides[index]); morph.seek(t); });
+  }
   live.syncSet();
 
-  window.stagekit = { version: VERSION, next, prev, show, showFrame, slides, frames, get index() { return index; }, get frame() { return frame; } };
+  window.stagekit = { version: VERSION, next, prev, show, showFrame, slides, frames, morph: { seek: morph.seek, finish: morph.finish },
+    get index() { return index; }, get frame() { return frame; } };
 })();

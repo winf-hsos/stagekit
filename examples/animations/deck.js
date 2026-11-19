@@ -85,3 +85,23 @@ const zoom = d.anim("fig-zoom", { auto: true, gap: 500, back: "play" });
 zoom.step(zoom.camera(detail.view, { dur: 2500 }));
 zoom.step(zoom.par(zoom.show("spot", { dur: 1000 }), zoom.draw("outline", { dur: 1000 })));
 zoom.step(zoom.show("caption", { dur: 400 }));
+
+/* --- between slides: magic move ---------------------------------------------
+ * A group marked <g data-morph="key"> is linked to the element with the same
+ * key on the neighbouring slide. The processor box becomes the statement of
+ * the next slide; the five value boxes keep their keys and only change places. */
+const morphGroup = (key, ...parts) => `<g data-morph="${key}">${parts.join("")}</g>`;
+el("fig-parts").innerHTML = d.svg(1680, 600,
+  d.arrow(420, 190, 660, 190), d.arrow(1020, 190, 1260, 190),
+  d.arrow(820, 260, 820, 400), d.arrow(860, 400, 860, 260),
+  d.box(120, 120, 300, 140, "input", { size: 40 }),
+  morphGroup("cpu", d.box(660, 120, 360, 140, "processor", { size: 40, border: d.color("blue") })),
+  d.box(1260, 120, 300, 140, "output", { size: 40 }),
+  d.box(690, 400, 300, 120, "memory", { size: 40 }));
+
+/* five boxes 160 wide with 60 between them, as in the sorting example */
+const valueRow = (order, caption) => d.svg(1680, 600,
+  d.label(840, 120, caption, { anchor: "middle", color: d.color("gray") }),
+  ...order.map((v, i) => morphGroup("value-" + v, d.box(320 + i * 220, 220, 160, 160, String(v), { size: 48, mono: true }))));
+el("fig-unsorted").innerHTML = valueRow([5, 2, 8, 1, 4], "as they arrived");
+el("fig-sorted").innerHTML = valueRow([1, 2, 4, 5, 8], "sorted");

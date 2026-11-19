@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Magic Move**: Elemente mit derselben Kennung `data-morph` auf zwei benachbarten Folien gleiten beim Weiterblättern an ihren neuen Platz, in HTML wie in Zeichnungen. Export, PDF und Sprünge bleiben statisch, `?morph=0` schaltet es ab. Beispiel im Teil „between slides“ des Demo-Decks. Bestehende Decks ändern sich nicht, solange sie kein `data-morph` tragen.
+
 ## 0.8.0 (2026-11-18)
 
 - `d.closeup()` berechnet Kameraziel, Abdunklung, Rahmen und Beschriftung aus einem Zielrechteck. `d.anchor()` und `d.connect()` verbinden Kanten und liefern denselben Weg für Pakete in beiden Richtungen. Netzwerk- und Platinenbeispiel verwenden die neuen Helfer. Bestehende Decks können die Helfer nach `tools/sync.py` nutzen.
