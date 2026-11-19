@@ -37,6 +37,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from urllib.parse import unquote, urlencode, urljoin
@@ -213,12 +214,14 @@ def make_sheet(deck, out):
     newest = max((p.stat().st_mtime for p in deck.parent.iterdir() if p.is_file()), default=0)
     if sheet.exists() and sheet.stat().st_mtime > newest:
         return sheet
-    frames = out / "frames"
-    subprocess.run([sys.executable, str(pathlib.Path(__file__).with_name("export.py")), str(deck),
-                    "--png", "--sheet", "--out", str(frames)], capture_output=True)
-    if (frames / "sheet.png").exists():
-        shutil.copy(frames / "sheet.png", out / "sheet.png")
-        return out / "sheet.png"
+    # only the sheet is kept: the frames would add megabytes to a synced deck folder
+    with tempfile.TemporaryDirectory(prefix="stagekit-review-") as frames:
+        subprocess.run([sys.executable, str(pathlib.Path(__file__).with_name("export.py")), str(deck),
+                        "--png", "--sheet", "--out", frames], capture_output=True)
+        made = pathlib.Path(frames) / "sheet.png"
+        if made.exists():
+            shutil.copy(made, sheet)
+            return sheet
     print("  hinweis: kein Kontaktbogen entstanden; der Auftrag kommt ohne Bild aus")
     return None
 
