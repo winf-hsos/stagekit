@@ -13,7 +13,7 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
-- **Magic Move**: Elemente mit derselben Kennung `data-morph` auf zwei benachbarten Folien gleiten beim Weiterblättern an ihren neuen Platz, in HTML wie in Zeichnungen. Export, PDF und Sprünge bleiben statisch, `?morph=0` schaltet es ab. Beispiel im Teil „between slides“ des Demo-Decks. Bestehende Decks ändern sich nicht, solange sie kein `data-morph` tragen.
+- **Magic Move**: Elemente mit derselben Kennung `data-morph` auf zwei benachbarten Folien gleiten beim Weiterblättern an ihren neuen Platz, in HTML wie in Zeichnungen. Export, PDF und Sprünge bleiben statisch, `?morph=0` schaltet es ab. Beispiel im Teil „between slides“ des Demo-Decks. Bestehende Decks ändern sich nicht, solange sie kein `data-morph` tragen. Der Agent setzt Magic Move von sich aus ein, wo derselbe Gegenstand auf zwei aufeinanderfolgenden Folien vorkommt und die Beziehung zur Aussage gehört (Regel „Magic Move verbindet benachbarte Folien“ in `docs/design-rules.md`).
 
 ## 0.8.0 (2026-11-18)
 
