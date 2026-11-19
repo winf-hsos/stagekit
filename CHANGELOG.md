@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.10.0 (2026-11-19)
+
 - **Publikumsprobe** mit `tools/review.py <deck>.html --audience "…" --minutes N`: Das Werkzeug liest das Deck so, wie das Publikum es sieht, und schreibt die Geschichte in Kernsätzen (`story.md`), Kennzahlen mit Warnungen zu Textmenge, Notizen, Layoutfolgen, neuen Begriffen und Sprechzeit (`metrics.md`) sowie einen Auftrag für ein Probepublikum mit Kontaktbogen (`audience.md`, `sheet.png`). Mit `--ask` beantwortet ein Modell über die OpenAI-API diesen Auftrag selbst (`audience-report.md`), für Agenten, die keinen Hilfsagenten starten können. Der Skill macht die Probe zum Schritt vor dem Vorlegen. Bestehende Decks müssen nichts tun.
 
 ## 0.9.0 (2026-11-19)
