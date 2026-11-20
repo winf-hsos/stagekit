@@ -64,7 +64,7 @@
   });
 
   /* --- signature layouts ----------------------------------------------------------
-   * Five slide classes with a fixed form, so a deck gets variety from tested
+   * Six slide classes with a fixed form, so a deck gets variety from tested
    * pieces instead of a new drawing each time (when: docs/design-rules.md):
    *
    *   number     <div class="number-value">73 %</div><div class="number-text">…</div>
@@ -76,6 +76,8 @@
    *              the latest event shown is marked as the current one
    *   compare    <div class="compare-view" data-stops="50 15 85"><img><img></div>,
    *              before and after with a line between them (see below)
+   *   checklist  <ul class="checks"><li data-checked>…</li><li data-check="1">…</li><li>…</li></ul>,
+   *              boxes ticked from the start, on a step, or left open
    *
    * stagekit only wraps the pieces of number and quote into a .content block
    * and adds the quotation mark; compare is built further down; everything
@@ -102,6 +104,55 @@
       li.insertAdjacentHTML("afterbegin", `<span class="date">${li.dataset.date || ""}</span><span class="dot"></span>`);
     });
   });
+  // a checklist: each item gets a box, and a tick drawn in SVG, so the export's
+  // step check sees nothing move. data-checked ticks it from the start,
+  // data-check="2" on step 2; the tick then carries the data-step itself.
+  $$(".slide.checklist ul.checks", deck).forEach((ul) => {
+    const items = $$(":scope > li", ul);
+    ul.classList.toggle("dense", items.length > 5);
+    ul.dataset.noAdvance = "1";
+    items.forEach((li) => {
+      if ($(".check-box", li)) return;
+      const at = Number(li.dataset.check) > 0 ? Number(li.dataset.check) : undefined;
+      const tick = '<svg class="check-tick" viewBox="0 0 24 24" aria-hidden="true"' +
+                   (at !== undefined ? ` data-step="${at}"` : "") + '><path d="M5 12.5 L10 17.5 L19 7"/></svg>';
+      li.classList.toggle("open", li.dataset.checked === undefined && li.dataset.check === undefined);
+      // the text and its .sub stay together as one block next to the box
+      const text = document.createElement("span");
+      text.className = "check-text";
+      while (li.firstChild) text.appendChild(li.firstChild);
+      li.append(text);
+      li.insertAdjacentHTML("afterbegin", `<span class="check-box">${tick}</span>`);
+      // in the talk a click on an item ticks it or takes the tick away; the
+      // slide forgets this when it is reached again
+      li.addEventListener("click", () => {
+        const on = !li.classList.contains("ticked") && (li.classList.contains("unticked") || !checkedNow(li));
+        li.classList.toggle("ticked", on);
+        li.classList.toggle("unticked", !on);
+        if (on) drawTick(li);
+      });
+    });
+  });
+  const checkedNow = (li) => {
+    const t = $(".check-tick", li);
+    return !li.classList.contains("open") && (!t.dataset.step || t.classList.contains("shown"));
+  };
+  function drawTick(li) {
+    if (reducedMotion) return;
+    const t = $(".check-tick", li);
+    t.classList.remove("draw");
+    void t.getBoundingClientRect();
+    t.classList.add("draw");
+  }
+  // how: "glide" (one step forward) draws the ticks that just appeared; a new
+  // arrival at the slide clears the clicks of the last visit
+  function checkStep(s, how, fresh) {
+    $$("ul.checks > li", s).forEach((li) => {
+      if (fresh) li.classList.remove("ticked", "unticked");
+      const t = $(".check-tick", li);
+      if (t && how === "glide" && t.dataset.step && Number(t.dataset.step) === s._step) drawTick(li);
+    });
+  }
   // the current event of a timeline: the last one shown, if the list is built up in steps
   function markNow(s) {
     $$("ol.events", s).forEach((ol) => {
@@ -710,10 +761,11 @@
   counter.className = "counter";
   document.body.appendChild(counter);
 
-  function applySteps(s, how) {
+  function applySteps(s, how, fresh) {
     $$("[data-step]", s).forEach((e) => e.classList.toggle("shown", Number(e.dataset.step) <= s._step));
     markNow(s);
     compareStep(s, how);
+    checkStep(s, how, fresh);
   }
 
   function showFrame(f) {
@@ -731,7 +783,7 @@
     if (!sameSlide) slides.forEach((x, k) => x.classList.toggle("current", k === index));
     // a compare line glides one step forward and sweeps on arrival; else it is there at once
     const forward = ready && !reducedMotion && frame === before + 1;
-    applySteps(s, forward ? (sameSlide ? "glide" : "sweep") : null);
+    applySteps(s, forward ? (sameSlide ? "glide" : "sweep") : null, !sameSlide);
     counter.textContent = `${frame + 1} / ${frames.length}`;
     history.replaceState(null, "", "#" + (frame + 1));
     if (!sameSlide && s.dataset.onShow && typeof window[s.dataset.onShow] === "function") window[s.dataset.onShow](s, s._step);

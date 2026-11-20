@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Signature-Layout `checklist`**: eine Liste mit Kästchen, für Regeln, Prüfpunkte oder Aufgaben. `data-checked` hakt einen Punkt von Anfang an ab, `data-check="N"` im Aufbauschritt N, ohne beides bleibt er offen. Ein Haken, der beim Weiterblättern dazukommt, wird gezeichnet; im Vortrag schaltet ein Klick auf einen Punkt den Haken um, ohne weiterzublättern. Druckansicht, PDF und Export zeigen je Schritt den Stand, `review.py` kennt das Layout und warnt ab neun Punkten. Beispiel im Teil „one list to check“ von `examples/layouts/layouts.html`. Bestehende Decks ändern sich nicht; `checklist` braucht einmal `tools/sync.py`.
+
 ## 0.12.0 (2026-11-19)
 
 - **Signature-Layout `compare`**: zwei Bilder oder Zeichnungen derselben Ansicht übereinander, getrennt von einer Linie mit Griff. Die Linie steht je Aufbauschritt an einer festen Stelle (`data-stops`) und gleitet beim Weiterblättern dorthin, lässt sich im Vortrag mit der Maus ziehen und läuft mit `data-sweep` beim Erreichen der Folie (und mit R) einmal von selbst über das ganze Bild. Druckansicht, PDF und Export zeigen jede Stellung als Seite, `review.py` kennt das Layout und warnt, wenn eine Seite keine Beschriftung hat. Beispiel im Teil „one change“ von `examples/layouts/layouts.html`. Bestehende Decks ändern sich nicht; `compare` braucht einmal `tools/sync.py`.

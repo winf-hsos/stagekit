@@ -11,7 +11,7 @@
 </head>
 <body>
 <div class="deck" data-title="signature layouts" data-subtitle="fixed forms that stand out, one slide each"
-     data-parts='["one figure", "one voice", "one picture", "one sequence", "one change"]'>
+     data-parts='["one figure", "one voice", "one picture", "one sequence", "one change", "one list to check"]'>
 
   <section class="slide title"></section>
   <section class="slide agenda"></section>
@@ -96,6 +96,33 @@
     </div>
     <div class="footnote right">image: ai-generated (gpt-image-2.5-flare), palette reduced with pillow</div>
     <aside class="notes">Without a heading the view takes the whole slide. data-sweep lets the line run across the picture by itself when the slide is reached; R runs it again.</aside>
+  </section>
+
+  <section class="slide part" data-part="one list to check" data-subtitle="class checklist: boxes ticked from the start, on a step, or left open"></section>
+
+  <section class="slide checklist">
+    <h2>before you hand in your notebook</h2>
+    <ul class="checks">
+      <li data-checked>it runs from top to bottom without an error</li>
+      <li data-check="1">every cell has one job<span class="sub">split a cell that loads, cleans and plots</span></li>
+      <li data-check="2">the plots have axis labels and units</li>
+      <li>someone else has read it once</li>
+    </ul>
+    <aside class="notes">The first item is ticked from the start, the next two on steps 1 and 2, the last stays open. In the talk a click on an item ticks it or takes the tick away.</aside>
+  </section>
+
+  <section class="slide checklist has-punch">
+    <h2>six rules for a slide</h2>
+    <ul class="checks">
+      <li data-checked>one idea per slide</li>
+      <li data-checked>a heading names the topic</li>
+      <li data-checked>four text sizes, nothing between</li>
+      <li data-checked>yellow marks what is new</li>
+      <li data-checked>every picture names its source</li>
+      <li data-checked>no line runs over</li>
+    </ul>
+    <div class="punch">a list of rules is a checklist with every box ticked.</div>
+    <aside class="notes">From six items on the text drops to the small size. All ticked from the start: a list of rules rather than tasks.</aside>
   </section>
 
 </div>

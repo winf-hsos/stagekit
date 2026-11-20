@@ -111,9 +111,18 @@ Rahmen und Text reisen getrennt: Der Text gleitet von der Mitte des alten zur Mi
     <img src="img/quality-4.jpg" data-label="quality 4, 0.25 mb"> <!-- rechts: nachher -->
   </div>
 </section>
+<section class="slide checklist"><h2>…</h2>
+  <ul class="checks">
+    <li data-checked>läuft ohne Fehler</li>                  <!-- von Anfang an abgehakt -->
+    <li data-check="1">jede Zelle hat eine Aufgabe<span class="sub">Zusatzzeile</span></li>  <!-- abgehakt in Schritt 1 -->
+    <li>jemand anderes hat es gelesen</li>                  <!-- bleibt offen -->
+  </ul>
+</section>
 ```
 
 `compare` legt zwei Bilder derselben Ansicht übereinander; links der Linie steht das erste, rechts das zweite. Statt Bildern gehen auch zwei Zeichnungen (`<div><svg>…</svg></div>`), die stagekit gleich groß übereinanderlegt. `data-stops` gibt je Aufbauschritt die Stellung der Linie an, beginnend mit Schritt 0; ein Schritt nach vorn gleitet dorthin, ein Sprung, die Druckansicht und der Export zeigen jede Stellung als eigene Seite. Im Vortrag lässt sich die Linie jederzeit mit der Maus ziehen, ohne dass die Folie weiterblättert. `data-sweep` lässt sie beim Erreichen der Folie einmal von selbst über das ganze Bild laufen und zur Stellung zurückkehren, mit R noch einmal (`data-sweep="6"`: sechs statt vier Sekunden). Eine Beschriftung, deren Seite zu schmal wird, blendet sich aus.
+
+`checklist` setzt vor jeden Punkt ein Kästchen. `data-checked` hakt ihn von Anfang an ab, `data-check="2"` im zweiten Aufbauschritt, ohne beides bleibt er offen; ein Punkt kann zusätzlich mit `data-step` erst später erscheinen. Ein Haken, der beim Weiterblättern dazukommt, wird gezeichnet; Druckansicht und Export zeigen je Schritt den Stand. Im Vortrag hakt ein Klick auf einen Punkt ihn ab oder nimmt den Haken weg, ohne dass die Folie weiterblättert; beim nächsten Erreichen der Folie gilt wieder der Stand aus dem Markup. Ab sechs Punkten setzt stagekit den Text klein, mehr als acht meldet `review.py`.
 
 Die Zahl zählt nur, wenn die Folie mit einem Schritt nach vorn erreicht wird; ein Sprung, ein frisches Laden, die Druckansicht und der Export zeigen den Endwert, ebenso bei reduzierter Bewegung. Trennzeichen und Einheit bleiben beim Zählen stehen (`1,250 kb`).
 

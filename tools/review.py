@@ -53,12 +53,13 @@ FRAME_LAYOUTS = {"title", "agenda", "part"}   # slides stagekit generates; no te
 WORDS_WARN, WORDS_HIGH = 40, 60                # words on a content slide (rule: one statement per slide)
 SAME_LAYOUT_RUN = 4                            # this many content slides of one layout in a row
 NEW_TERMS_WARN = 4                             # new terms on a single slide
+CHECKS_MAX = 8                                 # items on a checklist slide
 WORDS_PER_MINUTE = 120                         # speaking pace for the notes
 LAYOUT_NAMES = {"figure": "Zeichnung", "lines": "Zeilen", "columns": "Spalten", "code": "Code", "photo": "Foto",
                 "embed": "Demo", "statement": "Aussage", "poll": "Abfrage", "other": "sonstiges",
                 "number": "große Zahl", "quote": "Zitat", "timeline": "Zeitleiste", "fullbleed": "Vollbildfoto",
-                "compare": "Vorher/Nachher"}
-SIGNATURE = {"number", "quote", "timeline", "fullbleed", "compare"}   # signature layouts: an accent, never twice in a row
+                "compare": "Vorher/Nachher", "checklist": "Checkliste"}
+SIGNATURE = {"number", "quote", "timeline", "fullbleed", "compare", "checklist"}   # signature layouts: an accent, never twice in a row
 
 
 def read_deck(deck):
@@ -114,6 +115,8 @@ def warnings(data, minutes):
             out.append(f"{tag}: {what} ohne Quelle (Fußnote bzw. .quote-by)")
         if s["layout"] == "compare" and s.get("labels", 2) < 2:
             out.append(f"{tag}: Vorher/Nachher ohne Beschriftung beider Seiten (data-label)")
+        if s["layout"] == "checklist" and s.get("checks", 0) > CHECKS_MAX:
+            out.append(f"{tag}: {s['checks']} Punkte in der Checkliste, höchstens {CHECKS_MAX} passen lesbar auf eine Folie")
     # the same layout again and again
     run = []
     for s in content + [None]:

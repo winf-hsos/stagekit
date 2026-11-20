@@ -186,6 +186,34 @@ body.print .slide .code.figcode { display: none; }
   background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%); pointer-events: none; }
 .slide.compare:not(:has(h2)) .footnote { color: var(--gray-light); }
 
+/* a checklist: one box per line, ticked in green or left open. The tick is an
+ * SVG with its own data-step (stagekit.js), drawn in when it appears one step
+ * forward or on a click in the talk. */
+.slide.checklist ul.checks { position: absolute; left: var(--margin); right: var(--margin); top: 0; bottom: 0; margin: 0; padding: 0;
+  list-style: none; display: flex; flex-direction: column; justify-content: center; gap: 0.55em; }
+.slide.has-punch.checklist ul.checks { top: calc(var(--margin) * 1.6); bottom: calc(var(--margin) * 1.6); }
+.slide.checklist ul.checks > li { display: flex; align-items: flex-start; gap: 0.7em; font-size: var(--normal); line-height: 1.25;
+  color: var(--white); cursor: pointer; user-select: none; }
+.slide.checklist ul.checks.dense { gap: 0.45em; }
+.slide.checklist ul.checks.dense > li { font-size: var(--small); }
+.slide.checklist ul.checks .sub { display: block; font-size: var(--small); color: var(--gray); margin-top: 0.15em; }
+.slide.checklist ul.checks.dense .sub { font-size: var(--tiny); }
+.slide.checklist .check-box { flex: none; position: relative; width: 1em; height: 1em; margin-top: 0.12em;
+  border: 4px solid var(--gray); border-radius: 0.18em; }
+.slide.checklist .check-tick { position: absolute; left: -8%; top: -14%; width: 116%; height: 116%; overflow: visible; }
+.slide.checklist .check-tick path { fill: none; stroke: var(--green); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 24; stroke-dashoffset: 0; }
+.slide.checklist .check-tick.draw path { animation: check-draw 0.4s ease-out; }
+@keyframes check-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+/* an open item has a tick only for the click; a click overrides the steps */
+.slide.checklist li.open .check-tick { visibility: hidden; }
+.slide.checklist li.ticked .check-tick { visibility: visible; display: block; }
+.slide.checklist li.unticked .check-tick { visibility: hidden; }
+/* the box turns green with its tick */
+.slide.checklist li:not(.open):not(.unticked):has(.check-tick:not([data-step])) .check-box,
+.slide.checklist li:not(.unticked):has(.check-tick.shown) .check-box,
+.slide.checklist li.ticked .check-box { border-color: var(--green); }
+
 /* --- the location bar: which part are we in -------------------------------- */
 .location {
   position: absolute; left: var(--margin); right: var(--margin); bottom: calc(var(--margin) * 0.3);
