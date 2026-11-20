@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.13.0 (2026-11-20)
+
 - **Signature-Layout `checklist`**: eine Liste mit Kästchen, für Regeln, Prüfpunkte oder Aufgaben. `data-checked` hakt einen Punkt von Anfang an ab, `data-check="N"` im Aufbauschritt N, ohne beides bleibt er offen. Ein Haken, der beim Weiterblättern dazukommt, wird gezeichnet; im Vortrag schaltet ein Klick auf einen Punkt den Haken um, ohne weiterzublättern. Druckansicht, PDF und Export zeigen je Schritt den Stand, `review.py` kennt das Layout und warnt ab neun Punkten. Beispiel im Teil „one list to check“ von `examples/layouts/layouts.html`. Bestehende Decks ändern sich nicht; `checklist` braucht einmal `tools/sync.py`.
 
 ## 0.12.0 (2026-11-19)
