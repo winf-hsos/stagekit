@@ -6,6 +6,10 @@
    spaeter und gewinnt deshalb; so setzt der Export jede Folie mit derselben
    Schrift, auch wenn acht Chrome-Instanzen gleichzeitig laden. */
 @font-face { font-family: "Roboto Mono"; font-style: normal; font-weight: 400; src: url("fonts/RobotoMono-Regular.woff2") format("woff2"); }
+/* Roboto for themes that set it as the text font (themes/hsos.toml); a theme
+ * with another font never loads these files. */
+@font-face { font-family: "Roboto"; font-style: normal; font-weight: 400; src: url("fonts/Roboto-Regular.woff") format("woff"); }
+@font-face { font-family: "Roboto"; font-style: normal; font-weight: 700; src: url("fonts/Roboto-Bold.woff") format("woff"); }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--white); font-family: var(--font); overflow: hidden; }
 a { color: var(--blue); text-decoration: none; }
@@ -137,9 +141,10 @@ body.print .slide .code.figcode { display: none; }
 .slide.fullbleed img.photo { left: 0; width: 100%; height: 100%; object-fit: cover; }
 .slide.fullbleed::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 55%;
   background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.6) 55%, rgba(0,0,0,0) 100%); pointer-events: none; }
-.slide.fullbleed .photo-text { top: auto; bottom: calc(var(--margin) * 1.05); width: 70%; display: block; z-index: 1; }
+.slide.fullbleed .photo-text { top: auto; bottom: calc(var(--margin) * 1.05); width: 70%; display: block; z-index: 1; color: var(--band-text, var(--white)); }
 .slide.fullbleed h2, .slide.fullbleed .footnote, .slide.fullbleed .location { z-index: 1; }
-.slide.fullbleed .footnote { color: var(--gray-light); }
+/* the band is dark in every theme; a light theme sets --band-text and --band-muted (theme.py) */
+.slide.fullbleed .footnote { color: var(--band-muted, var(--gray-light)); }
 /* a timeline: equal columns, the dots on one line, date above, event below */
 .slide.timeline ol.events { position: absolute; left: var(--margin); right: var(--margin); top: 40%; margin: 0; padding: 0;
   list-style: none; display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); }
@@ -184,7 +189,7 @@ body.print .slide .code.figcode { display: none; }
 .slide.compare h2, .slide.compare .footnote, .slide.compare .location { z-index: 1; }
 .slide.compare:not(:has(h2))::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%;
   background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%); pointer-events: none; }
-.slide.compare:not(:has(h2)) .footnote { color: var(--gray-light); }
+.slide.compare:not(:has(h2)) .footnote { color: var(--band-muted, var(--gray-light)); }
 
 /* a checklist: one box per line, ticked in green or left open. The tick is an
  * SVG with its own data-step (stagekit.js), drawn in when it appears one step
@@ -213,6 +218,18 @@ body.print .slide .code.figcode { display: none; }
 .slide.checklist li:not(.open):not(.unticked):has(.check-tick:not([data-step])) .check-box,
 .slide.checklist li:not(.unticked):has(.check-tick.shown) .check-box,
 .slide.checklist li.ticked .check-box { border-color: var(--green); }
+
+/* --- the logo: top right on every slide, if the theme has one ------------
+ * theme.py writes --logo (the picture as a data URI) and --logo-w from
+ * [stagekit] logo in the style.toml. Slides whose picture fills the whole
+ * slide go without it. */
+.slide::before { content: none; }
+.slide:not(.fullbleed):not(.compare:not(:has(h2)))::before { content: var(--logo-on, none); position: absolute; z-index: 2;
+  right: var(--margin); top: calc(var(--margin) * 0.55 - (var(--logo-h, 56px) - var(--small) * 1.2) / 2);
+  width: var(--logo-w, 0px); height: var(--logo-h, 56px); background: var(--logo) right center / contain no-repeat; pointer-events: none; }
+/* the copy and show buttons of a figure's code move left of the logo; theme.py
+ * sets --logo-gap to the room they need there */
+.slide .code.figcode { right: calc(var(--margin) + 80px + var(--logo-w, 0px) + var(--logo-gap, 0px)); }
 
 /* --- the location bar: which part are we in -------------------------------- */
 .location {

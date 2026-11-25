@@ -15,6 +15,12 @@ werden auf die 1920x1080-Leinwand umgerechnet (1 pt = 2 px). Optional:
                             # bei Englisch, nein bei Deutsch (Substantive gross)
     margin = 120            # Rand in px
     parts = { "switches" = "009EE3", ... }   # Farbe je Teil fuer die Ortsangabe
+    preset = "hsos"         # Grundlage aus themes/<name>.toml; was diese Datei
+                            # selbst angibt, gilt darueber
+    logo = "logo.svg"       # Logo oben rechts auf jeder Folie (SVG oder PNG,
+                            # relativ zu dieser Datei); logo = false schaltet
+                            # das Logo einer Vorlage ab
+    logo_height = 56        # Hoehe des Logos in px
 
 [colors.light] mit denselben Schluesseln liefert die Palette fuer hellen Grund;
 sie wird als :root[data-theme="light"] in die theme.css geschrieben.
@@ -26,9 +32,13 @@ ohne dass ein Deck Hex-Werte kennt; draw.js liest sie mit d.color("families-repr
 Sie gelten unveraendert auch auf hellem Grund, sofern [colors.light.<tabelle>]
 nichts anderes sagt.
 """
+import base64
 import pathlib
+import re
 import sys
 import tomllib
+
+THEMES = pathlib.Path(__file__).resolve().parent.parent / "themes"
 
 KEYS = [("background", "bg"), ("white", "white"), ("gray_light", "gray-light"), ("gray", "gray"),
         ("gray_dark", "gray-dark"), ("blue", "blue"), ("green", "green"), ("yellow", "yellow"), ("red", "red")]
@@ -36,7 +46,58 @@ DEFAULTS = {"background": "000000", "white": "FFFFFF", "gray_light": "B6BEC6", "
             "gray_dark": "4A5259", "blue": "009EE3", "green": "4ADE80", "yellow": "FFD23F", "red": "FF4D6D"}
 
 
-def render(style):
+def merge(base, top):
+    """top over base, table by table."""
+    out = dict(base)
+    for k, v in top.items():
+        out[k] = merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
+    return out
+
+
+def with_preset(style, base):
+    """The style on top of its preset; a relative logo path keeps pointing where it was written."""
+    sk = style.get("stagekit", {})
+    if isinstance(sk.get("logo"), str) and base:
+        style = merge(style, {"stagekit": {"logo": str((pathlib.Path(base) / sk["logo"]).resolve())}})
+    name = sk.get("preset")
+    if not name:
+        return style
+    src = THEMES / f"{name}.toml"
+    if not src.is_file():
+        known = ", ".join(sorted(p.stem for p in THEMES.glob("*.toml"))) or "keine"
+        raise SystemExit(f"Vorlage '{name}' gibt es nicht (vorhanden: {known}).")
+    preset = tomllib.loads(src.read_text(encoding="utf-8"))
+    plogo = preset.get("stagekit", {}).get("logo")
+    if isinstance(plogo, str):
+        preset["stagekit"]["logo"] = str((THEMES / plogo).resolve())
+    return merge(preset, style)
+
+
+def logo_lines(sk):
+    """--logo as a data URI, so the theme works wherever the deck and the framework lie."""
+    path = sk.get("logo")
+    if not path:
+        return []
+    p = pathlib.Path(path)
+    data = p.read_bytes()
+    height = int(sk.get("logo_height", 56))
+    if p.suffix.lower() == ".svg":
+        vb = re.search(rb'viewBox="\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)', data)
+        ratio = float(vb[1]) / float(vb[2]) if vb else 4.0
+        mime = "image/svg+xml"
+    else:
+        from PIL import Image
+        with Image.open(p) as im:
+            ratio = im.width / im.height
+        mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
+    uri = f"data:{mime};base64," + base64.b64encode(data).decode("ascii")
+    return ['  --logo-on: "";', f'  --logo: url("{uri}");', f"  --logo-h: {height}px;",
+            f"  --logo-w: {round(height * ratio)}px;", "  --logo-gap: 84px;"]
+
+
+def render(style, base=None):
+    """theme.css for a style.toml; base is the folder of that file (for a relative logo path)."""
+    style = with_preset(style, base)
     colors = {**DEFAULTS, **style.get("colors", {})}
     fonts = {"text": "Arial", "code": "Roboto Mono", **style.get("fonts", {})}
     sizes = {"large": 40, "normal": 24, "small": 16, "tiny": 10, **style.get("sizes", {})}
@@ -55,6 +116,12 @@ def render(style):
     # seine Grossbuchstaben, sofern die toml nichts anderes sagt.
     lowercase = sk.get("lowercase", sk.get("language", "en") != "de")
     lines.append(f"  --lowercase: {'lowercase' if lowercase else 'none'};")
+    # a light slide still has dark bands (fullbleed, a compare without heading):
+    # their text stays white
+    bg = colors["background"]
+    if sum(int(bg[i:i + 2], 16) for i in (0, 2, 4)) > 3 * 128:
+        lines += ["  --band-text: #ffffff;", "  --band-muted: #b6bec6;"]
+    lines += logo_lines(sk)
     # benannte Zusatzfarben: jede Untertabelle ausser "light"
     extras = {name: tab for name, tab in colors.items() if isinstance(tab, dict) and name != "light"}
     for name, tab in extras.items():
@@ -89,7 +156,7 @@ def main(argv):
     src, dst = pathlib.Path(argv[0]), pathlib.Path(argv[1])
     style = tomllib.loads(src.read_text(encoding="utf-8"))
     dst.parent.mkdir(parents=True, exist_ok=True)
-    dst.write_text(render(style), encoding="utf-8")
+    dst.write_text(render(style, src.parent), encoding="utf-8")
     print(f"theme: {dst}")
     return 0
 

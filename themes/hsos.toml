@@ -1,0 +1,32 @@
+# Hochschule Osnabrück: light slides, Roboto, the logo top right.
+#
+# A project uses it with two lines in its style.toml:
+#
+#   [stagekit]
+#   preset = "hsos"
+#
+# Everything the project's style.toml sets itself wins over this file, so a
+# project can change single colours or switch the logo off (logo = false).
+# The colours keep their roles from the dark default (docs/design-rules.md):
+# "white" is the text colour, "background" the slide; on a light slide both
+# turn round, and the accents are darker so they stay readable on white.
+
+[colors]
+background = "FFFFFF"
+white      = "333333"   # text: the grey of the lettering in the logo
+gray_light = "5C6670"   # second rank
+gray       = "7D868F"   # headings, side text, footnotes
+gray_dark  = "C5CBD1"   # dimmed
+blue       = "009EE3"   # the blue of the logo
+green      = "2E9E5B"
+yellow     = "D99400"   # "current", remarks, the punchline: amber, yellow fades on white
+red        = "D7263D"
+
+[fonts]
+text = "Roboto"
+code = "Roboto Mono"
+
+[stagekit]
+lowercase = false
+logo = "hsos-logo.svg"
+logo_height = 56

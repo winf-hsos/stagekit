@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- **Design-Vorlagen und das Design der Hochschule Osnabrück.** Eine `style.toml` kann mit `[stagekit] preset = "hsos"` auf einer Vorlage aus `themes/` aufbauen und ändert darüber nur, was abweicht. Die erste Vorlage `themes/hsos.toml` hat einen hellen Grund, Roboto als Schrift und das Hochschullogo oben rechts auf jeder Folie außer Vollbildfoto und `compare` ohne Überschrift. Ein eigenes Logo geht mit `logo = "logo.svg"` (`logo = false` schaltet es ab); `theme.py` schreibt es als Daten-URI in die `theme.css`. Roboto liegt jetzt im Framework (`fonts/Roboto-Regular.woff`, `fonts/Roboto-Bold.woff`), `new_deck.py` kennt `--theme hsos`, und die Prüfung des Exports auf ungestylte Frames meldet ein Vollbildfoto nicht mehr fälschlich. Beispiel in `examples/hsos/`. Bestehende Decks ändern sich nicht; wer die Vorlage nutzen will, holt mit `tools/sync.py` die neuen Schriftdateien und erzeugt die `theme.css` neu.
+
 ## 0.13.0 (2026-11-20)
 
 - **Signature-Layout `checklist`**: eine Liste mit Kästchen, für Regeln, Prüfpunkte oder Aufgaben. `data-checked` hakt einen Punkt von Anfang an ab, `data-check="N"` im Aufbauschritt N, ohne beides bleibt er offen. Ein Haken, der beim Weiterblättern dazukommt, wird gezeichnet; im Vortrag schaltet ein Klick auf einen Punkt den Haken um, ohne weiterzublättern. Druckansicht, PDF und Export zeigen je Schritt den Stand, `review.py` kennt das Layout und warnt ab neun Punkten. Beispiel im Teil „one list to check“ von `examples/layouts/layouts.html`. Bestehende Decks ändern sich nicht; `checklist` braucht einmal `tools/sync.py`.

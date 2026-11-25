@@ -267,4 +267,9 @@ tiny = 10
 language = "en"    # Sprache aller Folien, auch der Beispiele; einmal festgelegt
 lowercase = true   # optional; ohne Angabe: ja bei "en", nein bei "de"
 margin = 120
+preset = "hsos"    # optional: Grundlage aus themes/<name>.toml, diese Datei gilt darüber
+logo = "logo.svg"  # optional: Logo oben rechts (SVG oder PNG, relativ zur toml); false schaltet es ab
+logo_height = 56   # optional: Höhe des Logos in px
 ```
+
+**Vorlagen.** `themes/` enthält fertige Designs als `style.toml`, bisher `hsos.toml`: das Design der Hochschule Osnabrück mit hellem Grund, Roboto und dem Hochschullogo oben rechts. Ein Projekt übernimmt eine Vorlage mit `preset = "hsos"` unter `[stagekit]` und ändert darüber nur, was abweicht, etwa die Sprache oder eine Farbe; `logo = false` nimmt das Logo weg. Ein neues Projekt ohne `style.toml` beginnt mit `python <stagekit>/tools/new_deck.py slides/<name> --theme hsos`. Die Farben behalten auf hellem Grund ihre Rollen: `white` ist die Textfarbe, `background` der Grund, die Akzente sind dunkler, damit sie auf Weiß lesbar bleiben. Dunkle Bänder (Vollbildfoto, `compare` ohne Überschrift) behalten weiße Schrift. Das Logo erscheint auf jeder Folie außer `fullbleed` und `compare` ohne Überschrift; die Knöpfe einer `figcode` rücken links daneben. `theme.py` schreibt das Logo als Daten-URI in die `theme.css`, sie bleibt also eine Datei und funktioniert, wo immer Deck und Framework liegen.

@@ -40,7 +40,7 @@ def prepare_runtime(folder):
             raise ValueError(f"Incomplete framework in {folder}. Check the project copy with tools/sync.py.")
 
 
-def create_deck(folder, title):
+def create_deck(folder, title, theme=None):
     folder = folder.resolve()
     ancestors = (folder, *folder.parents)
     style = next((p / "style.toml" for p in ancestors if (p / "style.toml").is_file()), None)
@@ -50,7 +50,10 @@ def create_deck(folder, title):
     if folder.is_relative_to(runtime) or folder == REPO or runtime.resolve() == REPO:
         raise ValueError("Choose a deck directory outside the framework itself.")
 
-    default_style = '[stagekit]\nlanguage = "en"\n'
+    default_style = '[stagekit]\nlanguage = "en"\n' + (f'preset = "{theme}"\n' if theme else "")
+    if theme and style:
+        raise ValueError(f'{style} already sets the look of this project; add preset = "{theme}" '
+                         "under [stagekit] there instead of --theme.")
     config = tomllib.loads(style.read_text(encoding="utf-8-sig") if style else default_style)
     language = config.get("stagekit", {}).get("language", "en")
     title = title or folder.name.replace("-", " ")
@@ -60,7 +63,7 @@ def create_deck(folder, title):
     notes = re.findall(r'<aside class="notes">(.*?)</aside>', template, flags=re.S)
     files = {
         "deck.js": (dedent(inline).strip() + "\n").encode("utf-8"),
-        "theme.css": render(config).encode("utf-8"),
+        "theme.css": render(config, style.parent if style else folder).encode("utf-8"),
         "skript.md": ("\n\n".join([f"# {title}", *notes]) + "\n").encode("utf-8"),
     }
     if not style:
@@ -103,9 +106,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("folder", type=Path, help="destination deck directory")
     parser.add_argument("--title", help="deck title (defaults to the directory name with spaces)")
+    parser.add_argument("--theme", help="a look from themes/ for a project without a style.toml, e.g. hsos")
     args = parser.parse_args()
     try:
-        deck = create_deck(args.folder, args.title)
+        deck = create_deck(args.folder, args.title, args.theme)
     except (ValueError, OSError) as error:
         parser.exit(1, f"new_deck: {error}\n")
     print(f"Deck: {deck}\nLauncher: {deck.parent / 'start-presentation.cmd'}")

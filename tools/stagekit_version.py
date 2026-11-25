@@ -13,7 +13,8 @@ REPO = pathlib.Path(__file__).resolve().parents[1]
 
 # what a deck loads at runtime; tools/sync.py copies exactly these
 RUNTIME = ["stagekit.css", "stagekit.js", "draw.js", "anim.js",
-           "fonts/RobotoMono-Regular.woff2", "fonts/NOTICE"]
+           "fonts/RobotoMono-Regular.woff2", "fonts/Roboto-Regular.woff", "fonts/Roboto-Bold.woff",
+           "fonts/NOTICE"]
 
 VERSION_RE = re.compile(r'const VERSION = "([^"]+)";')
 

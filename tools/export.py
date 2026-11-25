@@ -15,7 +15,7 @@ Schriften und Einbettungen so laden wie im Browser.
            die Druckansicht nicht traegt (eingebettete Demonstratoren im iframe
            drucken nicht mit), oder wenn das PDF exakt die Aufnahme zeigen soll.
   --png    ein PNG je Frame (jeder Aufbauschritt einzeln, ?slide=N) nach DIR/slides/.
-           Schwarze und ungestylte Frames (Pixel (5,5) nicht --bg der theme.css)
+           Schwarze und ungestylte Frames (Pixel (5,5) weiss statt --bg der theme.css)
            werden bis zu dreimal nachgeholt und gezaehlt; was danach noch
            fehlerhaft ist, meldet eine WARNUNG.
   --sheet  Kontaktbogen aus den PNGs, 6 Spalten, nummeriert, nach DIR/sheet.png
@@ -589,8 +589,11 @@ def export_deck(a, deck, out, url):
         # schwarz: aufgenommen vor dem ersten Zeichnen; jede Folie zeigt
         #   mindestens die Ortsangabe, also nie reines Schwarz.
         # ungestylt: theme.css oder die ganze Seite nicht geladen, eine weisse
-        #   Rohseite oder Chromes Fehlerseite. Erkannt am Pixel (5,5), das den
-        #   Seitengrund --bg aus der theme.css zeigen muss.
+        #   Rohseite oder Chromes Fehlerseite. Erkannt am Pixel (5,5): weiss,
+        #   obwohl der Seitengrund --bg aus der theme.css etwas anderes ist. Ein
+        #   Foto ueber die ganze Folie (fullbleed) zeigt dort ein Bildpixel und
+        #   gilt deshalb nicht als ungestylt; auf hellem Grund laesst sich eine
+        #   Rohseite so nicht erkennen.
         from PIL import Image
         bg = theme_bg(deck)
         def fehler(f):
@@ -600,7 +603,8 @@ def export_deck(a, deck, out, url):
                 return "fehlt"
             if im.convert("L").getextrema()[1] < 40:
                 return "schwarz"
-            if sum(abs(a - b) for a, b in zip(im.getpixel((5, 5)), bg)) > 30:
+            px = im.getpixel((5, 5))
+            if sum(abs(a - b) for a, b in zip(px, bg)) > 30 and min(px) >= 235:
                 return "ungestylt"
             return None
         nachgeholt = set()
@@ -617,7 +621,7 @@ def export_deck(a, deck, out, url):
         rest = {f: e for f in numbers if (e := fehler(f))}
         if rest:
             print(f"  WARNUNG: frames weiterhin fehlerhaft: {rest} "
-                  f"(pixel (5,5) soll --bg {bg} zeigen; randlos gefuellte folie?)")
+                  f"(pixel (5,5) weiss statt --bg {bg})")
             if a.frames:
                 raise SystemExit(f"Incomplete preview in {out}")
         print(f"png: {sl} ({len(numbers)} frames, {JOBS} gleichzeitig, {len(nachgeholt)} nachgeholt)")

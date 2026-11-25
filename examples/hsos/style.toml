@@ -1,0 +1,6 @@
+# The Hochschule Osnabrück look: light slides, Roboto, the logo top right.
+# theme.css is generated from this file: python ../../tools/theme.py style.toml theme.css
+
+[stagekit]
+preset = "hsos"
+language = "en"

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>the hochschule osnabrück look</title>
+  <!-- Demo of themes/hsos.toml: the same building blocks as every deck, on light
+       slides with Roboto and the logo top right. theme.css comes from style.toml
+       next to this file (python ../../tools/theme.py style.toml theme.css). -->
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="../../stagekit.css">
+</head>
+<body>
+<div class="deck" data-title="Data Compression" data-subtitle="Hands-on Computer Science · Winter 2026"
+     data-parts='["Text and code", "Drawings", "Signature layouts"]'>
+
+  <section class="slide title"></section>
+  <section class="slide agenda"></section>
+
+  <section class="slide part" data-part="Text and code" data-subtitle="the basic building blocks"></section>
+
+  <section class="slide">
+    <h2>Why compress at all?</h2>
+    <div class="content">
+      <div class="header">A photo from a phone</div>
+      <div class="statement">Twelve million pixels, three bytes each: 36 MB before anything happens.</div>
+      <div class="lines" data-step="1">JPEG brings it down to about 3 MB.</div>
+      <div class="remark" data-step="2">Nobody sees the difference.</div>
+    </div>
+    <div class="footnote">Source: <a href="https://github.com/winf-hsos/stagekit">github.com/winf-hsos/stagekit</a></div>
+    <aside class="notes">A statement slide with two build steps.</aside>
+  </section>
+
+  <section class="slide has-punch">
+    <h2>Counting characters in Python</h2>
+    <div class="content">
+      <div class="code">from collections import <span class="hl">Counter</span>
+counts = Counter("mississippi")
+print(counts.most_common(2))</div>
+      <div class="lines mono" data-step="1">[('i', 4), ('s', 4)]</div>
+    </div>
+    <div class="punch">Frequent symbols deserve short codes.</div>
+    <aside class="notes">Code with a copy button and a punchline.</aside>
+  </section>
+
+  <section class="slide part" data-part="Drawings" data-subtitle="draw.js takes its colours from the theme"></section>
+
+  <section class="slide">
+    <h2>A lossless round trip</h2>
+    <div class="figure" id="fig-trip"></div>
+    <div class="code figcode">data == decompress(compress(data))</div>
+    <aside class="notes">A drawing with verdicts, and the code behind it.</aside>
+  </section>
+
+  <section class="slide">
+    <h2>Compression ratio by file type</h2>
+    <div class="figure" id="fig-ratio"></div>
+    <aside class="notes">d.chart with one build step: sorted, then highlighted.</aside>
+  </section>
+
+  <section class="slide part" data-part="Signature layouts" data-subtitle="the accents of a deck"></section>
+
+  <section class="slide number">
+    <div class="number-value">91 %</div>
+    <div class="number-text">of a log file disappear when it is zipped.</div>
+    <div class="footnote">Source: measured with gzip on a web server log</div>
+    <aside class="notes">A number at display size.</aside>
+  </section>
+
+  <section class="slide checklist">
+    <h2>Before you hand in your notebook</h2>
+    <ul class="checks">
+      <li data-checked>It runs from top to bottom without an error</li>
+      <li data-check="1">Every cell has one job<span class="sub">Split a cell that loads, cleans and plots</span></li>
+      <li>Someone else has read it once</li>
+    </ul>
+    <aside class="notes">A checklist on a light slide.</aside>
+  </section>
+
+  <section class="slide compare">
+    <h2>JPEG at quality 4: where the bytes went</h2>
+    <div class="compare-view" data-stops="50 22">
+      <img src="../animations/img/motherboard.jpg" data-label="original, 2.1 MB">
+      <img src="../layouts/img/motherboard-q4.jpg" data-label="quality 4, 0.25 MB">
+    </div>
+    <div class="footnote">Image: AI-generated (gpt-image-2.5-flare), compressed with Pillow</div>
+    <aside class="notes">Before and after.</aside>
+  </section>
+
+  <section class="slide fullbleed">
+    <img class="photo" src="../animations/img/motherboard.jpg">
+    <div class="photo-text">Where on this board does the data wait?</div>
+    <div class="footnote right">Image: AI-generated (gpt-image-2.5-flare)</div>
+    <aside class="notes">A photo over the whole slide: no logo, the band stays dark.</aside>
+  </section>
+
+</div>
+<script src="../../draw.js"></script>
+<script src="../../anim.js"></script>
+<script>
+  const d = window.draw;
+  document.getElementById("fig-trip").innerHTML = d.svg(1680, 560,
+    d.box(80, 220, 360, 120, "data"), d.arrow(440, 280, 620, 280),
+    d.box(620, 220, 440, 120, "compress()", { mono: true }), d.arrow(1060, 280, 1240, 280),
+    d.verdict(1240, 220, 360, 120, "same data", true));
+  const ratio = d.chart({
+    type: "hbar", width: 1680, height: 700, unit: " %",
+    labels: ["csv table", "jpeg photo", "log file", "mp4 video", "source code"],
+    values: [82, 2, 91, 1, 74],
+    states: [{ values: "all" }, { sort: "desc", highlight: ["jpeg photo", "mp4 video"], note: { at: "jpeg photo", text: "already compressed" } }],
+  });
+  document.getElementById("fig-ratio").innerHTML = d.svg(1680, 700, ratio.svg());
+  ratio.steps("fig-ratio");
+</script>
+<script src="../../stagekit.js"></script>
+</body>
+</html>

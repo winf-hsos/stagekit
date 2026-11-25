@@ -27,8 +27,9 @@ What it adds to a plain HTML page:
 | `draw.js` | SVG helpers: `svg`, `box`, `label`, `line`, `arrow`, `wire`, `dot`, `gate`, `lamp`, `toggle`, `truthTable`, `verdict`, `formula`, `highlight`, `icon`, … |
 | `anim.js` | animations of drawings in segments: timeline, keyframes as build-up steps, `draw.g()` to name parts, `draw.image()` for pictures |
 | `themes/default.css` | the design tokens; template for a project's `theme.css` |
+| `themes/hsos.toml` | a ready look (Hochschule Osnabrück: light slides, Roboto, logo top right); a project takes it with `preset = "hsos"` in its `style.toml` |
 | `template/deck.html` | starting point for a new deck |
-| `tools/theme.py` | writes `theme.css` from a `style.toml`; `[colors.light]` becomes `:root[data-theme="light"]`, switched on by `?theme=light` |
+| `tools/theme.py` | writes `theme.css` from a `style.toml`; `preset` builds on a look from `themes/`, `logo` puts a picture top right on every slide, `[colors.light]` becomes `:root[data-theme="light"]`, switched on by `?theme=light` |
 | `tools/sync.py` | brings a project's copy of the framework up to date and sets the cache buster in its decks; `--check` only reports |
 | `tools/export.py` | PDF, PNGs, contact sheet (one image per frame, every build-up step separately), step check (`--steps`: elements that move between steps), font check (`--fonts`: text sizes outside the four steps), text overflow check (`--overflow`), warns when a deck loads an outdated copy |
 | `tools/start_script.py` | writes `start-presentation.cmd` next to a deck: double-click starts a local server and opens the deck, on a port derived from the deck's name |
@@ -58,7 +59,7 @@ python C:/code/stagekit/tools/new_deck.py slides/selection-bias
 
 This creates `selection-bias.html`, `deck.js`, `theme.css`, speaker notes in the HTML and `skript.md`, and a Windows launcher. Use `--title "Selection bias"` to supply the display title and derive the HTML filename from it. Existing output files are protected.
 
-The tool uses the nearest enclosing `style.toml` and project copy of `stagekit/`. If the runtime is missing, it installs one beside the style file. Without an inherited style it starts a deck-local `style.toml` with English defaults. Use `tools/sync.py` when you want to update a shared runtime.
+The tool uses the nearest enclosing `style.toml` and project copy of `stagekit/`. If the runtime is missing, it installs one beside the style file. Without an inherited style it starts a deck-local `style.toml` with English defaults; `--theme hsos` starts it on a look from `themes/` instead. Use `tools/sync.py` when you want to update a shared runtime.
 
 1. Replace the template's sample content and notes. Set the subtitle and parts in the HTML, and edit drawings in `deck.js`.
 2. Double-click `start-presentation.cmd`. Press **N** in the deck for the notes window.

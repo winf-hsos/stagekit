@@ -28,7 +28,7 @@ Briefing, vorhandenes Deck und Projektvorgaben (etwa Sprache und Design in der `
 3. **Anlass und Dauer** (Faustregel: deutlich unter zwei Minuten je Inhaltsfolie). Dabei klären, ob der Satz einmalig gehalten wird oder wiederkehrt — davon hängt ab, ob ein Datum auf die Titelfolie gehört.
 4. **Sprache der Folien** (die Folien in der Sprache des Publikums; Skript und Sprechernotizen dürfen in einer anderen Sprache stehen). Die Antwort wird **einmal** in der `style.toml` des Projekts festgehalten (`[stagekit] language = "en"`), und danach ist **alles auf den Folien** in dieser Sprache: Überschriften, Beschriftungen, Zeichnungen, und auch die Beispiele, Beispielsätze und Beispieldaten. Ein deutscher Beispielsatz auf einer englischen Folie („die sonne scheint") ist ein Fehler, kein Lokalkolorit (Regel vom 14.09.2026). Bei Deutsch gilt die Kleinschreibung nicht: `theme.py` setzt `--lowercase` dann auf `none`, Substantive bleiben groß.
 5. **Eröffnung:** jeder Satz beginnt mit einem Symbolfoto samt Geschichte. Das Bild wird erzeugt, nicht gesucht (`tools/image.py`); frag nach dem Motiv, wenn der Nutzer keines nennt.
-6. **Design:** gilt die `style.toml` des Projekts, oder braucht dieser Satz eine eigene?
+6. **Design:** gilt die `style.toml` des Projekts, oder braucht dieser Satz eine eigene? Für Vorträge im Namen der Hochschule gibt es die Vorlage `hsos` (heller Grund, Roboto, Logo oben rechts): `preset = "hsos"` in der `style.toml`, bei einem neuen Projekt `new_deck.py … --theme hsos`.
 7. **Interaktive Elemente:** gibt es Demonstratoren oder Live-Daten, die auf eine Folie gehören? Das ist die Stärke von stagekit; frag danach.
 
 ### 2. Direkt bauen: das Deck ist die Diskussionsgrundlage
