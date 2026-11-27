@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+## 0.15.0 (2026-11-27)
+
 - **Sprachname am Codeblock.** Codeblöcke mit `data-language` zeigen den Sprachnamen auch außerhalb von `trace` und im Codefenster einer Abbildung; mit `data-hide-language` lässt er sich je Block ausblenden, während die Syntaxfarben bleiben.
 
 - **Syntaxfarben für Python und R.** Quelltext mit `data-language` wird offline eingefärbt, und das Layout `trace` setzt die Anweisungen als kopierbaren Codeblock ohne Zeilennummern. Im Galeriebeispiel leuchtet die RGB-LED während der Wartezeit weiter rot, während der Zeitzeiger eine Sekunde lang läuft; die PDF-Frames zeigen jeweils den Endzustand. Bestehende Decks übernehmen die neue Laufzeit mit `tools/sync.py`.
