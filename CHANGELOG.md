@@ -13,11 +13,11 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
-- Codeblöcke mit `data-language` zeigen den Sprachnamen auch außerhalb von `trace` und im Codefenster einer Abbildung. Mit `data-hide-language` lässt er sich pro Block ausblenden. Die Syntaxhervorhebung bleibt aktiv.
+- **Sprachname am Codeblock.** Codeblöcke mit `data-language` zeigen den Sprachnamen auch außerhalb von `trace` und im Codefenster einer Abbildung; mit `data-hide-language` lässt er sich je Block ausblenden, während die Syntaxfarben bleiben.
 
-- Quelltext in Python und R erhält mit `data-language` Syntaxfarben. Das Layout `trace` stellt die Anweisungen als kopierbaren Codeblock ohne Zeilennummern dar. Im Galeriebeispiel leuchtet die RGB-LED während der Wartezeit weiter rot; der Zeitzeiger bewegt sich eine Sekunde lang. Die PDF-Frames zeigen die jeweiligen Endzustände. Bestehende Decks können die neue Laufzeit mit `tools/sync.py` übernehmen.
+- **Syntaxfarben für Python und R.** Quelltext mit `data-language` wird offline eingefärbt, und das Layout `trace` setzt die Anweisungen als kopierbaren Codeblock ohne Zeilennummern. Im Galeriebeispiel leuchtet die RGB-LED während der Wartezeit weiter rot, während der Zeitzeiger eine Sekunde lang läuft; die PDF-Frames zeigen jeweils den Endzustand. Bestehende Decks übernehmen die neue Laufzeit mit `tools/sync.py`.
 
-- Vier Signature-Layouts für Lehrbeispiele: `prediction`, `trace`, `readings` und `measurement`. Die Galerie zeigt alle vier Formen. Pfeiltasten, direkte Frame-Aufrufe und PDF nutzen dieselben Zwischenstände. Bestehende Decks brauchen keine Änderung.
+- **Vier Signature-Layouts für Lehrbeispiele:** `prediction`, `trace`, `readings` und `measurement`, alle vier in der Galerie `examples/layouts/`. Pfeiltasten, direkte Frame-Aufrufe und PDF zeigen dieselben Zwischenstände, und bestehende Decks brauchen keine Änderung.
 
 ## 0.14.0 (2026-11-25)
 
