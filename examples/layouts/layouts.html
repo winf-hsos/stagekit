@@ -8,6 +8,7 @@
        deck loads its project copy (tools/sync.py). -->
   <link rel="stylesheet" href="../../themes/default.css">
   <link rel="stylesheet" href="../../stagekit.css">
+  <link rel="stylesheet" href="lamp.css">
 </head>
 <body>
 <div class="deck" data-title="signature layouts" data-subtitle="fixed forms that stand out, one slide each"
@@ -143,19 +144,41 @@
   <section class="slide trace">
     <h2>when does the lamp turn blue?</h2>
     <div class="content">
-      <ol class="trace-code">
-        <li>lamp("red")</li>
-        <li>wait(1)</li>
-        <li>lamp("blue")</li>
-      </ol>
-      <div class="trace-states">
-        <div data-line="0">lamp off · 0 s</div>
-        <div data-line="1">lamp red · 0 s</div>
-        <div data-line="2">lamp red · 1 s</div>
-        <div data-line="3">lamp blue · 1 s</div>
+      <div class="code trace-code" data-language="python">
+        <div>from time import sleep</div>
+        <div>from lifi_hardware import led</div>
+        <div></div>
+        <div>led.set_color(255, 0, 0)</div>
+        <div>sleep(1)</div>
+        <div>led.set_color(0, 0, 255)</div>
+      </div>
+      <div class="lamp-output">
+        <svg class="led" viewBox="0 0 300 280" aria-label="RGB lamp" role="img">
+          <g fill="none" stroke="var(--gray)" stroke-width="6" stroke-linecap="round">
+            <path d="M121 164v85 M140 164v98 M159 164v90 M178 164v80"/>
+          </g>
+          <path class="lens" d="M81 158V96a69 69 0 0 1 138 0v62l9 10v13H72v-13z"/>
+          <path d="M99 105V96a51 51 0 0 1 29-46" fill="none" stroke="white" stroke-opacity=".65" stroke-width="6" stroke-linecap="round"/>
+          <path d="M85 163h130" fill="none" stroke="white" stroke-opacity=".4" stroke-width="3"/>
+        </svg>
+        <div class="trace-states">
+          <div data-line="0">lamp off</div>
+          <div data-line="4" data-light="red">red</div>
+          <div data-line="5" data-light="red">red</div>
+          <div data-line="6" data-light="blue">blue</div>
+        </div>
+        <div class="lamp-time" id="lamp-time">
+          <svg viewBox="0 0 600 50" aria-label="Elapsed time from zero to one second" role="img">
+            <path d="M20 25H580" stroke="var(--gray-dark)" stroke-width="6"/>
+            <path d="M20 13v24 M300 17v16 M580 13v24" stroke="var(--gray)" stroke-width="3"/>
+            <path data-a="red-duration" d="M20 25H580" fill="none" stroke="var(--led-red)" stroke-width="9"/>
+            <g data-a="time-cursor"><circle class="lamp-cursor" cx="20" cy="25" r="12"/></g>
+          </svg>
+          <div class="time-labels"><span>0 s</span><span>elapsed time</span><span>1 s</span></div>
+        </div>
       </div>
     </div>
-    <aside class="notes">Start with the lamp off. Ask what the wait changes, then step back once to compare the clock and lamp. The code is pseudocode.</aside>
+    <aside class="notes">The example uses the course LiFi device and its Python package. The three arguments set the red, green and blue channels. Ask what the lamp will do during sleep(1). Let the cursor travel for the full second while the lamp stays red. At the next instruction only the lamp and the endpoint turn blue. The red interval records the colour that was on during the wait.</aside>
   </section>
 
   <section class="slide readings">
@@ -186,6 +209,12 @@
 
 </div>
 <script src="../../draw.js"></script>
+<script src="../../anim.js"></script>
+<script>
+  const lampTime = draw.anim("lamp-time", { first: 2 });
+  const waitTime = { dur: matchMedia("(prefers-reduced-motion: reduce)").matches ? 1 : 1000, ease: "linear" };
+  lampTime.step(lampTime.par(lampTime.draw("red-duration", waitTime), lampTime.move("time-cursor", 560, 0, waitTime)));
+</script>
 <script src="../../stagekit.js"></script>
 </body>
 </html>

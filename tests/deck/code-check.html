@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Code block checks</title>
+<div class="deck">
+  <section class="slide trace">
+    <div class="code trace-code" data-language="python"><div>if ready:</div><div>    text = """# start</div><div>    end"""</div><div></div><div data-step="1">    <span class="hl">emit</span>(text, 12)  # send</div></div>
+    <div class="trace-states"><div data-line="0">ready</div><div data-line="5">sent</div></div>
+    <div class="code figcode" data-language="r">mean(c(1, 2), na.rm = TRUE)</div>
+  </section>
+</div>
+<output id="result"></output>
+<script src="../../stagekit.js"></script>
+<script>
+  const source = document.querySelector(".trace-code");
+  const result = document.getElementById("result");
+  const expect = (ok, message) => { if (!ok) throw Error(message); };
+  async function verify() {
+    let copied;
+    Object.defineProperty(navigator, "clipboard", { value: { writeText: async text => { copied = text; } } });
+    source.querySelector(".copy").click();
+    await Promise.resolve();
+    expect(copied === 'if ready:\n    text = """# start\n    end"""\n\n    emit(text, 12)  # send', "copied source changed");
+    expect(source.querySelectorAll(".syntax-string").length === 2, "multiline string lost");
+    expect(source.querySelector(".syntax-comment").textContent === "# send", "comment inside string");
+    expect(source.querySelector(".syntax-keyword").textContent === "if", "Python keyword missing");
+    expect(source.querySelector(".hl").textContent === "emit", "manual emphasis lost");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    expect(source.querySelector(".trace-current.shown")?.dataset.step === "1", "wrong active line");
+    document.querySelector(".figcode .show").click();
+    const overlay = document.querySelector(".overlay-code");
+    expect(overlay.querySelectorAll(".syntax-call").length === 2 && overlay.querySelector(".syntax-keyword").textContent === "TRUE", "R overlay missing tokens");
+    result.textContent = "passed";
+  }
+  verify().catch(error => { result.textContent = error.message; });
+</script>
+</html>

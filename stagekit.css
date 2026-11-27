@@ -58,6 +58,11 @@ a { color: var(--blue); text-decoration: none; }
              box-shadow: 0 0.18em 0 var(--gray); padding: 0 0.55em; margin: 0 0.1em; white-space: nowrap; }
 .code .kw { color: var(--blue); }
 .code .num { color: var(--yellow); }
+:is(.code, .overlay-code) .syntax-keyword { color: var(--blue); }
+:is(.code, .overlay-code) .syntax-call { color: var(--white); font-weight: bold; }
+:is(.code, .overlay-code) .syntax-number { color: var(--yellow); }
+:is(.code, .overlay-code) .syntax-string { color: var(--green); }
+:is(.code, .overlay-code) .syntax-comment { color: var(--gray); }
 /* the copy button stagekit.js adds to every code block: to the right of the
  * block, so it never covers a line; grey, white on hover, green once copied */
 .slide .code { position: relative; }
@@ -203,11 +208,18 @@ body.print .slide .code.figcode { display: none; }
 .slide:is(.prediction, .readings) .cue { color: var(--part-color); }
 .slide.readings .given { font-size: var(--large); }
 .slide.readings .reading-list { width: 100%; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 1em; }
-.slide.trace .content { display: grid; grid-template-columns: 1fr 1fr; align-items: center; }
-.slide.trace .trace-code { margin: 0; padding-left: 2em; font-family: var(--mono); text-transform: none; }
-.slide.trace .trace-code li { padding: 0.14em 0.3em; border-left: 5px solid transparent; }
-.slide.trace .trace-current { color: var(--part-color); }
-.slide.trace .trace-code li.trace-current { border-left-color: currentColor; }
+.slide.trace .content { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: center; gap: var(--margin); }
+.slide.trace .trace-code { margin: 0; padding: 88px 24px 36px; list-style: none; white-space: normal;
+  border: 2px solid var(--gray-dark); border-radius: 16px; font-size: var(--normal);
+  background: color-mix(in srgb, var(--white) 4%, var(--bg)); }
+.slide.trace .trace-code[data-language]::before { content: attr(data-language); position: absolute; left: 1.1em;
+  top: 0.8em; color: var(--gray); font-family: var(--font); font-size: var(--small); }
+.slide.trace .trace-code > :is(div, li) { box-sizing: border-box; min-height: 1.5em; line-height: 1.5;
+  padding: 0 0.3em; border-left: 5px solid transparent; white-space: pre; }
+.slide.trace .trace-code > .trace-current { border-left-color: var(--white);
+  background: color-mix(in srgb, var(--white) 12%, transparent); }
+.slide.trace .trace-code .copy { right: 0.65em; top: 0.6em; }
+body.print .slide.trace .trace-code .copy { display: block; }
 .slide.trace .trace-states { display: grid; align-items: center; min-height: 4em; }
 .slide.trace .trace-states > * { grid-area: 1 / 1; }
 .slide.trace .trace-states > [hidden] { display: block; visibility: hidden; }

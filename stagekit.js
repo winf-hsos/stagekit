@@ -105,6 +105,7 @@
     });
   });
   // A trace state is a complete snapshot. A repeated line number can describe a loop.
+  $$(".slide.trace .trace-code", deck).forEach((block) => block.classList.add("code"));
   $$(".slide.trace .trace-states", deck).forEach((states) => {
     $$(":scope > [data-line]", states).forEach((state, step) => {
       if (step) state.dataset.step = String(step);
@@ -129,7 +130,7 @@
       const states = $$(".trace-states > [data-line]", s);
       const current = states.filter((state) => Number(state.dataset.step || 0) <= s._step).pop();
       states.forEach((state) => { state.hidden = state !== current; });
-      $$(".trace-code > li", s).forEach((line, i) => {
+      $$(".trace-code > :is(div, li)", s).forEach((line, i) => {
         line.classList.toggle("trace-current", i + 1 === Number(current?.dataset.line));
       });
     }
@@ -916,12 +917,71 @@
    * "copy" and "check2" 1.11.3 (MIT, (c) The Bootstrap Authors). */
   const ICON_COPY = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/></svg>';
   const ICON_CHECK = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/></svg>';
+  // Rows keep their build steps and indentation. Older trace decks used list items.
+  const codeRows = (block) => $$(":scope > div, :scope.trace-code > li", block);
   function codeText(block) {
-    const lines = Array.from(block.children).filter((c) => c.tagName === "DIV");
+    const lines = codeRows(block);
     if (lines.length) return lines.map((l) => l.textContent).join("\n");
     const clone = block.cloneNode(true);
     clone.querySelectorAll(".copy, .show").forEach((b) => b.remove());
     return clone.textContent.replace(/^\n+|\s+$/g, "");
+  }
+  // Colour only marked blocks. Match against the complete source so a string
+  // spanning several rows stays a string. Write spans into existing text
+  // nodes, preserving the author's build steps, manual emphasis and literal text.
+  const syntaxKeywords = {
+    python: new Set("False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield".split(" ")),
+    r: new Set("if else repeat while function for in next break TRUE FALSE NULL Inf NaN NA NA_integer_ NA_real_ NA_complex_ NA_character_".split(" ")),
+  };
+  function highlightCode(block, language) {
+    const keywords = syntaxKeywords[language];
+    if (!(keywords instanceof Set)) return;
+    const nodes = [];
+    let source = "";
+    const rows = codeRows(block);
+    (rows.length ? rows : [block]).forEach((row, i) => {
+      if (i) source += "\n";
+      const walker = document.createTreeWalker(row, NodeFilter.SHOW_TEXT);
+      for (let node; (node = walker.nextNode());) {
+        nodes.push({ node, start: source.length });
+        source += node.data;
+      }
+    });
+    const words = language === "python"
+      ? /(?<comment>#[^\n]*)|(?<string>(?:\b(?:[bB][rR]?|[rR][bBfF]?|[fF][rR]?|[uU]))?(?:"""(?:\\[\s\S]|(?!""")[^\\])*?(?:"""|$)|'''(?:\\[\s\S]|(?!''')[^\\])*?(?:'''|$)|"(?:\\[\s\S]|[^"\\\n])*"|'(?:\\[\s\S]|[^'\\\n])*'))|(?<number>\b(?:0[xX][\da-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+)|(?:\b\d[\d_]*(?:\.[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?[\d_]+)?[jJ]?)|(?<name>[\p{L}_][\p{L}\p{N}_]*)/gu
+      : /(?<comment>#[^\n]*)|(?<string>"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|`(?:\\[\s\S]|[^`\\])*`)|(?<number>\b0[xX][\da-fA-F]+|(?:\b\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?[Li]?)|(?<name>[\p{L}._][\p{L}\p{N}._]*)/gu;
+    const tokens = [];
+    for (const match of source.matchAll(words)) {
+      const { comment, string, number } = match.groups;
+      const end = match.index + match[0].length;
+      let kind;
+      if (comment !== undefined) kind = "comment";
+      else if (string !== undefined) kind = "string";
+      else if (number !== undefined) kind = "number";
+      else if (keywords.has(match[0])) kind = "keyword";
+      else if (/^[ \t]*\(/.test(source.slice(end))) kind = "call";
+      if (kind) tokens.push({ start: match.index, end, kind });
+    }
+    let first = 0;
+    for (const { node, start } of nodes) {
+      const value = node.data, end = start + value.length;
+      while (first < tokens.length && tokens[first].end <= start) first++;
+      if (!value || first === tokens.length || tokens[first].start >= end || node.parentElement.closest(".hl, .kw, .num")) continue;
+      const fragment = document.createDocumentFragment();
+      let offset = 0;
+      for (let i = first; i < tokens.length && tokens[i].start < end; i++) {
+        const token = tokens[i];
+        const left = Math.max(0, token.start - start), right = Math.min(value.length, token.end - start);
+        fragment.append(value.slice(offset, left));
+        const span = document.createElement("span");
+        span.className = "syntax-" + token.kind;
+        span.textContent = value.slice(left, right);
+        fragment.append(span);
+        offset = right;
+      }
+      fragment.append(value.slice(offset));
+      node.replaceWith(fragment);
+    }
   }
   function copyText(text) {
     if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
@@ -933,6 +993,7 @@
     return Promise.resolve();
   }
   document.querySelectorAll(".slide .code").forEach((block) => {
+    highlightCode(block, block.dataset.language);
     const b = document.createElement("button");
     b.className = "copy"; b.title = "copy"; b.setAttribute("aria-label", "copy code");
     b.dataset.noAdvance = "1"; b.innerHTML = ICON_COPY;
@@ -969,6 +1030,7 @@
       box.className = "code-overlay"; box.dataset.noAdvance = "1";
       const code = document.createElement("div");
       code.className = "overlay-code"; code.textContent = codeText(block);
+      highlightCode(code, block.dataset.language);
       const x = document.createElement("button");
       x.className = "close"; x.title = "close"; x.setAttribute("aria-label", "close");
       x.dataset.noAdvance = "1"; x.innerHTML = ICON_CLOSE;

@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- Quelltext in Python und R erhält mit `data-language` Syntaxfarben. Das Layout `trace` stellt die Anweisungen als kopierbaren Codeblock ohne Zeilennummern dar. Im Galeriebeispiel leuchtet die RGB-LED während der Wartezeit weiter rot; der Zeitzeiger bewegt sich eine Sekunde lang. Die PDF-Frames zeigen die jeweiligen Endzustände. Bestehende Decks können die neue Laufzeit mit `tools/sync.py` übernehmen.
+
 - Vier Signature-Layouts für Lehrbeispiele: `prediction`, `trace`, `readings` und `measurement`. Die Galerie zeigt alle vier Formen. Pfeiltasten, direkte Frame-Aufrufe und PDF nutzen dieselben Zwischenstände. Bestehende Decks brauchen keine Änderung.
 
 ## 0.14.0 (2026-11-25)

@@ -183,8 +183,22 @@ def export(tmp, update):
         preview(out)
     overflow_bounds()
     visual_helpers(tmp)
+    code_blocks()
     review(tmp)
     return pngs + [midstate(out / "slides")]
+
+
+def code_blocks():
+    import export as ex
+    server, port = ex.serve(REPO)
+    try:
+        dom = ex.rendered(ex.chrome(), f"http://127.0.0.1:{port}/tests/deck/code-check.html") or ""
+        result = re.search(r'<output id="result">([^<]*)</output>', dom)
+        check(result and result.group(1) == "passed", "Code highlighting, copy and trace steps",
+              result.group(1) if result else "no browser result")
+    finally:
+        server.shutdown()
+        server.server_close()
 
 
 def review(tmp):

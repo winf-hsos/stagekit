@@ -1,0 +1,24 @@
+/* These colours describe emitted light on the device. The text underneath
+   gives the same information to someone who cannot distinguish them. */
+.lamp-output {
+  --led-red: #f04438;
+  --led-blue: #2765ff;
+  --light: var(--gray-dark);
+  display: grid; justify-items: center; width: 100%;
+}
+.lamp-output:has([data-light="red"]:not([hidden])) { --light: var(--led-red); }
+.lamp-output:has([data-light="blue"]:not([hidden])) { --light: var(--led-blue); }
+.lamp-output .led { width: 56%; display: block; }
+.lamp-output .lens, .lamp-output .lamp-cursor {
+  fill: var(--light); stroke: var(--gray-light); stroke-width: 2;
+}
+.slide.trace .lamp-output .trace-states {
+  min-height: 1.5em; text-align: center; font-size: var(--small);
+}
+.lamp-output .lamp-time { width: 92%; margin-top: 0.7em; }
+.lamp-output svg { overflow: visible; }
+.lamp-output .time-labels {
+  display: flex; justify-content: space-between; font-size: var(--small);
+  color: var(--gray-light); line-height: 1;
+}
+.lamp-output .time-labels > :nth-child(2) { color: var(--gray); }
