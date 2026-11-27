@@ -13,6 +13,8 @@ alles, was ein Deck anfassen muss.
 
 ## Unveröffentlicht
 
+- Vier Signature-Layouts für Lehrbeispiele: `prediction`, `trace`, `readings` und `measurement`. Die Galerie zeigt alle vier Formen. Pfeiltasten, direkte Frame-Aufrufe und PDF nutzen dieselben Zwischenstände. Bestehende Decks brauchen keine Änderung.
+
 ## 0.14.0 (2026-11-25)
 
 - **Design-Vorlagen und das Design der Hochschule Osnabrück.** Eine `style.toml` kann mit `[stagekit] preset = "hsos"` auf einer Vorlage aus `themes/` aufbauen und ändert darüber nur, was abweicht. Die erste Vorlage `themes/hsos.toml` hat einen hellen Grund, Roboto als Schrift und das Hochschullogo oben rechts auf jeder Folie außer Vollbildfoto und `compare` ohne Überschrift. Ein eigenes Logo geht mit `logo = "logo.svg"` (`logo = false` schaltet es ab); `theme.py` schreibt es als Daten-URI in die `theme.css`. Roboto liegt jetzt im Framework (`fonts/Roboto-Regular.woff`, `fonts/Roboto-Bold.woff`), `new_deck.py` kennt `--theme hsos`, und die Prüfung des Exports auf ungestylte Frames meldet ein Vollbildfoto nicht mehr fälschlich. Beispiel in `examples/hsos/`. Bestehende Decks ändern sich nicht; wer die Vorlage nutzen will, holt mit `tools/sync.py` die neuen Schriftdateien und erzeugt die `theme.css` neu.

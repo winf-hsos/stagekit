@@ -58,8 +58,9 @@ WORDS_PER_MINUTE = 120                         # speaking pace for the notes
 LAYOUT_NAMES = {"figure": "Zeichnung", "lines": "Zeilen", "columns": "Spalten", "code": "Code", "photo": "Foto",
                 "embed": "Demo", "statement": "Aussage", "poll": "Abfrage", "other": "sonstiges",
                 "number": "große Zahl", "quote": "Zitat", "timeline": "Zeitleiste", "fullbleed": "Vollbildfoto",
-                "compare": "Vorher/Nachher", "checklist": "Checkliste"}
-SIGNATURE = {"number", "quote", "timeline", "fullbleed", "compare", "checklist"}   # signature layouts: an accent, never twice in a row
+                "compare": "Vorher/Nachher", "checklist": "Checkliste", "prediction": "Vorhersage",
+                "trace": "Ausführungsprotokoll", "readings": "Lesarten", "measurement": "Messung wählen"}
+SIGNATURE = {"number", "quote", "timeline", "fullbleed", "compare", "checklist", "prediction", "trace", "readings", "measurement"}   # signature layouts: an accent, never twice in a row
 
 
 def read_deck(deck):

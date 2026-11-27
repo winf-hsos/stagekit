@@ -35,7 +35,7 @@ function visibleText(slide) {
 
 function layout(slide) {
   const c = slide.classList;
-  for (const kind of ["title", "agenda", "part", "poll", "number", "quote", "timeline", "fullbleed", "compare", "checklist"]) if (c.contains(kind)) return kind;
+  for (const kind of ["title", "agenda", "part", "poll", "number", "quote", "timeline", "fullbleed", "compare", "checklist", "prediction", "trace", "readings", "measurement"]) if (c.contains(kind)) return kind;
   if (slide.querySelector("img.photo, .photo-text")) return "photo";
   if (slide.querySelector(".code:not(.figcode)")) return "code";
   if (slide.querySelector(".embed iframe")) return "embed";

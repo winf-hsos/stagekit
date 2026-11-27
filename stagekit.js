@@ -64,7 +64,7 @@
   });
 
   /* --- signature layouts ----------------------------------------------------------
-   * Six slide classes with a fixed form, so a deck gets variety from tested
+   * Signature slide classes with a fixed form, so a deck gets variety from tested
    * pieces instead of a new drawing each time (when: docs/design-rules.md):
    *
    *   number     <div class="number-value">73 %</div><div class="number-text">…</div>
@@ -104,6 +104,47 @@
       li.insertAdjacentHTML("afterbegin", `<span class="date">${li.dataset.date || ""}</span><span class="dot"></span>`);
     });
   });
+  // A trace state is a complete snapshot. A repeated line number can describe a loop.
+  $$(".slide.trace .trace-states", deck).forEach((states) => {
+    $$(":scope > [data-line]", states).forEach((state, step) => {
+      if (step) state.dataset.step = String(step);
+    });
+  });
+  // Each observation has its own addressable frame. Picking a measurement uses
+  // the same navigation path as arrows, jumps and the embedded control bar.
+  $$(".slide.measurement .measurements > li", deck).forEach((item) => {
+    const button = $(":scope > button", item);
+    const result = $(":scope > span", item);
+    if (!button || !result) return;
+    const step = Array.from(item.parentElement.children).indexOf(item) + 1;
+    result.dataset.step = String(step);
+    button.addEventListener("click", () => show(index, step));
+    button.addEventListener("keydown", (event) => {
+      // Let the native button activate on Space while it has keyboard focus.
+      if (event.key === " ") event.stopPropagation();
+    });
+  });
+  function teachingStep(s) {
+    if (s.classList.contains("trace")) {
+      const states = $$(".trace-states > [data-line]", s);
+      const current = states.filter((state) => Number(state.dataset.step || 0) <= s._step).pop();
+      states.forEach((state) => { state.hidden = state !== current; });
+      $$(".trace-code > li", s).forEach((line, i) => {
+        line.classList.toggle("trace-current", i + 1 === Number(current?.dataset.line));
+      });
+    }
+    if (s.classList.contains("measurement")) {
+      $$(".measurements > li", s).forEach((item) => {
+        const result = $(":scope > span", item);
+        const button = $(":scope > button", item);
+        if (!result || !button) return;
+        const selected = Number(result.dataset.step) === s._step;
+        // Reserve the result's place even when another observation is chosen.
+        result.classList.toggle("unselected", !selected);
+        button.setAttribute("aria-expanded", String(selected));
+      });
+    }
+  }
   // a checklist: each item gets a box, and a tick drawn in SVG, so the export's
   // step check sees nothing move. data-checked ticks it from the start,
   // data-check="2" on step 2; the tick then carries the data-step itself.
@@ -765,6 +806,7 @@
     $$("[data-step]", s).forEach((e) => e.classList.toggle("shown", Number(e.dataset.step) <= s._step));
     markNow(s);
     compareStep(s, how);
+    teachingStep(s);
     checkStep(s, how, fresh);
   }
 

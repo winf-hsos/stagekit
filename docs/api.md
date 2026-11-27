@@ -126,6 +126,13 @@ Rahmen und Text reisen getrennt: Der Text gleitet von der Mitte des alten zur Mi
 
 Die Zahl zählt nur, wenn die Folie mit einem Schritt nach vorn erreicht wird; ein Sprung, ein frisches Laden, die Druckansicht und der Export zeigen den Endwert, ebenso bei reduzierter Bewegung. Trennzeichen und Einheit bleiben beim Zählen stehen (`1,250 kb`).
 
+**Vier Lehrbeispiele** stehen im letzten Teil von `examples/layouts/layouts.html`. Alle vier verwenden einen `.content`-Block. Die Texte und Einheiten kommen aus dem Deck.
+
+- `prediction`: Die Frage steht in `<div class="given">…</div>`, darunter je ein Block mit `data-step="1"` für die Vorhersage und `data-step="2"` für das Ergebnis. Eine kurze Beschriftung bekommt `class="cue"`, der Beleg `class="evidence"`.
+- `trace`: `<ol class="trace-code"><li>…</li>…</ol>` enthält die Anweisungen. Daneben steht `<div class="trace-states"><div data-line="0">Anfangszustand</div><div data-line="1">Zustand nach Zeile 1</div>…</div>`. Jeder weitere Zustand erzeugt einen Frame. Zeilen zählen ab eins. Eine Zeile darf mehrfach vorkommen, etwa in einer Schleife. Pro Zustand den vollständigen Inhalt für die rechte Seite angeben.
+- `readings`: Der gemeinsame Wert steht in `.given`. In `<div class="reading-list">` je Lesart einen Block mit `data-step="1"`, `data-step="2"` usw. setzen. Die Konvention steht in `<span class="cue">…</span>`. Frühere Lesarten bleiben sichtbar.
+- `measurement`: Unter dem Symptom in `.given` steht `<ol class="measurements">`. Jede Option hat die Form `<li><button type="button">Messung</button><span>Befund</span></li>`. Ein Klick oder Tab und Eingabetaste öffnet genau diesen Befund. Die Pfeiltasten durchlaufen die vorbereiteten Befunde in Listenreihenfolge. Der Ausgangsframe enthält nur Symptom und Optionen. Im PDF folgt darauf ein eigener Frame je Befund.
+
 Live-Abfrage (braucht `data-live-url` am `div.deck`):
 
 ```html

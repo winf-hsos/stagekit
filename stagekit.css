@@ -191,6 +191,37 @@ body.print .slide .code.figcode { display: none; }
   background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%); pointer-events: none; }
 .slide.compare:not(:has(h2)) .footnote { color: var(--band-muted, var(--gray-light)); }
 
+/* Teaching signatures keep the prompt and reference material in one place. */
+.slide:is(.prediction, .readings, .trace, .measurement) .content {
+  top: calc(var(--margin) * 1.55); bottom: calc(var(--margin) * 1.35);
+  font-size: var(--normal); line-height: 1.25; gap: 0.85em;
+}
+.slide:is(.prediction, .readings) .cue,
+.slide:is(.prediction, .readings) .evidence {
+  display: block; font-size: var(--small); color: var(--gray);
+}
+.slide:is(.prediction, .readings) .cue { color: var(--part-color); }
+.slide.readings .given { font-size: var(--large); }
+.slide.readings .reading-list { width: 100%; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 1em; }
+.slide.trace .content { display: grid; grid-template-columns: 1fr 1fr; align-items: center; }
+.slide.trace .trace-code { margin: 0; padding-left: 2em; font-family: var(--mono); text-transform: none; }
+.slide.trace .trace-code li { padding: 0.14em 0.3em; border-left: 5px solid transparent; }
+.slide.trace .trace-current { color: var(--part-color); }
+.slide.trace .trace-code li.trace-current { border-left-color: currentColor; }
+.slide.trace .trace-states { display: grid; align-items: center; min-height: 4em; }
+.slide.trace .trace-states > * { grid-area: 1 / 1; }
+.slide.trace .trace-states > [hidden] { display: block; visibility: hidden; }
+.slide.measurement .measurements { width: 100%; list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55em; }
+.slide.measurement .measurements li { display: grid; grid-template-columns: 1fr 1.6fr; align-items: center; gap: 0.8em; }
+.slide.measurement .measurements button {
+  font: inherit; color: inherit; text-align: left; background: transparent; cursor: pointer;
+  border: 2px solid var(--gray); border-radius: 0.15em; padding: 0.18em 0.4em;
+}
+.slide.measurement .measurements button[aria-expanded="true"] { color: var(--part-color); border-color: currentColor; }
+.slide.measurement .measurements button:focus-visible { outline: 4px solid var(--part-color); outline-offset: 4px; }
+.slide.measurement .measurements span { font-size: var(--small); }
+.slide.measurement .measurements .unselected { visibility: hidden; }
+
 /* a checklist: one box per line, ticked in green or left open. The tick is an
  * SVG with its own data-step (stagekit.js), drawn in when it appears one step
  * forward or on a click in the talk. */

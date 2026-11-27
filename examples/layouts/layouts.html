@@ -11,7 +11,7 @@
 </head>
 <body>
 <div class="deck" data-title="signature layouts" data-subtitle="fixed forms that stand out, one slide each"
-     data-parts='["one figure", "one voice", "one picture", "one sequence", "one change", "one list to check"]'>
+     data-parts='["one figure", "one voice", "one picture", "one sequence", "one change", "one list to check", "teaching examples"]'>
 
   <section class="slide title"></section>
   <section class="slide agenda"></section>
@@ -123,6 +123,65 @@
     </ul>
     <div class="punch">a list of rules is a checklist with every box ticked.</div>
     <aside class="notes">From six items on the text drops to the small size. All ticked from the start: a list of rules rather than tasks.</aside>
+  </section>
+
+
+  <section class="slide part" data-part="teaching examples" data-subtitle="four ways to work through a question together"></section>
+
+  <section class="slide prediction">
+    <h2>where do the chickens sleep?</h2>
+    <div class="content">
+      <div class="given">Complete the training sentence: “The chickens sleep in the ___.”</div>
+      <div data-step="1"><span class="cue">our prediction</span>barn</div>
+      <div data-step="2"><span class="cue">most frequent in this sample</span>hive
+        <div class="evidence">After “in the”, the five endings were hive, barn, field, yard and hive.</div>
+      </div>
+    </div>
+    <aside class="notes">Ask for a spoken prediction before advancing. The five endings are an invented corpus. A two-word counting model uses those counts even when an ending sounds odd.</aside>
+  </section>
+
+  <section class="slide trace">
+    <h2>when does the lamp turn blue?</h2>
+    <div class="content">
+      <ol class="trace-code">
+        <li>lamp("red")</li>
+        <li>wait(1)</li>
+        <li>lamp("blue")</li>
+      </ol>
+      <div class="trace-states">
+        <div data-line="0">lamp off · 0 s</div>
+        <div data-line="1">lamp red · 0 s</div>
+        <div data-line="2">lamp red · 1 s</div>
+        <div data-line="3">lamp blue · 1 s</div>
+      </div>
+    </div>
+    <aside class="notes">Start with the lamp off. Ask what the wait changes, then step back once to compare the clock and lamp. The code is pseudocode.</aside>
+  </section>
+
+  <section class="slide readings">
+    <h2>what does this byte represent?</h2>
+    <div class="content">
+      <div class="given mono">01000001</div>
+      <div class="reading-list">
+        <div data-step="1"><span class="cue">unsigned integer</span>65</div>
+        <div data-step="2"><span class="cue">ASCII character</span><span class="keep-case">A</span></div>
+        <div data-step="3"><span class="cue">8-bit grayscale</span>dark gray<span class="evidence">65 out of 255</span></div>
+      </div>
+    </div>
+    <aside class="notes">Keep the byte on screen. Ask which convention a reader needs to know before interpreting it. On this grayscale scale, zero is black.</aside>
+  </section>
+
+  <section class="slide measurement">
+    <h2>which measurement would you take?</h2>
+    <div class="content">
+      <div class="given">A light receiver reads the first symbols correctly. Errors appear after a few seconds.</div>
+      <ol class="measurements">
+        <li><button type="button">sensor levels</button><span>Bright and dark levels still form two distinct bands.</span></li>
+        <li><button type="button">decoded characters</button><span>Errors begin after the fiftieth character.</span></li>
+        <li><button type="button">sample times</button><span>Each reading falls a little later within its symbol.</span></li>
+      </ol>
+    </div>
+    <aside class="notes">Ask the room to spend one measurement. Click its name to open only its prepared result. Which explanations can the class now rule out? The observations describe an invented receiver with clock drift.</aside>
   </section>
 
 </div>
