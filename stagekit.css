@@ -58,6 +58,10 @@ a { color: var(--blue); text-decoration: none; }
              box-shadow: 0 0.18em 0 var(--gray); padding: 0 0.55em; margin: 0 0.1em; white-space: nowrap; }
 .code .kw { color: var(--blue); }
 .code .num { color: var(--yellow); }
+:is(.code:not(.figcode), .overlay-code)[data-language]:not([data-hide-language])::before {
+  content: attr(data-language); display: block; margin-bottom: 0.35em;
+  color: var(--gray); font-family: var(--font); font-size: var(--small);
+}
 :is(.code, .overlay-code) .syntax-keyword { color: var(--blue); }
 :is(.code, .overlay-code) .syntax-call { color: var(--white); font-weight: bold; }
 :is(.code, .overlay-code) .syntax-number { color: var(--yellow); }
@@ -212,8 +216,7 @@ body.print .slide .code.figcode { display: none; }
 .slide.trace .trace-code { margin: 0; padding: 88px 24px 36px; list-style: none; white-space: normal;
   border: 2px solid var(--gray-dark); border-radius: 16px; font-size: var(--normal);
   background: color-mix(in srgb, var(--white) 4%, var(--bg)); }
-.slide.trace .trace-code[data-language]::before { content: attr(data-language); position: absolute; left: 1.1em;
-  top: 0.8em; color: var(--gray); font-family: var(--font); font-size: var(--small); }
+.slide.trace .trace-code::before { position: absolute; left: 1.1em; top: 0.8em; }
 .slide.trace .trace-code > :is(div, li) { box-sizing: border-box; min-height: 1.5em; line-height: 1.5;
   padding: 0 0.3em; border-left: 5px solid transparent; white-space: pre; }
 .slide.trace .trace-code > .trace-current { border-left-color: var(--white);

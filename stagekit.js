@@ -1030,6 +1030,8 @@
       box.className = "code-overlay"; box.dataset.noAdvance = "1";
       const code = document.createElement("div");
       code.className = "overlay-code"; code.textContent = codeText(block);
+      if (block.dataset.language) code.dataset.language = block.dataset.language;
+      code.toggleAttribute("data-hide-language", block.hasAttribute("data-hide-language"));
       highlightCode(code, block.dataset.language);
       const x = document.createElement("button");
       x.className = "close"; x.title = "close"; x.setAttribute("aria-label", "close");

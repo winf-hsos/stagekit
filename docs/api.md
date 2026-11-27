@@ -135,6 +135,13 @@ Die Zahl zählt nur, wenn die Folie mit einem Schritt nach vorn erreicht wird; e
 
 **Syntaxhervorhebung.** Jeder normale Codeblock und auch `.code.figcode` kann `data-language="python"` oder `data-language="r"` tragen. Stagekit markiert Schlüsselwörter, Zeichenketten, Kommentare, Zahlen und Funktionsaufrufe offline. Das funktioniert mit mehrzeiligem Text und mit einem `<div>` je Zeile. Eigene Markierungen mit `.hl` bleiben erhalten. Der Kopierknopf übernimmt den Quelltext samt Einrückung. Bei `trace` ist das Kopiersymbol auch im PDF sichtbar, kopiert wird in der HTML-Fassung.
 
+Bei gesetztem `data-language` erscheint der Sprachname standardmäßig am Codeblock. Mit `data-hide-language` blendet der Autor die Beschriftung für diesen Block aus. Die Syntaxfarben bleiben aktiv. Das gilt auch für `trace` und das Codefenster einer Abbildung. Der Kopierknopf übernimmt nur den Quelltext.
+
+```html
+<div class="code" data-language="python">print("Hallo")</div>
+<div class="code" data-language="r" data-hide-language>mean(c(2, 4))</div>
+```
+
 Live-Abfrage (braucht `data-live-url` am `div.deck`):
 
 ```html

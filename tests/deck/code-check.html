@@ -1,10 +1,12 @@
 <!doctype html>
 <html lang="en"><meta charset="utf-8"><title>Code block checks</title>
+<link rel="stylesheet" href="../../stagekit.css">
 <div class="deck">
   <section class="slide trace">
     <div class="code trace-code" data-language="python"><div>if ready:</div><div>    text = """# start</div><div>    end"""</div><div></div><div data-step="1">    <span class="hl">emit</span>(text, 12)  # send</div></div>
     <div class="trace-states"><div data-line="0">ready</div><div data-line="5">sent</div></div>
     <div class="code figcode" data-language="r">mean(c(1, 2), na.rm = TRUE)</div>
+    <div class="code" data-language="r" data-hide-language>mean(c(2, 4))</div>
   </section>
 </div>
 <output id="result"></output>
@@ -14,6 +16,14 @@
   const result = document.getElementById("result");
   const expect = (ok, message) => { if (!ok) throw Error(message); };
   async function verify() {
+    const label = el => getComputedStyle(el, "::before").content;
+    const plain = document.querySelector(".code[data-hide-language]");
+    expect(label(plain) === "none" && plain.querySelector(".syntax-call"), "hidden label suppressed highlighting");
+    plain.removeAttribute("data-hide-language");
+    expect(label(plain) === '"r"', "ordinary block missing language label");
+    expect(label(source) === '"python"', "trace missing language label");
+    source.setAttribute("data-hide-language", "");
+    expect(label(source) === "none", "trace label still visible");
     let copied;
     Object.defineProperty(navigator, "clipboard", { value: { writeText: async text => { copied = text; } } });
     source.querySelector(".copy").click();
@@ -28,6 +38,12 @@
     document.querySelector(".figcode .show").click();
     const overlay = document.querySelector(".overlay-code");
     expect(overlay.querySelectorAll(".syntax-call").length === 2 && overlay.querySelector(".syntax-keyword").textContent === "TRUE", "R overlay missing tokens");
+    expect(label(overlay) === '"r"', "overlay missing language label");
+    document.querySelector(".code-overlay .close").click();
+    document.querySelector(".figcode").setAttribute("data-hide-language", "");
+    document.querySelector(".figcode .show").click();
+    const hiddenOverlay = document.querySelector(".overlay-code");
+    expect(label(hiddenOverlay) === "none" && hiddenOverlay.querySelector(".syntax-call"), "overlay lost the block's visibility setting");
     result.textContent = "passed";
   }
   verify().catch(error => { result.textContent = error.message; });
